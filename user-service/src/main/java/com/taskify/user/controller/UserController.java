@@ -1,9 +1,9 @@
-// controller/UserController.java
 package com.taskify.user.controller;
 
 import com.taskify.user.dto.CreateUserDto;
 import com.taskify.user.dto.UpdateUserDto;
 import com.taskify.user.dto.UserBasicDto;
+import com.taskify.user.dto.UserDto;
 import com.taskify.user.entity.User;
 import com.taskify.user.mapper.UserMapper;
 import com.taskify.user.service.UserService;
@@ -25,7 +25,7 @@ public class UserController {
         this._userMapper = userMapper;
     }
 
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<List<UserBasicDto>> getAllUsers() {
         List<User> users = _userService.getAllUsers();
 
@@ -33,20 +33,20 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserBasicDto> getUserById(@PathVariable("id") String id) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable("id") String id) {
         User user = _userService.getUserById(id);
 
-        return ResponseEntity.ok(_userMapper.toBasicDto(user));
+        return ResponseEntity.ok(_userMapper.toDto(user));
     }
 
-    @PostMapping("/")
+    @PostMapping()
     public ResponseEntity<UserBasicDto> createUser(@RequestBody CreateUserDto createUserDto) {
         User user = _userService.createUser(createUserDto);
 
         return ResponseEntity.ok(_userMapper.toBasicDto(user));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<UserBasicDto> updateUser(@PathVariable("id") String id, @RequestBody UpdateUserDto updateUserDto) {
         User user = _userService.updateUserById(id, updateUserDto);
 
@@ -54,9 +54,18 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<UserBasicDto> deleteUser(@PathVariable("id") String id) {
+    public ResponseEntity<String> deleteUser(@PathVariable("id") String id) {
         User user = _userService.deleteUserById(id);
 
-        return ResponseEntity.ok(_userMapper.toBasicDto(user));
+        return ResponseEntity.ok("User with id " + user.getId() + " deleted");
+    }
+
+
+    // For testing purposes
+    @PostMapping("/admin")
+    public ResponseEntity<String> createAdmin() {
+        _userService.createAdmin();
+
+        return ResponseEntity.ok("Admin created");
     }
 }

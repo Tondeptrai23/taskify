@@ -14,7 +14,7 @@ public class UserDto {
     private UUID id;
     private String username;
     private String email;
-    private String systemRole;
+    private String role;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
     private ZonedDateTime deletedAt;

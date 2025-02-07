@@ -14,12 +14,14 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+    @Mapping(target = "role", source = "systemRole")
     UserDto toDto(User user);
 
     User toEntity(UserDto userDto);
 
     User toEntity(UserBasicDto userBasicDto);
 
+    @Mapping(target = "systemRole", source = "role")
     User toEntity(CreateUserDto userCreateDto);
 
     User toEntity(UpdateUserDto userUpdateDto);

@@ -2,6 +2,7 @@ package com.taskify.user.service;
 
 import com.taskify.user.dto.CreateUserDto;
 import com.taskify.user.dto.UpdateUserDto;
+import com.taskify.user.entity.SystemRole;
 import com.taskify.user.entity.User;
 import com.taskify.user.mapper.UserMapper;
 import com.taskify.user.repository.UserRepository;
@@ -17,7 +18,7 @@ public class UserService {
     private final UserMapper _userMapper;
 
     @Autowired
-    public UserService(UserRepository userRepository,UserMapper userMapper) {
+    public UserService(UserRepository userRepository, UserMapper userMapper) {
         this._userRepository = userRepository;
         this._userMapper = userMapper;
     }
@@ -42,8 +43,13 @@ public class UserService {
             return null;
         }
 
-        user.setUsername(updateUserDto.getUsername());
-        user.setPasswordHash(updateUserDto.getPassword());
+        if (updateUserDto.getUsername() != null) {
+            user.setEmail(updateUserDto.getUsername());
+        }
+
+        if (updateUserDto.getPassword() != null) {
+            user.setPasswordHash(updateUserDto.getPassword());
+        }
         return _userRepository.save(user);
     }
 
@@ -55,5 +61,23 @@ public class UserService {
 
         _userRepository.deleteById(UUID.fromString(id));
         return user;
+    }
+
+    public boolean existsByEmail(String email) {
+        User user = _userRepository.findUserByEmail(email);
+
+        return user != null;
+    }
+
+    public User createAdmin() {
+        if (this.existsByEmail("admin@taskify.com")) {
+            return null;
+        }
+        User user = new User();
+        user.setEmail("admin@taskify.com");
+        user.setUsername("admin");
+        user.setPasswordHash("admin");
+        user.setSystemRole(SystemRole.SYSTEM_ADMIN);
+        return _userRepository.save(user);
     }
 }
