@@ -1,15 +1,15 @@
 // controller/UserController.java
 package com.taskify.user.controller;
 
+import com.taskify.user.dto.CreateUserDto;
+import com.taskify.user.dto.UpdateUserDto;
 import com.taskify.user.dto.UserBasicDto;
 import com.taskify.user.entity.User;
 import com.taskify.user.mapper.UserMapper;
 import com.taskify.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -28,7 +28,35 @@ public class UserController {
     @GetMapping("/")
     public ResponseEntity<List<UserBasicDto>> getAllUsers() {
         List<User> users = _userService.getAllUsers();
-        
+
         return ResponseEntity.ok(_userMapper.toBasicDtoList(users));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserBasicDto> getUserById(@PathVariable("id") String id) {
+        User user = _userService.getUserById(id);
+
+        return ResponseEntity.ok(_userMapper.toBasicDto(user));
+    }
+
+    @PostMapping("/")
+    public ResponseEntity<UserBasicDto> createUser(@RequestBody CreateUserDto createUserDto) {
+        User user = _userService.createUser(createUserDto);
+
+        return ResponseEntity.ok(_userMapper.toBasicDto(user));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserBasicDto> updateUser(@PathVariable("id") String id, @RequestBody UpdateUserDto updateUserDto) {
+        User user = _userService.updateUserById(id, updateUserDto);
+
+        return ResponseEntity.ok(_userMapper.toBasicDto(user));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserBasicDto> deleteUser(@PathVariable("id") String id) {
+        User user = _userService.deleteUserById(id);
+
+        return ResponseEntity.ok(_userMapper.toBasicDto(user));
     }
 }

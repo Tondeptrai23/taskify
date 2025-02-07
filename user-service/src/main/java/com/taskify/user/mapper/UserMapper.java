@@ -1,5 +1,7 @@
 package com.taskify.user.mapper;
 
+import com.taskify.user.dto.CreateUserDto;
+import com.taskify.user.dto.UpdateUserDto;
 import com.taskify.user.dto.UserBasicDto;
 import com.taskify.user.dto.UserDto;
 import com.taskify.user.entity.User;
@@ -13,6 +15,14 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     UserDto toDto(User user);
+
+    User toEntity(UserDto userDto);
+
+    User toEntity(UserBasicDto userBasicDto);
+
+    User toEntity(CreateUserDto userCreateDto);
+
+    User toEntity(UpdateUserDto userUpdateDto);
 
     @Named("toBasicDto")
     @Mapping(target = "id", expression = "java(user.getId().toString())")
