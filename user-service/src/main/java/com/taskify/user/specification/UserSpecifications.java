@@ -1,4 +1,4 @@
-package com.taskify.user.repository;
+package com.taskify.user.specification;
 
 import com.taskify.user.dto.user.UserCollectionRequest;
 import com.taskify.user.entity.User;

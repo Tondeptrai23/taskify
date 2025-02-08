@@ -8,7 +8,7 @@ import com.taskify.user.entity.User;
 import com.taskify.user.exception.UserNotFoundException;
 import com.taskify.user.mapper.UserMapper;
 import com.taskify.user.repository.UserRepository;
-import com.taskify.user.repository.UserSpecifications;
+import com.taskify.user.specification.UserSpecifications;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
