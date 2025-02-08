@@ -9,6 +9,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.ZonedDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -38,4 +39,7 @@ public class Organization {
 
     @Column(name = "deleted_at")
     private ZonedDateTime deletedAt;
+
+    @OneToMany(mappedBy = "organization")
+    private Set<UserOrganization> userOrganizations;
 }

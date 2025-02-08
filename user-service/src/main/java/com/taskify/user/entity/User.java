@@ -9,6 +9,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.ZonedDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -30,7 +31,7 @@ public class User {
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "system_role", columnDefinition = "system_role")
     private SystemRole systemRole;
@@ -45,4 +46,7 @@ public class User {
 
     @Column(name = "deleted_at")
     private ZonedDateTime deletedAt;
+
+    @OneToMany(mappedBy = "user")
+    private Set<UserOrganization> userOrganizations;
 }

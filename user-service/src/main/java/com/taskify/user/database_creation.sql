@@ -27,7 +27,8 @@ CREATE TABLE organizations (
 CREATE TABLE organization_roles (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
-    description TEXT
+    description TEXT,
+    isDefault BOOLEAN DEFAULT FALSE,
 );
 
 -- Create user_organizations table
@@ -39,9 +40,6 @@ CREATE TABLE user_organizations (
     is_admin BOOLEAN DEFAULT FALSE,
     joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE,
     UNIQUE(user_id, org_id)
 );
 
@@ -53,11 +51,11 @@ CREATE INDEX idx_user_organizations_org_id ON user_organizations(org_id) WHERE d
 CREATE INDEX idx_user_organizations_role_id ON user_organizations(org_role_id);
 
 -- Insert default organization roles
-INSERT INTO organization_roles (name, description) VALUES
-('DEVELOPER', 'Software developer role'),
-('TESTER', 'Quality assurance role'),
-('PRODUCT_OWNER', 'Product owner role'),
-('SCRUM_MASTER', 'Scrum master role');
+INSERT INTO organization_roles (name, description, isDefault) VALUES
+('DEVELOPER', 'Software developer role', TRUE),
+('TESTER', 'Quality assurance role', FALSE),
+('PRODUCT_OWNER', 'Product owner role', FALSE),
+('SCRUM_MASTER', 'Scrum master role', FALSE);
 
 INSERT INTO users (id, email, username, password_hash, system_role) VALUES
 ('00000000-0000-0000-0000-000000000000', 'admin@taskify.com', 'admin', 'admin', "SYSTEM_ADMIN")

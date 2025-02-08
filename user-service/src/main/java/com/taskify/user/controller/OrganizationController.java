@@ -4,27 +4,36 @@ import com.taskify.user.dto.common.BaseCollectionResponse;
 import com.taskify.user.dto.organization.*;
 import com.taskify.user.entity.Organization;
 import com.taskify.user.mapper.OrganizationMapper;
+import com.taskify.user.mapper.UserOrganizationMapper;
 import com.taskify.user.service.OrganizationService;
+import com.taskify.user.service.UserOrganizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/organizations")
 public class OrganizationController {
     private final OrganizationService organizationService;
+    private final UserOrganizationService userOrganizationService;
     private final OrganizationMapper organizationMapper;
+    private final UserOrganizationMapper userOrganizationMapper;
 
     @Autowired
     public OrganizationController(
             OrganizationService organizationService,
-            OrganizationMapper organizationMapper
+            UserOrganizationService userOrganizationService,
+            OrganizationMapper organizationMapper,
+            UserOrganizationMapper userOrganizationMapper
     ) {
         this.organizationService = organizationService;
+        this.userOrganizationService = userOrganizationService;
         this.organizationMapper = organizationMapper;
+        this.userOrganizationMapper = userOrganizationMapper;
     }
 
     @GetMapping
@@ -65,6 +74,47 @@ public class OrganizationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<OrganizationDto> deleteOrganization(@PathVariable("id") UUID id) {
         Organization organization = organizationService.deleteOrganization(id);
+
+        return ResponseEntity.ok(organizationMapper.toDto(organization));
+    }
+
+    @GetMapping("/{id}/members")
+    public ResponseEntity<BaseCollectionResponse<OrganizationMemberDto>> getOrganizationMembers(
+            @PathVariable("id") UUID orgId,
+            @ModelAttribute OrganizationMemberCollectionRequest filter
+    ) {
+        Page<OrganizationMemberDto> userOrganizationDtos = userOrganizationService.getOrganizationMembers(orgId, filter)
+                .map(userOrganizationMapper::toDtoList);
+
+        return ResponseEntity.ok(BaseCollectionResponse.from(userOrganizationDtos));
+    }
+
+    @PostMapping("/{id}/members")
+    public ResponseEntity<OrganizationDto> addMembers(
+            @PathVariable("id") UUID orgId,
+            @RequestBody List<UUID> userIds
+    ) {
+        Organization organization = userOrganizationService.addMembers(orgId, userIds);
+
+        return ResponseEntity.ok(organizationMapper.toDto(organization));
+    }
+
+    @DeleteMapping("/{id}/members")
+    public ResponseEntity<OrganizationDto> removeMembers(
+            @PathVariable("id") UUID orgId,
+            @RequestBody List<UUID> userIds
+    ) {
+        Organization organization = userOrganizationService.removeMembers(orgId, userIds);
+
+        return ResponseEntity.ok(organizationMapper.toDto(organization));
+    }
+
+    @PutMapping("/{id}/members")
+    public ResponseEntity<OrganizationDto> updateMembers(
+            @PathVariable("id") UUID orgId,
+            @RequestBody BatchMemberOperationDto updateMembersDto
+    ) {
+        Organization organization = userOrganizationService.updateMembers(orgId, updateMembersDto.getMembers(), updateMembersDto.getRoleId());
 
         return ResponseEntity.ok(organizationMapper.toDto(organization));
     }
