@@ -2,11 +2,18 @@ package com.taskify.user.service;
 
 import com.taskify.user.dto.CreateUserDto;
 import com.taskify.user.dto.UpdateUserDto;
+import com.taskify.user.dto.UserBasicDto;
+import com.taskify.user.dto.UserCollectionRequest;
 import com.taskify.user.entity.SystemRole;
 import com.taskify.user.entity.User;
 import com.taskify.user.mapper.UserMapper;
 import com.taskify.user.repository.UserRepository;
+import com.taskify.user.repository.UserSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,8 +30,26 @@ public class UserService {
         this._userMapper = userMapper;
     }
 
-    public List<User> getAllUsers() {
-        return _userRepository.findAll();
+    public Page<User> getAllUsers(UserCollectionRequest filter) {
+        Pageable pageable = PageRequest.of(
+                filter.getPage(),
+                filter.getSize(),
+                Sort.by(
+                        filter.getSortDirection().equalsIgnoreCase("asc")
+                                ? Sort.Direction.ASC
+                                : Sort.Direction.DESC,
+                        filter.getSortBy()
+                )
+        );
+
+        return _userRepository.findAll(
+                UserSpecifications.withFilters(filter),
+                pageable
+        );
+    }
+
+    public List<User> getUsersByIds(List<UUID> ids) {
+        return _userRepository.findAllById(ids);
     }
 
     public User createUser(CreateUserDto createUserDto) {
@@ -33,11 +58,11 @@ public class UserService {
         return _userRepository.save(user);
     }
 
-    public User getUserById(String id) {
-        return _userRepository.findById(UUID.fromString(id)).orElse(null);
+    public User getUserById(UUID id) {
+        return _userRepository.findById(id).orElse(null);
     }
 
-    public User updateUserById(String id, UpdateUserDto updateUserDto) {
+    public User updateUserById(UUID id, UpdateUserDto updateUserDto) {
         User user = this.getUserById(id);
         if (user == null) {
             return null;
@@ -53,13 +78,13 @@ public class UserService {
         return _userRepository.save(user);
     }
 
-    public User deleteUserById(String id) {
+    public User deleteUserById(UUID id) {
         User user = this.getUserById(id);
         if (user == null) {
             return null;
         }
 
-        _userRepository.deleteById(UUID.fromString(id));
+        _userRepository.deleteById(id);
         return user;
     }
 
