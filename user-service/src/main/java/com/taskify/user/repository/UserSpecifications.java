@@ -1,10 +1,9 @@
 package com.taskify.user.repository;
 
-import com.taskify.user.dto.UserCollectionRequest;
+import com.taskify.user.dto.user.UserCollectionRequest;
 import com.taskify.user.entity.User;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 public class UserSpecifications {

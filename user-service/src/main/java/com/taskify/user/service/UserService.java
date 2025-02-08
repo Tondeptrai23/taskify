@@ -1,14 +1,15 @@
 package com.taskify.user.service;
 
-import com.taskify.user.dto.CreateUserDto;
-import com.taskify.user.dto.UpdateUserDto;
-import com.taskify.user.dto.UserBasicDto;
-import com.taskify.user.dto.UserCollectionRequest;
+import com.taskify.user.dto.user.CreateUserDto;
+import com.taskify.user.dto.user.UpdateUserDto;
+import com.taskify.user.dto.user.UserCollectionRequest;
 import com.taskify.user.entity.SystemRole;
 import com.taskify.user.entity.User;
+import com.taskify.user.exception.UserNotFoundException;
 import com.taskify.user.mapper.UserMapper;
 import com.taskify.user.repository.UserRepository;
 import com.taskify.user.repository.UserSpecifications;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,6 +53,7 @@ public class UserService {
         return _userRepository.findAllById(ids);
     }
 
+    @Transactional
     public User createUser(CreateUserDto createUserDto) {
         User user = _userMapper.toEntity(createUserDto);
         user.setPasswordHash(createUserDto.getPassword());
@@ -62,10 +64,11 @@ public class UserService {
         return _userRepository.findById(id).orElse(null);
     }
 
+    @Transactional
     public User updateUserById(UUID id, UpdateUserDto updateUserDto) {
         User user = this.getUserById(id);
         if (user == null) {
-            return null;
+            throw new UserNotFoundException("User not found");
         }
 
         if (updateUserDto.getUsername() != null) {
@@ -78,10 +81,11 @@ public class UserService {
         return _userRepository.save(user);
     }
 
+    @Transactional
     public User deleteUserById(UUID id) {
         User user = this.getUserById(id);
         if (user == null) {
-            return null;
+            throw new UserNotFoundException("User not found");
         }
 
         _userRepository.deleteById(id);

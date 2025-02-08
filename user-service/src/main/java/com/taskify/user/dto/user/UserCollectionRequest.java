@@ -1,4 +1,4 @@
-package com.taskify.user.dto;
+package com.taskify.user.dto.user;
 
 import com.taskify.user.dto.common.BaseCollectionRequest;
 import lombok.Getter;

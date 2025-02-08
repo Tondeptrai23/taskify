@@ -1,9 +1,9 @@
 package com.taskify.user.mapper;
 
-import com.taskify.user.dto.CreateUserDto;
-import com.taskify.user.dto.UpdateUserDto;
-import com.taskify.user.dto.UserBasicDto;
-import com.taskify.user.dto.UserDto;
+import com.taskify.user.dto.user.CreateUserDto;
+import com.taskify.user.dto.user.UpdateUserDto;
+import com.taskify.user.dto.user.UserBasicDto;
+import com.taskify.user.dto.user.UserDto;
 import com.taskify.user.entity.User;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;

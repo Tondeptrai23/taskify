@@ -1,4 +1,4 @@
-package com.taskify.user.dto;
+package com.taskify.user.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

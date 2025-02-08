@@ -1,10 +1,11 @@
-package com.taskify.user.dto;
+package com.taskify.user.dto.user;
 
 import lombok.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter @Setter
+@Getter
+@Setter
 public class UserBasicDto {
     private String id;
     private String username;

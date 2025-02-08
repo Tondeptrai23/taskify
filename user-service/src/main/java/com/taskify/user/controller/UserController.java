@@ -1,8 +1,8 @@
 package com.taskify.user.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.taskify.user.dto.*;
 import com.taskify.user.dto.common.BaseCollectionResponse;
+import com.taskify.user.dto.user.*;
 import com.taskify.user.entity.User;
 import com.taskify.user.mapper.UserMapper;
 import com.taskify.user.service.UserService;

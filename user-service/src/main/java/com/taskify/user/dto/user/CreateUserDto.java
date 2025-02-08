@@ -1,4 +1,4 @@
-package com.taskify.user.dto;
+package com.taskify.user.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,7 +9,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UpdateUserDto {
+public class CreateUserDto {
     private String username;
+    private String email;
     private String password;
+    private String role;
 }
