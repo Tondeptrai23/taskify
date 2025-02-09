@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+// TODO: validate authorization
 @RestController
 @RequestMapping("/api/v1/organizations")
 public class OrganizationController {
@@ -84,7 +85,7 @@ public class OrganizationController {
             @ModelAttribute OrganizationMemberCollectionRequest filter
     ) {
         Page<OrganizationMemberDto> userOrganizationDtos = userOrganizationService.getOrganizationMembers(orgId, filter)
-                .map(userOrganizationMapper::toDtoList);
+                .map(userOrganizationMapper::toDto);
 
         return ResponseEntity.ok(BaseCollectionResponse.from(userOrganizationDtos));
     }

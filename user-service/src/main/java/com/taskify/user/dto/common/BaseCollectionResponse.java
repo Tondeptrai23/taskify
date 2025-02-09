@@ -21,7 +21,7 @@ public class BaseCollectionResponse<T> {
     public static <T> BaseCollectionResponse<T> from(Page<T> page) {
         return new BaseCollectionResponse<>(
                 page.getContent(),
-                page.getNumber() + 1,
+                page.getNumber(),
                 page.getSize(),
                 page.getTotalElements(),
                 page.getTotalPages(),

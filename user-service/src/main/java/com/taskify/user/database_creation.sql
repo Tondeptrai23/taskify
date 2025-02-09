@@ -28,7 +28,7 @@ CREATE TABLE organization_roles (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
-    isDefault BOOLEAN DEFAULT FALSE,
+    is_default BOOLEAN DEFAULT FALSE,
 );
 
 -- Create user_organizations table
