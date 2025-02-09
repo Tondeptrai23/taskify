@@ -21,15 +21,15 @@ public class UserOrganizationSpecifications {
 
     private static Specification<UserOrganization> belongsToOrganization(UUID orgId) {
         return (root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("orgId"), orgId);
+                criteriaBuilder.equal(root.get("organization").get("id"), orgId);
     }
 
-    private static Specification<UserOrganization> hasRole(String roleId) {
+    private static Specification<UserOrganization> hasRole(UUID roleId) {
         return (root, query, criteriaBuilder) -> {
             if (roleId == null) {
                 return null;
             }
-            return criteriaBuilder.equal(root.get("orgRoleId"), UUID.fromString(roleId));
+            return criteriaBuilder.equal(root.get("role").get("id"), roleId);
         };
     }
 

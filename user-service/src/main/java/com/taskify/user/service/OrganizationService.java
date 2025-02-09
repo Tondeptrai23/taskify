@@ -2,10 +2,13 @@ package com.taskify.user.service;
 
 import com.taskify.user.dto.organization.*;
 import com.taskify.user.entity.Organization;
-import com.taskify.user.entity.User;
+import com.taskify.user.entity.OrganizationRole;
 import com.taskify.user.exception.OrganizationNotFoundException;
+import com.taskify.user.exception.ResourceNotFoundException;
 import com.taskify.user.mapper.OrganizationMapper;
 import com.taskify.user.repository.OrganizationRepository;
+import com.taskify.user.repository.OrganizationRoleRepository;
+import com.taskify.user.repository.UserOrganizationRepository;
 import com.taskify.user.repository.UserRepository;
 import com.taskify.user.specification.OrganizationSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,19 +23,22 @@ import java.util.UUID;
 
 @Service
 public class OrganizationService {
-    private final OrganizationRepository organizationRepository;
-    private final OrganizationMapper organizationMapper;
-    private final UserRepository userRepository;
+    private final OrganizationRepository _organizationRepository;
+    private final OrganizationMapper _organizationMapper;
+    private final UserRepository _userRepository;
+    private final OrganizationRoleRepository _organizationRoleRepository;
 
     @Autowired
     public OrganizationService(
             OrganizationRepository organizationRepository,
             OrganizationMapper organizationMapper,
-            UserRepository userRepository
+            UserRepository userRepository,
+            OrganizationRoleRepository organizationRoleRepository
     ) {
-        this.organizationRepository = organizationRepository;
-        this.organizationMapper = organizationMapper;
-        this.userRepository = userRepository;
+        this._organizationRepository = organizationRepository;
+        this._organizationMapper = organizationMapper;
+        this._userRepository = userRepository;
+        _organizationRoleRepository = organizationRoleRepository;
     }
 
     public Page<Organization> getAllOrganizations(OrganizationCollectionRequest filter) {
@@ -47,7 +53,7 @@ public class OrganizationService {
                 )
         );
 
-        return organizationRepository.findAll(
+        return _organizationRepository.findAll(
                 OrganizationSpecifications.withFilters(filter),
                 pageable
         );
@@ -55,36 +61,41 @@ public class OrganizationService {
 
     @Transactional
     public Organization createOrganization(CreateOrganizationDto createOrganizationDto) {
-        Organization organization = organizationMapper.toEntity(createOrganizationDto);
-        organization = organizationRepository.save(organization);
+        Organization organization = _organizationMapper.toEntity(createOrganizationDto);
+        organization = _organizationRepository.save(organization);
+
 
         return organization;
     }
 
 
     public Organization getOrganizationById(UUID id) {
-        return organizationRepository.findById(id).orElse(null);
+        return _organizationRepository.findById(id).orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
     }
 
     @Transactional
     public Organization updateOrganization(UUID id, UpdateOrganizationDto updateOrganizationDto) {
         Organization organization = this.getOrganizationById(id);
-        if (organization == null) {
-            return null;
-        }
 
-        organizationMapper.updateEntity(organization, updateOrganizationDto);
-        return organizationRepository.save(organization);
+        _organizationMapper.updateEntity(organization, updateOrganizationDto);
+        return _organizationRepository.save(organization);
     }
 
     @Transactional
-    public Organization deleteOrganization(UUID id) {
+    public boolean deleteOrganization(UUID id) {
         Organization organization = this.getOrganizationById(id);
-        if (organization == null) {
-            throw new OrganizationNotFoundException("Organization not found");
-        }
 
-        organizationRepository.deleteById(id);
-        return organization;
+        _organizationRepository.deleteById(id);
+        return true;
+    }
+
+    public OrganizationRole getDefaultRole() {
+        return _organizationRoleRepository.getOrganizationRoleByDefault(true);
+    }
+
+    public OrganizationRole getRoleOrThrow(UUID roleId) {
+        return _organizationRoleRepository.findById(roleId).orElseThrow(
+                () -> new ResourceNotFoundException("Role not found", "ROLE_NOT_FOUND")
+        );
     }
 }

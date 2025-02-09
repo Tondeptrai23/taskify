@@ -3,6 +3,7 @@ package com.taskify.user.controller;
 import com.taskify.user.dto.common.BaseCollectionResponse;
 import com.taskify.user.dto.organization.*;
 import com.taskify.user.entity.Organization;
+import com.taskify.user.entity.UserOrganization;
 import com.taskify.user.mapper.OrganizationMapper;
 import com.taskify.user.mapper.UserOrganizationMapper;
 import com.taskify.user.service.OrganizationService;
@@ -73,10 +74,10 @@ public class OrganizationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<OrganizationDto> deleteOrganization(@PathVariable("id") UUID id) {
-        Organization organization = organizationService.deleteOrganization(id);
+    public ResponseEntity<String> deleteOrganization(@PathVariable("id") UUID id) {
+        organizationService.deleteOrganization(id);
 
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
+        return ResponseEntity.ok("Organization deleted successfully");
     }
 
     @GetMapping("/{id}/members")
@@ -91,32 +92,32 @@ public class OrganizationController {
     }
 
     @PostMapping("/{id}/members")
-    public ResponseEntity<OrganizationDto> addMembers(
+    public ResponseEntity<List<OrganizationMemberDto>> addMembers(
             @PathVariable("id") UUID orgId,
             @RequestBody List<UUID> userIds
     ) {
-        Organization organization = userOrganizationService.addMembers(orgId, userIds);
+        List<UserOrganization> userOrganizations = userOrganizationService.addMembers(orgId, userIds);
 
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
+        return ResponseEntity.ok(userOrganizationMapper.toDtoList(userOrganizations));
     }
 
     @DeleteMapping("/{id}/members")
-    public ResponseEntity<OrganizationDto> removeMembers(
+    public ResponseEntity<String> removeMembers(
             @PathVariable("id") UUID orgId,
             @RequestBody List<UUID> userIds
     ) {
-        Organization organization = userOrganizationService.removeMembers(orgId, userIds);
+        userOrganizationService.deactivateMembers(orgId, userIds);
 
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
+        return ResponseEntity.ok("Members removed successfully");
     }
 
     @PutMapping("/{id}/members")
-    public ResponseEntity<OrganizationDto> updateMembers(
+    public ResponseEntity<List<OrganizationMemberDto>> updateMembers(
             @PathVariable("id") UUID orgId,
             @RequestBody BatchMemberOperationDto updateMembersDto
     ) {
-        Organization organization = userOrganizationService.updateMembers(orgId, updateMembersDto.getMembers(), updateMembersDto.getRoleId());
+        List<UserOrganization> userOrganizations = userOrganizationService.updateMembers(orgId, updateMembersDto.getMembers(), updateMembersDto.getRoleId());
 
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
+        return ResponseEntity.ok(userOrganizationMapper.toDtoList(userOrganizations));
     }
 }
