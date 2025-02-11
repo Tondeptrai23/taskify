@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Configuration
 @EnableJpaAuditing(dateTimeProviderRef = "dateTimeProvider")
-public class AuditConfig {
+public class JpaAuditConfig {
     @Bean
     public DateTimeProvider dateTimeProvider() {
         return () -> Optional.of(ZonedDateTime.now());

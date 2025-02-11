@@ -18,14 +18,14 @@ public class BaseCollectionResponse<T> {
     private int totalPages;
     private boolean isLast;
 
-    public static <T> BaseCollectionResponse<T> from(Page<T> page) {
-        return new BaseCollectionResponse<>(
-                page.getContent(),
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.isLast()
-        );
-    }
+//    public static <T> BaseCollectionResponse<T> from(Page<T> page) {
+//        return new BaseCollectionResponse<>(
+//                page.getContent(),
+//                page.getNumber(),
+//                page.getSize(),
+//                page.getTotalElements(),
+//                page.getTotalPages(),
+//                page.isLast()
+//        );
+//    }
 }
