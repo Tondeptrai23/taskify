@@ -2,12 +2,18 @@ package com.taskify.project.project.service;
 
 import com.taskify.project.common.exception.ResourceNotFoundException;
 import com.taskify.project.project.dto.CreateProjectDto;
+import com.taskify.project.project.dto.ProjectCollectionRequest;
 import com.taskify.project.project.entity.Project;
 import com.taskify.project.project.entity.ProjectStatus;
 import com.taskify.project.project.exception.ProjectNameTakenException;
 import com.taskify.project.project.exception.ProjectNotFoundException;
 import com.taskify.project.project.repository.ProjectRepository;
+import com.taskify.project.project.specification.ProjectSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,8 +28,19 @@ public class ProjectService {
         this._projectRepository = projectRepository;
     }
 
-    public List<Project> getProjects() {
-        return _projectRepository.findAll();
+    public Page<Project> getProjects(ProjectCollectionRequest filter) {
+        Pageable pageable = PageRequest.of(
+                filter.getPage(),
+                filter.getSize(),
+                Sort.by(
+                    filter.getSortDirection().equalsIgnoreCase("asc")
+                        ? Sort.Direction.ASC
+                        : Sort.Direction.DESC,
+                        filter.getSortBy()
+                )
+        );
+
+        return _projectRepository.findAll(ProjectSpecifications.withFilters(filter), pageable);
     }
 
     public Project getProject(UUID projectId) {

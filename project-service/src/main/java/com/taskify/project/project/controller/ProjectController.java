@@ -1,14 +1,16 @@
 package com.taskify.project.project.controller;
 
+import com.taskify.project.common.dto.BaseCollectionResponse;
+import com.taskify.project.project.dto.CreateProjectDto;
+import com.taskify.project.project.dto.ProjectCollectionRequest;
 import com.taskify.project.project.dto.ProjectDto;
+import com.taskify.project.project.entity.Project;
 import com.taskify.project.project.mapper.ProjectMapper;
 import com.taskify.project.project.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -26,12 +28,26 @@ public class ProjectController {
     }
 
     @GetMapping("/projects")
-    public ResponseEntity<List<ProjectDto>> getProjects() {
-        return ResponseEntity.ok(_projectMapper.toDtoList(_projectService.getProjects()));
+    public ResponseEntity<BaseCollectionResponse<ProjectDto>> getProjects(@ModelAttribute ProjectCollectionRequest filter) {
+        Page<Project> projectPages = _projectService.getProjects(filter);
+        Page<ProjectDto> projectDtos = projectPages.map(_projectMapper::toDto);
+
+        return ResponseEntity.ok(BaseCollectionResponse.from(projectDtos));
     }
 
     @GetMapping("/projects/{projectId}")
     public ResponseEntity<ProjectDto> getProject(@PathVariable UUID projectId) {
         return ResponseEntity.ok(_projectMapper.toDto(_projectService.getProject(projectId)));
+    }
+
+    @PutMapping("/projects/{projectId}")
+    public ResponseEntity<ProjectDto> updateProject(@PathVariable UUID projectId, @RequestBody CreateProjectDto projectDto) {
+        return ResponseEntity.ok(_projectMapper.toDto(_projectService.updateProject(projectId, projectDto)));
+    }
+
+    @DeleteMapping("/projects/{projectId}")
+    public ResponseEntity<String> deleteProject(@PathVariable UUID projectId) {
+        _projectService.deleteProject(projectId);
+        return ResponseEntity.ok("Project deleted successfully");
     }
 }
