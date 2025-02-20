@@ -29,13 +29,13 @@ Acts as a unified entry point for all client applications, handling:
 
 Each service is independently deployable, with its own database:
 
-| Service              | Responsibility                     | Database          | Rationale                                                                                                                                         |
-| -------------------- | ---------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Auth Service         | Authentication, JWT management     | PostgreSQL, Redis | PostgreSQL provides ACID compliance for critical auth data. Redis enables fast token blacklisting and session management.                         |
-| IAM Service          | Identity and access management     | Neo4j             | Graph database excels at modeling complex role-permission relationships and hierarchies with superior query performance for permission traversal. |
-| Organization Service | Org management, member invitations | PostgreSQL        | Relational data with foreign key constraints ensures data integrity for organization hierarchies and membership relationships.                    |
-| Project Service      | Project lifecycle management       | PostgreSQL        | Projects benefit from structured schema with transaction support for maintaining project hierarchy and relationships.                             |
-| Task Service         | Task creation and management       | MongoDB           | Document database provides flexibility for varied task structures, fields, and metadata while supporting high write throughput for task updates.  |
+| Service              | Responsibility                     | Database          
+| -------------------- | ---------------------------------- | ----------------- 
+| Auth Service         | Authentication, JWT management     | PostgreSQL, Redis 
+| IAM Service          | Identity and access management     | Neo4j            
+| Organization Service | Org management, member invitations | PostgreSQL       
+| Project Service      | Project lifecycle management       | PostgreSQL        
+| Task Service         | Task creation and management       | MongoDB           
 
 #### 4. Supporting Infrastructure
 
@@ -131,37 +131,38 @@ Detailed technical documentation is available in the `/docs` directory:
 ## Service Responsibilities
 
 ### Auth Service
-
--   Credential validation
--   JWT token generation and validation
--   Refresh token management
--   Token reuse detection
--   User management (temporary)
+- Credential validation
+- JWT token generation and validation
+- Refresh token management
+- Token reuse detection
+- **Database Choice**: PostgreSQL provides ACID compliance for critical auth data, while Redis enables fast orgs-context verification
 
 ### IAM Service
-
--   Role and permission management
--   Permission verification
--   Permission overrides handling
--   Access control enforcement
+- Role and permission management
+- Permission verification
+- Permission overrides handling
+- Access control enforcement
+- **Database Choice**: Neo4j graph database excels at modeling complex role-permission relationships and hierarchies with superior query performance for permission traversal
 
 ### Organization Service
-
--   Organization lifecycle management
--   Organization membership
--   Member invitation workflow
+- Organization lifecycle management
+- Organization membership
+- Member invitation workflow
+- Local user data management
+- **Database Choice**: PostgreSQL's relational model with foreign key constraints ensures data integrity for organization hierarchies and membership relationships
 
 ### Project Service
-
--   Project creation and management
--   Project metadata
+- Project creation and management
+- Project hierarchies
+- Project metadata
+- **Database Choice**: PostgreSQL provides structured schema with transaction support for maintaining project hierarchy and relationships
 
 ### Task Service
-
--   Task creation and tracking
--   Task assignments
--   Status updates
--   Task metadata
+- Task creation and tracking
+- Task assignments
+- Status updates
+- Task metadata
+- **Database Choice**: MongoDB's document database provides flexibility for varied task structures, fields, and metadata while supporting high write throughput for task updates
 
 ## Project Structure
 
