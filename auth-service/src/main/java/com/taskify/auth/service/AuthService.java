@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class AuthService {
     private final UserService _userService;
@@ -30,5 +32,16 @@ public class AuthService {
 
         String token = _jwtService.generateToken(user);
         return Pair.of(user, token);
+    }
+
+    public User verify(String token) {
+        var claims = _jwtService.getClaims(token);
+
+        User user = _userRepository.findUserById(UUID.fromString(claims.getSubject()));
+        if (user == null) {
+            throw new UnauthorizedException("Invalid token");
+        }
+
+        return user;
     }
 }

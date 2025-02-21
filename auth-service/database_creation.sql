@@ -3,21 +3,23 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users Table (with username and soft delete)
 CREATE TABLE users (
-   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-   email VARCHAR(255) NOT NULL,
-   username VARCHAR(255) NOT NULL,
-   password_hash VARCHAR(255) NOT NULL,
-   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   deleted_at TIMESTAMP WITH TIME ZONE,
-   CONSTRAINT users_email_unique UNIQUE (email),
-   CONSTRAINT users_username_unique UNIQUE (username)
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    system_role VARCHAR(50) NOT NULL DEFAULT 'USER',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP WITH TIME ZONE,
+    CONSTRAINT users_email_unique UNIQUE (email),
+    CONSTRAINT users_username_unique UNIQUE (username)
 );
 
 -- Add indexes for users
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_deleted_at ON users(deleted_at);
+CREATE INDEX idx_users_system_role ON users(system_role);
 
 -- Refresh Tokens Table
 CREATE TABLE refresh_tokens (
@@ -37,14 +39,22 @@ CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 
 -- Insert initial users (optional, usually created during first login)
-INSERT INTO users (id, email, username, password_hash, created_at, updated_at)
+INSERT INTO users (id, email, username, password_hash, system_role, created_at, updated_at)
 VALUES
-    ('11111111-1111-1111-1111-111111111111', 'admin@taskify.com', 'system_admin',
+    ('11111111-1111-1111-1111-111111111111',
+     'admin@taskify.com',
+     'system_admin',
      'admin123', -- Raw text password
-     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-    ('22222222-2222-2222-2222-222222222222', 'user@taskify.com', 'regular_user',
+     'SYSTEM_ADMIN',
+     CURRENT_TIMESTAMP,
+     CURRENT_TIMESTAMP),
+    ('22222222-2222-2222-2222-222222222222',
+     'user@taskify.com',
+     'regular_user',
      'user123', -- Raw text password
-     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+     'USER',
+     CURRENT_TIMESTAMP,
+     CURRENT_TIMESTAMP);
 
 -- Insert initial refresh tokens (optional, usually created during first login)
 INSERT INTO refresh_tokens (id, user_id, token, is_revoked, expires_at, created_at)

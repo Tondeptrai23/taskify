@@ -51,30 +51,7 @@ public class JwtService {
         }
     }
 
-    public String getUserIdFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(encodedSecret)
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.getSubject();
-    }
-
-    public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(encodedSecret)
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.get("email", String.class);
-    }
-
-    public String getRolesFromToken(String token) {
-        Claims claims = Jwts.parser()
-                .setSigningKey(encodedSecret)
-                .parseClaimsJws(token)
-                .getBody();
-
-        return claims.get("roles", String.class);
+    public Claims getClaims(String token) {
+        return Jwts.parser().setSigningKey(encodedSecret).parseClaimsJws(token).getBody();
     }
 }
