@@ -46,7 +46,4 @@ public class User {
 
     @Column(name = "deleted_at")
     private ZonedDateTime deletedAt;
-
-    @OneToMany(mappedBy = "user")
-    private Set<UserOrganization> userOrganizations;
 }

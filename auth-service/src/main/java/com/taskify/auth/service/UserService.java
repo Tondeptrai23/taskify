@@ -98,6 +98,20 @@ public class UserService {
         return user != null;
     }
 
+    public User authenticateUser(String email, String password) {
+        User user = _userRepository.findUserByEmail(email);
+        if (user == null) {
+            return null;
+        }
+
+        // TODO: Implement password hashing
+        if (!user.getPasswordHash().equals(password)) {
+            return null;
+        }
+
+        return user;
+    }
+
     public User createAdmin() {
         if (this.existsByEmail("admin@taskify.com")) {
             return null;
