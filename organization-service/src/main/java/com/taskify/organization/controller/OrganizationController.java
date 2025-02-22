@@ -3,21 +3,20 @@ package com.taskify.organization.controller;
 import com.taskify.organization.dto.common.BaseCollectionResponse;
 import com.taskify.organization.dto.organization.*;
 import com.taskify.organization.entity.Organization;
-import com.taskify.organization.mapper.MembershipMapper;
 import com.taskify.organization.mapper.OrganizationMapper;
-import com.taskify.organization.service.MembershipService;
 import com.taskify.organization.service.OrganizationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 // TODO: validate authorization
+@Slf4j
 @RestController
-@RequestMapping("/api/v1/organizations")
+@RequestMapping("/api/v1/orgs")
 public class OrganizationController {
     private final OrganizationService organizationService;
     private final OrganizationMapper organizationMapper;
@@ -25,7 +24,7 @@ public class OrganizationController {
     @Autowired
     public OrganizationController(
             OrganizationService organizationService,
-            OrganizationMapper organizationMapper,
+            OrganizationMapper organizationMapper
     ) {
         this.organizationService = organizationService;
         this.organizationMapper = organizationMapper;
@@ -33,8 +32,11 @@ public class OrganizationController {
 
     @GetMapping
     public ResponseEntity<BaseCollectionResponse<OrganizationDto>> findAll(
+            @RequestHeader("X-User-Id") UUID userId,
             @ModelAttribute OrganizationCollectionRequest filter
     ) {
+        log.info("User {} is fetching organizations", userId);
+        filter.setUserId(userId.toString());
         Page<Organization> organizations = organizationService.getAllOrganizations(filter);
         Page<OrganizationDto> organizationDtos = organizations.map(organizationMapper::toDto);
 

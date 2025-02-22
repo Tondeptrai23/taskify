@@ -10,6 +10,7 @@ import java.time.ZonedDateTime;
 @Getter
 @Setter
 public class OrganizationCollectionRequest extends BaseCollectionRequest {
+    private String userId;
     private String name;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

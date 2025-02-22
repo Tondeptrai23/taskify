@@ -6,10 +6,12 @@ import com.taskify.auth.dto.user.UserDto;
 import com.taskify.auth.entity.User;
 import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.service.AuthService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -31,10 +33,11 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse(response));
     }
 
-    @PostMapping("/me")
+    @GetMapping("/me")
     public ResponseEntity<UserDto> verify(
             @RequestHeader("Authorization") String token
     ){
+        log.info("Verifying token: {}", token);
         var response = _authService.verify(token);
         return ResponseEntity.ok(_userMapper.toDto(response));
     }

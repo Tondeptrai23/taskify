@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/organizations")
+@RequestMapping("/api/v1/orgs")
 public class MembershipController {
     private final MembershipService membershipService;
     private final MembershipMapper membershipMapper;

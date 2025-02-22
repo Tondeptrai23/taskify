@@ -13,7 +13,7 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface MembershipMapper {
     @Mapping(target = "userId", source = "user.id")
-    @Mapping(target = "userName", source = "user.name")
+    @Mapping(target = "username", source = "user.username")
     @Mapping(target = "email", source = "user.email")
     MembershipDto toDto(Membership membership);
 

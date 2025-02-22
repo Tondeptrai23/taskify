@@ -1,6 +1,6 @@
 package com.taskify.organization.exception;
 
-import com.taskify.user.dto.common.ErrorResponse;
+import com.taskify.organization.dto.common.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -35,7 +35,9 @@ public class AuthService {
     }
 
     public User verify(String token) {
-        var claims = _jwtService.getClaims(token);
+        var tokenParts = token.split(" ");
+
+        var claims = _jwtService.getClaims(tokenParts[1]);
 
         User user = _userRepository.findUserById(UUID.fromString(claims.getSubject()));
         if (user == null) {

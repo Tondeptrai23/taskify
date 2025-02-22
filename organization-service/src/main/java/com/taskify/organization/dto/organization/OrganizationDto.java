@@ -13,7 +13,6 @@ public class OrganizationDto {
     private String name;
     private String description;
     private UUID ownerId;
-    private OrganizationStatus status;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }
