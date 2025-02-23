@@ -1,11 +1,12 @@
 package com.taskify.auth.controller;
 
+import com.taskify.auth.dto.auth.AuthTokens;
 import com.taskify.auth.dto.auth.LoginRequest;
 import com.taskify.auth.dto.auth.LoginResponse;
-import com.taskify.auth.dto.user.UserDto;
-import com.taskify.auth.entity.User;
+import com.taskify.auth.dto.auth.RefreshRequest;
 import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,5 +32,13 @@ public class AuthController {
     ){
         var response = _authService.login(loginRequest.getUsername(), loginRequest.getPassword());
         return ResponseEntity.ok(new LoginResponse(response));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthTokens> refresh(
+             @RequestBody RefreshRequest req
+    ){
+        var response = _authService.refresh(req.getRefreshToken());
+        return ResponseEntity.ok(response);
     }
 }

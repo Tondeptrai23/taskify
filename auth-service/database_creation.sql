@@ -25,7 +25,7 @@ CREATE INDEX idx_users_system_role ON users(system_role);
 CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
-    token UUID NOT NULL,
+    token VARCHAR(255) NOT NULL,
     is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,

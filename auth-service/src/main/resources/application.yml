@@ -3,3 +3,8 @@ spring:
     name: auth-service
   config:
     import: optional:configserver:http://localhost:8888
+
+security:
+  refresh-token:
+    expiration: 86400000
+
