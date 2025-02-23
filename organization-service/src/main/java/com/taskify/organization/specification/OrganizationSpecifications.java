@@ -19,7 +19,7 @@ public class OrganizationSpecifications {
             if (id == null) {
                 return null;
             }
-            return criteriaBuilder.equal(root.get("id"), UUID.fromString(id));
+            return criteriaBuilder.equal(root.get("ownerId"), UUID.fromString(id));
         };
     }
 

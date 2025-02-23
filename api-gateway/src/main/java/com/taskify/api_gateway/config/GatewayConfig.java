@@ -28,10 +28,10 @@ public class GatewayConfig {
 
                 // Organization Service Routes (protected)
                 .route("organization-service", r -> r
-                        .path("/api/v1/orgs/**")
-                        .filters(f -> f
+                        .path("/api/v1/orgs", "/api/v1/orgs/", "/api/v1/orgs/**")
+                    .filters(f -> f
                                 .filter(_tokenTranslationFilter)
-                                .rewritePath("/api/v1/orgs/(?<segment>.*)", "/orgs/${segment}"))
+                                .rewritePath("/api/v1/(?<segment>.*)", "/${segment}"))
                         .uri("lb://organization-service"))
                 .build();
     }

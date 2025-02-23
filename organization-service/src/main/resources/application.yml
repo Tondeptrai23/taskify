@@ -3,3 +3,10 @@ spring:
     name: organization-service
   config:
     import: optional:configserver:http://localhost:8888
+
+  devtools:
+    restart:
+      enabled: true
+      additional-paths: src/main/java
+    livereload:
+      enabled: true

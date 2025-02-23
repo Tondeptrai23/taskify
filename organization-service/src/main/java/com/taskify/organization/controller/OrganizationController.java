@@ -30,12 +30,11 @@ public class OrganizationController {
         this.organizationMapper = organizationMapper;
     }
 
-    @GetMapping
+    @GetMapping({"/", ""})
     public ResponseEntity<BaseCollectionResponse<OrganizationDto>> findAll(
             @RequestHeader("X-User-Id") UUID userId,
             @ModelAttribute OrganizationCollectionRequest filter
     ) {
-        log.info("Finding all organizations for user {}", userId);
         filter.setUserId(userId.toString());
 
         Page<Organization> organizations = organizationService.getAllOrganizations(filter);
@@ -51,7 +50,7 @@ public class OrganizationController {
         return ResponseEntity.ok(organizationMapper.toDto(organization));
     }
 
-    @PostMapping
+    @PostMapping({"/", ""})
     public ResponseEntity<OrganizationDto> createOrganization(
             @RequestBody CreateOrganizationDto createOrganizationDto
     ) {
