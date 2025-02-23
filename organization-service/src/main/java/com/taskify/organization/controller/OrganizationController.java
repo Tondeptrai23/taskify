@@ -16,7 +16,7 @@ import java.util.UUID;
 // TODO: validate authorization
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/orgs")
+@RequestMapping("/orgs")
 public class OrganizationController {
     private final OrganizationService organizationService;
     private final OrganizationMapper organizationMapper;
@@ -35,8 +35,9 @@ public class OrganizationController {
             @RequestHeader("X-User-Id") UUID userId,
             @ModelAttribute OrganizationCollectionRequest filter
     ) {
-        log.info("User {} is fetching organizations", userId);
+        log.info("Finding all organizations for user {}", userId);
         filter.setUserId(userId.toString());
+
         Page<Organization> organizations = organizationService.getAllOrganizations(filter);
         Page<OrganizationDto> organizationDtos = organizations.map(organizationMapper::toDto);
 
@@ -72,7 +73,6 @@ public class OrganizationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteOrganization(@PathVariable("id") UUID id) {
         organizationService.deleteOrganization(id);
-
         return ResponseEntity.ok("Organization deleted successfully");
     }
 }

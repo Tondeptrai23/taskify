@@ -39,13 +39,11 @@ public class TokenTranslationFilter implements GatewayFilter {
         // Call Auth Service to verify token
         return webClientBuilder.build()
                 .get()
-                .uri("lb://auth-service/api/v1/auth/me")
+                .uri("lb://auth-service/internal/validate")
                 .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .retrieve()
                 .bodyToMono(TokenVerificationResponse.class)
                 .flatMap(response -> {
-                    log.info(response.toString());
-                    log.info("User {} is authenticated", response.getId());
                     // Create new request with X-User-Id header
                     ServerHttpRequest modifiedRequest = request.mutate()
                             .headers(headers -> {

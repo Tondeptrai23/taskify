@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/auth")
 public class AuthController {
     private final AuthService _authService;
     private final UserMapper _userMapper;
@@ -31,14 +31,5 @@ public class AuthController {
     ){
         var response = _authService.login(loginRequest.getUsername(), loginRequest.getPassword());
         return ResponseEntity.ok(new LoginResponse(response));
-    }
-
-    @GetMapping("/me")
-    public ResponseEntity<UserDto> verify(
-            @RequestHeader("Authorization") String token
-    ){
-        log.info("Verifying token: {}", token);
-        var response = _authService.verify(token);
-        return ResponseEntity.ok(_userMapper.toDto(response));
     }
 }

@@ -23,14 +23,7 @@ public class GatewayConfig {
                 .route("auth-service-public", r -> r
                         .path("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh")
                         .filters(f -> f
-                                .rewritePath("/api/v1/auth/(?<segment>.*)", "/${segment}"))
-                        .uri("lb://auth-service"))
-
-                // Get current user info endpoint
-                .route("auth-service-me", r -> r
-                        .path("/api/v1/auth/me")
-                        .filters(f -> f
-                                .rewritePath("/api/v1/auth/me", "/api/v1/auth/me"))
+                                .rewritePath("/api/v1/auth/(?<segment>.*)", "/auth/${segment}"))
                         .uri("lb://auth-service"))
 
                 // Organization Service Routes (protected)
@@ -38,7 +31,7 @@ public class GatewayConfig {
                         .path("/api/v1/orgs/**")
                         .filters(f -> f
                                 .filter(_tokenTranslationFilter)
-                                .rewritePath("/api/v1/orgs/(?<segment>.*)", "/${segment}"))
+                                .rewritePath("/api/v1/orgs/(?<segment>.*)", "/orgs/${segment}"))
                         .uri("lb://organization-service"))
                 .build();
     }
