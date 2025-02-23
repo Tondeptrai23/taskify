@@ -5,6 +5,7 @@ import com.taskify.auth.entity.RefreshToken;
 import com.taskify.auth.entity.User;
 import com.taskify.auth.exception.UnauthorizedException;
 import com.taskify.auth.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,7 @@ public class AuthService {
         return user;
     }
 
+    @Transactional
     public AuthTokens refresh(String token) {
         var hashedToken = _refreshTokenService.findTokenByBase64Token(token);
 

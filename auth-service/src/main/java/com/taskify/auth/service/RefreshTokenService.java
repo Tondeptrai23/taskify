@@ -59,6 +59,7 @@ public class RefreshTokenService {
         return base64Token;
     }
 
+    @Transactional
     public boolean verifyToken(String hashedToken) {
         RefreshToken refreshToken = _refreshTokenRepository.findByToken(hashedToken);
         if (refreshToken == null) {
@@ -66,6 +67,9 @@ public class RefreshTokenService {
         }
 
         if (refreshToken.isRevoked()) {
+            // Token reuse detected
+            _refreshTokenRepository.revokeAllTokensOfUser(refreshToken.getUserId());
+
             throw new UnauthorizedException("Token has been revoked");
         }
 

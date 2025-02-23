@@ -18,4 +18,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
         nativeQuery = true
     )
     void revokeToken(String token);
+
+    @Modifying
+    @Query(
+        value = "UPDATE refresh_tokens SET is_revoked = true WHERE user_id = ?1",
+        nativeQuery = true
+    )
+    void revokeAllTokensOfUser(UUID userId);
 }
