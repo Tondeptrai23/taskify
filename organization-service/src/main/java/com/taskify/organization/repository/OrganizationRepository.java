@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, UUID>,
         JpaSpecificationExecutor<Organization> {
+    boolean existsByIdAndOwnerId(UUID id, UUID ownerId);
 }

@@ -13,6 +13,7 @@ import com.taskify.organization.repository.LocalUserRepository;
 import com.taskify.organization.repository.MembershipRepository;
 import com.taskify.organization.repository.OrganizationRepository;
 import com.taskify.organization.specification.OrganizationSpecifications;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,9 +22,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class OrganizationService {
     private final OrganizationRepository organizationRepository;
@@ -74,6 +75,7 @@ public class OrganizationService {
         organization = organizationRepository.save(organization);
 
         // Add owner as a member
+        // TODO: Add default role for new organization
         Membership membership = new Membership(organization, owner);
         membershipRepository.save(membership);
 
@@ -95,9 +97,14 @@ public class OrganizationService {
 
     @Transactional
     public boolean deleteOrganization(UUID id) {
-        Organization organization = this.getOrganizationById(id);
-
         organizationRepository.deleteById(id);
         return true;
+    }
+
+    public boolean isOwner(UUID id, UUID ownerId) {
+        Organization organization = organizationRepository.findById(id)
+                .orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
+
+        return organization.getOwnerId().equals(ownerId);
     }
 }

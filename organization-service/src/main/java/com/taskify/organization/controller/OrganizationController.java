@@ -9,11 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-// TODO: validate authorization
+
 @Slf4j
 @RestController
 @RequestMapping("/orgs")
@@ -43,25 +44,11 @@ public class OrganizationController {
         return ResponseEntity.ok(BaseCollectionResponse.from(organizationDtos));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<OrganizationDto> getOrganizationById(@PathVariable("id") UUID id) {
-        Organization organization = organizationService.getOrganizationById(id);
-
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
-    }
-
-    @PostMapping({"/", ""})
-    public ResponseEntity<OrganizationDto> createOrganization(
-            @RequestBody CreateOrganizationDto createOrganizationDto
-    ) {
-        // TODO: get current user id from security context
-        Organization organization = organizationService.createOrganization(createOrganizationDto, null);
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
-    }
-
+    @PreAuthorize(value = "@organizationService.isOwner(#id, #userId)")
     @PutMapping("/{id}")
     public ResponseEntity<OrganizationDto> updateOrganization(
             @PathVariable("id") UUID id,
+            @RequestHeader("X-User-Id") String userId,
             @RequestBody UpdateOrganizationDto updateOrganizationDto
     ) {
         Organization organization = organizationService.updateOrganization(id, updateOrganizationDto);
@@ -69,9 +56,30 @@ public class OrganizationController {
         return ResponseEntity.ok(organizationMapper.toDto(organization));
     }
 
+    @PreAuthorize("@organizationService.isOwner(#id, #userId)")
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteOrganization(@PathVariable("id") UUID id) {
+    public ResponseEntity<String> deleteOrganization(
+            @PathVariable("id") UUID id,
+            @RequestHeader("X-User-Id") String userId) {
         organizationService.deleteOrganization(id);
         return ResponseEntity.ok("Organization deleted successfully");
     }
+
+    @PostMapping({"/", ""})
+    public ResponseEntity<OrganizationDto> createOrganization(
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestBody CreateOrganizationDto createOrganizationDto
+    ) {
+        Organization organization = organizationService.createOrganization(createOrganizationDto, userId);
+        return ResponseEntity.ok(organizationMapper.toDto(organization));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrganizationDto> getOrganizationById(
+            @PathVariable("id") UUID id) {
+        Organization organization = organizationService.getOrganizationById(id);
+
+        return ResponseEntity.ok(organizationMapper.toDto(organization));
+    }
 }
+
