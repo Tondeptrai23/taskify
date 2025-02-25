@@ -1,7 +1,7 @@
-package com.taskify.api_gateway.filter;
+package com.taskify.apigateway.filter;
 
-import com.taskify.api_gateway.data.TokenVerificationResponse;
-import lombok.RequiredArgsConstructor;
+import com.taskify.apigateway.data.TokenVerificationResponse;
+import com.taskify.apigateway.exception.ApiGatewayException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -32,8 +32,14 @@ public class TokenTranslationFilter implements GatewayFilter {
         ServerHttpRequest request = exchange.getRequest();
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return onError(exchange, HttpStatus.UNAUTHORIZED);
+        if (authHeader == null) {
+            log.error("Authorization header is missing");
+            throw new ApiGatewayException("Authorization header is missing", HttpStatus.UNAUTHORIZED);
+        }
+
+        if (!authHeader.startsWith("Bearer ")) {
+            log.error("Authorization header is not a Bearer token");
+            throw new ApiGatewayException("Authorization header is not a Bearer token", HttpStatus.UNAUTHORIZED);
         }
 
         // Call Auth Service to verify token
@@ -57,15 +63,9 @@ public class TokenTranslationFilter implements GatewayFilter {
                 .onErrorResume(WebClientResponseException.class, e -> {
                     log.error("Error verifying token", e);
                     if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                        return onError(exchange, HttpStatus.UNAUTHORIZED);
+                        throw new ApiGatewayException(e.getMessage(), HttpStatus.UNAUTHORIZED);
                     }
-                    return onError(exchange, HttpStatus.INTERNAL_SERVER_ERROR);
+                    throw new ApiGatewayException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
                 });
-    }
-
-    private Mono<Void> onError(ServerWebExchange exchange, HttpStatus status) {
-        ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(status);
-        return response.setComplete();
     }
 }

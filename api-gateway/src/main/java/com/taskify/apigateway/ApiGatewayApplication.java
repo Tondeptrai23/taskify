@@ -1,4 +1,4 @@
-package com.taskify.api_gateway;
+package com.taskify.apigateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

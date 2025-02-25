@@ -1,7 +1,7 @@
-package com.taskify.api_gateway.config;
+package com.taskify.apigateway.config;
 
-import com.taskify.api_gateway.filter.OrgContextValidationFilter;
-import com.taskify.api_gateway.filter.TokenTranslationFilter;
+import com.taskify.apigateway.filter.OrgContextValidationFilter;
+import com.taskify.apigateway.filter.TokenTranslationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;

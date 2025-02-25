@@ -1,4 +1,4 @@
-package com.taskify.api_gateway.data;
+package com.taskify.apigateway.data;
 
 import lombok.Getter;
 import lombok.Setter;

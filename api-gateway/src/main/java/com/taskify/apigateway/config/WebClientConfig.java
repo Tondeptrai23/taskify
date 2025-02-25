@@ -1,4 +1,4 @@
-package com.taskify.api_gateway.config;
+package com.taskify.apigateway.config;
 
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;

@@ -1,5 +1,6 @@
-package com.taskify.api_gateway.filter;
+package com.taskify.apigateway.filter;
 
+import com.taskify.apigateway.exception.ApiGatewayException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -19,8 +20,7 @@ public class OrgContextValidationFilter implements GatewayFilter {
         // If X-Organization-Context header is not present, return 400 Bad Request
         if (orgContextHeader == null) {
             log.error("X-Organization-Context header is missing");
-            exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
-            return exchange.getResponse().setComplete();
+            throw new ApiGatewayException("X-Organization-Context header is missing", HttpStatus.BAD_REQUEST);
         }
 
         // If X-Organization-Context header doesn't have UUID format, return 400 Bad Request
@@ -28,8 +28,7 @@ public class OrgContextValidationFilter implements GatewayFilter {
             UUID.fromString(orgContextHeader.get(0));
         } catch (IllegalArgumentException e) {
             log.error("X-Organization-Context header is not a valid UUID");
-            exchange.getResponse().setStatusCode(HttpStatus.BAD_REQUEST);
-            return exchange.getResponse().setComplete();
+            throw new ApiGatewayException("X-Organization-Context header is not a valid UUID", HttpStatus.BAD_REQUEST);
         }
 
         return chain.filter(exchange);
