@@ -31,4 +31,37 @@ public class RoleController {
         var roles = _roleService.getRoles(organizationId);
         return ResponseEntity.ok(_roleMapper.toDtoList(roles));
     }
+
+    @PostMapping({"/", ""})
+    public ResponseEntity<RoleDto> createRole(
+            @RequestBody CreateRoleDto roleDto,
+            @RequestHeader("X-Organization-Context") UUID organizationId) {
+        var role = _roleService.createRole(roleDto, organizationId);
+        return ResponseEntity.ok(_roleMapper.toDto(role));
+    }
+
+    @GetMapping("/{roleId}")
+    public ResponseEntity<RoleDto> getRole(
+            @PathVariable UUID roleId,
+            @RequestHeader("X-Organization-Context") UUID organizationId) {
+        var role = _roleService.getRole(roleId, organizationId);
+        return ResponseEntity.ok(_roleMapper.toDto(role));
+    }
+
+    @PutMapping("/{roleId}")
+    public ResponseEntity<RoleDto> updateRole(
+            @PathVariable UUID roleId,
+            @RequestBody CreateRoleDto roleDto,
+            @RequestHeader("X-Organization-Context") UUID organizationId) {
+        var role = _roleService.updateRole(roleId, roleDto, organizationId);
+        return ResponseEntity.ok(_roleMapper.toDto(role));
+    }
+
+    @DeleteMapping("/{roleId}")
+    public ResponseEntity<Void> deleteRole(
+            @PathVariable UUID roleId,
+            @RequestHeader("X-Organization-Context") UUID organizationId) {
+        _roleService.deleteRole(roleId, organizationId);
+        return ResponseEntity.noContent().build();
+    }
 }
