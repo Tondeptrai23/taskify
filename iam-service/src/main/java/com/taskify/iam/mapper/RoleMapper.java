@@ -1,6 +1,7 @@
 package com.taskify.iam.mapper;
 
 
+import com.taskify.iam.dto.role.CreateRoleDto;
 import com.taskify.iam.dto.role.RoleDto;
 import com.taskify.iam.entity.Permission;
 import com.taskify.iam.entity.Role;
@@ -15,8 +16,8 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface RoleMapper {
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "permissions", source = "permissions", qualifiedByName = "permissionsToStringList")
+    @Mapping(target = "organizationId", source = "organization.id")
     @Named("toDto")
     RoleDto toDto(Role role);
 
@@ -32,4 +33,9 @@ public interface RoleMapper {
                 .map(Permission::getName)
                 .collect(Collectors.toList());
     }
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "permissions", source = "permissions", ignore = true)
+    @Named("toEntity")
+    Role toEntity(CreateRoleDto role);
 }

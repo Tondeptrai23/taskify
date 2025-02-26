@@ -1,5 +1,6 @@
 package com.taskify.iam.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -21,7 +22,6 @@ public class Role {
     private String name;
     private String description;
     private boolean isDefault;
-    private UUID organizationId;
 
     @CreatedDate
     private ZonedDateTime createdAt;
@@ -31,4 +31,7 @@ public class Role {
 
     @Relationship(type = "HAS_PERMISSION", direction = Relationship.Direction.OUTGOING)
     private Set<Permission> permissions = new HashSet<>();
+
+    @Relationship(type = "HAS_ROLE", direction = Relationship.Direction.INCOMING)
+    private LocalOrganization organization;
 }

@@ -10,7 +10,8 @@ import java.util.UUID;
 
 @Repository
 public interface RoleRepository extends Neo4jRepository<Role, UUID> {
-    @Query("MATCH (r:Role)-[h:HAS_PERMISSION]->(p:Permission) " +
-            "RETURN r,h,p")
-    List<Role> findAllWithPermissions();
+    @Query("MATCH (o:Organization)-[hr:HAS_ROLE]->(r:Role)-[h:HAS_PERMISSION]->(p:Permission) " +
+            "WHERE o.id = $orgId " +
+            "RETURN r, o, hr, collect(h), collect(p)")
+    List<Role> findAllWithPermissionsInOrg(String orgId);
 }
