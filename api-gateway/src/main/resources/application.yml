@@ -9,6 +9,8 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
+      refresh:
+        enabled: true
     loadbalancer:
       ribbon:
         enabled: false
@@ -17,6 +19,9 @@ eureka:
   client:
     registerWithEureka: true
     fetchRegistry: true
-    registry-fetch-interval-seconds: 5
+    registry-fetch-interval-seconds: 2    # Poll registry every 5 seconds
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    lease-renewal-interval-in-seconds: 2  # Send heartbeats every 5 seconds
+    lease-expiration-duration-in-seconds: 4  # Consider service down after 10 seconds
