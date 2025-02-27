@@ -3,11 +3,11 @@ package com.taskify.iam.service;
 import com.taskify.common.error.OrganizationNotFoundException;
 import com.taskify.common.error.RoleNotFoundException;
 import com.taskify.iam.dto.role.CreateRoleDto;
-import com.taskify.iam.entity.Role;
+import com.taskify.iam.entity.OrganizationRole;
 import com.taskify.iam.exception.DefaultRoleDeletionException;
 import com.taskify.iam.mapper.RoleMapper;
 import com.taskify.iam.repository.OrganizationRepository;
-import com.taskify.iam.repository.RoleRepository;
+import com.taskify.iam.repository.OrganizationRoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,14 +20,14 @@ import java.util.UUID;
 @Slf4j
 @Service
 public class RoleService {
-    private final RoleRepository _roleRepository;
+    private final OrganizationRoleRepository _roleRepository;
     private final OrganizationRepository _organizationRepository;
     private final RoleMapper _roleMapper;
 
     private final PermissionPrerequisiteValidator _permissionCreationValidator;
 
     @Autowired
-    public RoleService(RoleRepository roleRepository,
+    public RoleService(OrganizationRoleRepository roleRepository,
                        PermissionPrerequisiteValidator permissionCreationValidator,
                        OrganizationRepository organizationRepository,
                        RoleMapper roleMapper) {
@@ -37,12 +37,12 @@ public class RoleService {
         _roleMapper = roleMapper;
     }
 
-    public Role getRole(UUID roleId, UUID organizationId) {
+    public OrganizationRole getRole(UUID roleId, UUID organizationId) {
         return _roleRepository.findRoleByIdAndOrgIdWithPermissions(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
     }
 
-    public List<Role> getRoles(UUID organizationId) {
+    public List<OrganizationRole> getRoles(UUID organizationId) {
         var roles = _roleRepository.findAllWithPermissionsInOrg(organizationId.toString());
 
         log.info("Roles: {}", roles);
@@ -51,7 +51,7 @@ public class RoleService {
     }
 
     @Transactional
-    public Role createRole(CreateRoleDto role, UUID organizationId) {
+    public OrganizationRole createRole(CreateRoleDto role, UUID organizationId) {
         var newRole = _roleMapper.toEntity(role);
         var createdRole = _roleRepository.save(newRole);
 
@@ -69,7 +69,7 @@ public class RoleService {
     }
 
     @Transactional
-    public Role updateRole(UUID roleId, CreateRoleDto role, UUID organizationId) {
+    public OrganizationRole updateRole(UUID roleId, CreateRoleDto role, UUID organizationId) {
         var existingRole = _roleRepository.findRoleByIdAndOrgId(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 

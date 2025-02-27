@@ -1,6 +1,5 @@
 package com.taskify.iam.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -14,9 +13,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Node("Role")
+@Node("OrganizationRole")
 @Data
-public class Role {
+public class OrganizationRole {
     @Id
     @GeneratedValue(GeneratedValue.UUIDGenerator.class)
     private UUID id;

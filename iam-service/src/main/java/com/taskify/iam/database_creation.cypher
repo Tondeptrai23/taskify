@@ -30,6 +30,32 @@ CREATE (user:User {
   updatedAt: datetime()
 });
 
+// Create Sample Projects with meaningful names
+CREATE (webProject:Project {
+  id: '88888888-8888-8888-8888-888888888888',
+  name: 'Website Redesign',
+  description: 'Complete overhaul of company website with new branding',
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+CREATE (mobileProject:Project {
+  id: '77777777-7777-7777-7777-777777777777',
+  name: 'Mobile App Development',
+  description: 'New iOS and Android app for customer engagement',
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+// Connect Projects to Organization
+MATCH (p:Project {id: '88888888-8888-8888-8888-888888888888'})
+MATCH (o:Organization {id: '33333333-3333-3333-3333-333333333333'})
+CREATE (p)-[:BELONGS_TO]->(o);
+
+MATCH (p:Project {id: '77777777-7777-7777-7777-777777777777'})
+MATCH (o:Organization {id: '33333333-3333-3333-3333-333333333333'})
+CREATE (p)-[:BELONGS_TO]->(o);
+
 // Create Permission Groups with static IDs
 CREATE (projectPerms:PermissionGroup {
   id: 1,
@@ -56,13 +82,12 @@ CREATE (memberPerms:PermissionGroup {
 });
 
 CREATE (rolePerms:PermissionGroup {
-  id: 5,
+  id: 4,
   name: 'Role Management',
-  description: 'Permissions related to role management',
+  description: 'Permissions related to organizationRole management',
   createdAt: datetime(),
   updatedAt: datetime()
 });
-
 
 // Create Base Permissions with static IDs and prerequisites
 // Project Permissions (1000-1999 range)
@@ -161,7 +186,7 @@ CREATE (inviteMember:Permission {
 CREATE (updateMemberRole:Permission {
   id: 3003,
   name: 'UPDATE_MEMBER_ROLE',
-  description: 'Ability to update member roles',
+  description: 'Ability to update member organizationRoles',
   prerequisites: ['VIEW_MEMBER'],
   createdAt: datetime(),
   updatedAt: datetime()
@@ -176,17 +201,18 @@ CREATE (removeMember:Permission {
   updatedAt: datetime()
 });
 
+// Role Management Permissions (4000-4999 range)
 CREATE (manageRole:Permission {
-  id: 5001,
+  id: 4001,
   name: 'MANAGE_ROLE',
-  description: 'Ability to create, update, and delete roles',
+  description: 'Ability to create, update, and delete organizationRoles',
   prerequisites: ['VIEW_MEMBER'],
   createdAt: datetime(),
   updatedAt: datetime()
 });
 
-// Create Default Roles
-CREATE (adminRole:Role {
+// Create Organization Roles
+CREATE (orgAdminRole:OrganizationRole {
   id: '55555555-5555-5555-5555-555555555555',
   name: 'Admin',
   description: 'Organization administrator with full access',
@@ -195,8 +221,8 @@ CREATE (adminRole:Role {
   updatedAt: datetime()
 });
 
-CREATE (pmRole:Role {
-  id: '77777777-7777-7777-7777-777777777777',
+CREATE (orgPMRole:OrganizationRole {
+  id: '66666666-6666-6666-6666-666666666666',
   name: 'Project Manager',
   description: 'Can manage projects and team members',
   isDefault: false,
@@ -204,28 +230,67 @@ CREATE (pmRole:Role {
   updatedAt: datetime()
 });
 
-CREATE (devRole:Role {
-  id: '66666666-6666-6666-6666-666666666666',
+CREATE (orgDevRole:OrganizationRole {
+  id: '77777777-7777-7777-7777-777777777777',
   name: 'Developer',
   description: 'Can work on assigned tasks and view projects',
-  isDefault: true,  // This is the default role for new members
+  isDefault: true,  // This is the default organizationRole for new members
   createdAt: datetime(),
   updatedAt: datetime()
 });
 
-// Create Sample Resources (Projects/Tasks)
-CREATE (project1:Resource {
-  id: '88888888-8888-8888-8888-888888888888',
-  type: 'PROJECT',
-  name: 'Sample Project 1',
+// Create Project Roles for Website Redesign project
+CREATE (webProjectLead:ProjectRole {
+  id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+  name: 'Web Design Lead',
+  description: 'Lead for website redesign project with design authority',
+  isDefault: false,
   createdAt: datetime(),
   updatedAt: datetime()
 });
 
-CREATE (task1:Resource {
-  id: '99999999-9999-9999-9999-999999999999',
-  type: 'TASK',
-  name: 'Sample Task 1',
+CREATE (webDesigner:ProjectRole {
+  id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+  name: 'UI/UX Designer',
+  description: 'Designer responsible for user interface and experience',
+  isDefault: true,  // Default organizationRole for project members
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+CREATE (webContentEditor:ProjectRole {
+  id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+  name: 'Content Editor',
+  description: 'Responsible for website content and copy',
+  isDefault: false,
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+// Create Project Roles for Mobile App Development project
+CREATE (mobileProjectLead:ProjectRole {
+  id: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+  name: 'Mobile Development Lead',
+  description: 'Lead for mobile app development with technical oversight',
+  isDefault: false,
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+CREATE (mobileDeveloper:ProjectRole {
+  id: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+  name: 'Mobile Developer',
+  description: 'Developer working on mobile app code',
+  isDefault: true,  // Default organizationRole for project members
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+CREATE (mobileQA:ProjectRole {
+  id: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+  name: 'QA Tester',
+  description: 'Responsible for testing mobile app functionality',
+  isDefault: false,
   createdAt: datetime(),
   updatedAt: datetime()
 });
@@ -247,17 +312,18 @@ MATCH (p:Permission)
 CREATE (pg)-[:CONTAINS]->(p);
 
 MATCH (pg:PermissionGroup {name: 'Role Management'})
-MATCH (p:Permission {name: 'MANAGE_ROLE'})
+MATCH (p:Permission)
+  WHERE p.name IN ['MANAGE_ROLE']
 CREATE (pg)-[:CONTAINS]->(p);
 
-// Set up Role-Permission relationships
+// Set up Organization Role-Permission relationships
 // Admin Role - gets all permissions
-MATCH (r:Role {name: 'Admin'})
+MATCH (r:OrganizationRole {name: 'Admin'})
 MATCH (p:Permission)
 CREATE (r)-[:HAS_PERMISSION]->(p);
 
 // Project Manager Role
-MATCH (r:Role {name: 'Project Manager'})
+MATCH (r:OrganizationRole {name: 'Project Manager'})
 MATCH (p:Permission)
   WHERE p.name IN [
     'CREATE_PROJECT', 'UPDATE_PROJECT', 'VIEW_PROJECT',
@@ -268,7 +334,7 @@ MATCH (p:Permission)
 CREATE (r)-[:HAS_PERMISSION]->(p);
 
 // Developer Role
-MATCH (r:Role {name: 'Developer'})
+MATCH (r:OrganizationRole {name: 'Developer'})
 MATCH (p:Permission)
   WHERE p.name IN [
     'VIEW_PROJECT',
@@ -277,40 +343,147 @@ MATCH (p:Permission)
   ]
 CREATE (r)-[:HAS_PERMISSION]->(p);
 
-// Connect Organization with Roles
+// Set up Project Role-Permission relationships for Website Redesign project
+// Web Design Lead Role
+MATCH (r:ProjectRole {name: 'Web Design Lead'})
+MATCH (p:Permission)
+  WHERE p.name IN [
+    'UPDATE_PROJECT', 'VIEW_PROJECT',
+    'CREATE_TASK', 'UPDATE_TASK_STATUS', 'DELETE_TASK', 'VIEW_TASK',
+    'INVITE_MEMBER', 'VIEW_MEMBER'
+  ]
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+// UI/UX Designer Role
+MATCH (r:ProjectRole {name: 'UI/UX Designer'})
+MATCH (p:Permission)
+  WHERE p.name IN [
+    'VIEW_PROJECT',
+    'CREATE_TASK', 'UPDATE_TASK_STATUS', 'VIEW_TASK',
+    'VIEW_MEMBER'
+  ]
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+// Content Editor Role
+MATCH (r:ProjectRole {name: 'Content Editor'})
+MATCH (p:Permission)
+  WHERE p.name IN [
+    'VIEW_PROJECT',
+    'VIEW_TASK', 'UPDATE_TASK_STATUS',
+    'VIEW_MEMBER'
+  ]
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+// Set up Project Role-Permission relationships for Mobile App Development project
+// Mobile Development Lead Role
+MATCH (r:ProjectRole {name: 'Mobile Development Lead'})
+MATCH (p:Permission)
+  WHERE p.name IN [
+    'UPDATE_PROJECT', 'VIEW_PROJECT',
+    'CREATE_TASK', 'UPDATE_TASK_STATUS', 'DELETE_TASK', 'VIEW_TASK',
+    'INVITE_MEMBER', 'VIEW_MEMBER'
+  ]
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+// Mobile Developer Role
+MATCH (r:ProjectRole {name: 'Mobile Developer'})
+MATCH (p:Permission)
+  WHERE p.name IN [
+    'VIEW_PROJECT',
+    'CREATE_TASK', 'UPDATE_TASK_STATUS', 'VIEW_TASK',
+    'VIEW_MEMBER'
+  ]
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+// QA Tester Role
+MATCH (r:ProjectRole {name: 'QA Tester'})
+MATCH (p:Permission)
+  WHERE p.name IN [
+    'VIEW_PROJECT',
+    'CREATE_TASK', 'UPDATE_TASK_STATUS', 'VIEW_TASK',
+    'VIEW_MEMBER'
+  ]
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+// Connect Organizations with Organization Roles
 MATCH (o:Organization {id: '33333333-3333-3333-3333-333333333333'})
-MATCH (r:Role)
+MATCH (r:OrganizationRole)
 CREATE (o)-[:HAS_ROLE]->(r);
 
-// Connect Users with Roles in Organization context
+// Connect Website Redesign Project with its specific Project Roles
+MATCH (p:Project {id: '88888888-8888-8888-8888-888888888888'})
+MATCH (r:ProjectRole)
+  WHERE r.name IN ['Web Design Lead', 'UI/UX Designer', 'Content Editor']
+CREATE (p)-[:HAS_ROLE]->(r);
+
+// Connect Mobile App Development Project with its specific Project Roles
+MATCH (p:Project {id: '77777777-7777-7777-7777-777777777777'})
+MATCH (r:ProjectRole)
+  WHERE r.name IN ['Mobile Development Lead', 'Mobile Developer', 'QA Tester']
+CREATE (p)-[:HAS_ROLE]->(r);
+
+// Connect Users with Organization Roles
 MATCH (u:User {username: 'system_admin'})
-MATCH (r:Role {name: 'Admin'})
-MATCH (o:Organization {id: '33333333-3333-3333-3333-333333333333'})
-CREATE (u)-[:HAS_ROLE_IN {
-  organizationId: o.id,
+MATCH (r:OrganizationRole {name: 'Admin'})
+CREATE (u)-[:HAS_ORG_ROLE {
+  organizationId: '33333333-3333-3333-3333-333333333333',
   grantedAt: datetime(),
   grantedBy: 'SYSTEM'
 }]->(r);
 
 MATCH (u:User {username: 'regular_user'})
-MATCH (r:Role {name: 'Developer'})
-MATCH (o:Organization {id: '33333333-3333-3333-3333-333333333333'})
-CREATE (u)-[:HAS_ROLE_IN {
-  organizationId: o.id,
+MATCH (r:OrganizationRole {name: 'Developer'})
+CREATE (u)-[:HAS_ORG_ROLE {
+  organizationId: '33333333-3333-3333-3333-333333333333',
   grantedAt: datetime(),
   grantedBy: 'SYSTEM'
 }]->(r);
 
-// Connect Resources to Organization
-MATCH (o:Organization {id: '33333333-3333-3333-3333-333333333333'})
-MATCH (r:Resource)
-CREATE (r)-[:BELONGS_TO]->(o);
+// Connect Users with Project Roles for Website Redesign project
+MATCH (u:User {username: 'system_admin'})
+MATCH (r:ProjectRole {name: 'Web Design Lead'})
+CREATE (u)-[:HAS_PROJECT_ROLE {
+  projectId: '88888888-8888-8888-8888-888888888888',
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
+
+MATCH (u:User {username: 'regular_user'})
+MATCH (r:ProjectRole {name: 'UI/UX Designer'})
+CREATE (u)-[:HAS_PROJECT_ROLE {
+  projectId: '88888888-8888-8888-8888-888888888888',
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
+
+// Connect Users with Project Roles for Mobile App Development project
+MATCH (u:User {username: 'system_admin'})
+MATCH (r:ProjectRole {name: 'Mobile Development Lead'})
+CREATE (u)-[:HAS_PROJECT_ROLE {
+  projectId: '77777777-7777-7777-7777-777777777777',
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
+
+MATCH (u:User {username: 'regular_user'})
+MATCH (r:ProjectRole {name: 'Mobile Developer'})
+CREATE (u)-[:HAS_PROJECT_ROLE {
+  projectId: '77777777-7777-7777-7777-777777777777',
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
 
 // Create indices for performance
 CREATE INDEX user_id_index IF NOT EXISTS FOR (u:User) ON (u.id);
-CREATE INDEX role_id_index IF NOT EXISTS FOR (r:Role) ON (r.id);
-CREATE INDEX role_name_index IF NOT EXISTS FOR (r:Role) ON (r.name);
+CREATE INDEX organization_role_id_index IF NOT EXISTS FOR (r:OrganizationRole) ON (r.id);
+CREATE INDEX organization_role_name_index IF NOT EXISTS FOR (r:OrganizationRole) ON (r.name);
+CREATE INDEX project_role_id_index IF NOT EXISTS FOR (r:ProjectRole) ON (r.id);
+CREATE INDEX project_role_name_index IF NOT EXISTS FOR (r:ProjectRole) ON (r.name);
 CREATE INDEX permission_id_index IF NOT EXISTS FOR (p:Permission) ON (p.id);
 CREATE INDEX permission_name_index IF NOT EXISTS FOR (p:Permission) ON (p.name);
 CREATE INDEX organization_id_index IF NOT EXISTS FOR (o:Organization) ON (o.id);
-CREATE INDEX resource_id_index IF NOT EXISTS FOR (r:Resource) ON (r.id);
+CREATE INDEX project_id_index IF NOT EXISTS FOR (p:Project) ON (p.id);

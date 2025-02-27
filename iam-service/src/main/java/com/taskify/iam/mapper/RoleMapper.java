@@ -4,7 +4,7 @@ package com.taskify.iam.mapper;
 import com.taskify.iam.dto.role.CreateRoleDto;
 import com.taskify.iam.dto.role.RoleDto;
 import com.taskify.iam.entity.Permission;
-import com.taskify.iam.entity.Role;
+import com.taskify.iam.entity.OrganizationRole;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,10 +19,10 @@ public interface RoleMapper {
     @Mapping(target = "permissions", source = "permissions", qualifiedByName = "permissionsToStringList")
     @Mapping(target = "organizationId", source = "organization.id")
     @Named("toDto")
-    RoleDto toDto(Role role);
+    RoleDto toDto(OrganizationRole organizationRole);
 
     @IterableMapping(qualifiedByName = "toDto")
-    List<RoleDto> toDtoList(List<Role> roles);
+    List<RoleDto> toDtoList(List<OrganizationRole> organizationRoles);
 
     @Named("permissionsToStringList")
     default List<String> permissionsToStringList(Set<Permission> permissions) {
@@ -37,5 +37,5 @@ public interface RoleMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "permissions", source = "permissions", ignore = true)
     @Named("toEntity")
-    Role toEntity(CreateRoleDto role);
+    OrganizationRole toEntity(CreateRoleDto role);
 }
