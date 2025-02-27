@@ -2,7 +2,8 @@ package com.taskify.iam.service;
 
 import com.taskify.iam.dto.role.CreateRoleDto;
 import com.taskify.iam.entity.Role;
-import com.taskify.iam.exception.ConflictException;
+import com.taskify.common.error.ConflictException;
+import com.taskify.iam.exception.DefaultRoleDeletionException;
 import com.taskify.iam.exception.ResourceNotFoundException;
 import com.taskify.iam.mapper.RoleMapper;
 import com.taskify.iam.repository.OrganizationRepository;
@@ -90,7 +91,7 @@ public class RoleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found", "ROLE_NOT_FOUND"));
 
         if (role.isDefault()){
-            throw new ConflictException("Cannot delete default role", "DEFAULT_ROLE_DELETION");
+            throw new DefaultRoleDeletionException();
         }
 
         _roleRepository.delete(role);

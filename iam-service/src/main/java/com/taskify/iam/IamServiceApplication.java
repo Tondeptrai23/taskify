@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
-@SpringBootApplication(exclude = {SecurityAutoConfiguration.class})
+@SpringBootApplication(exclude = {SecurityAutoConfiguration.class}, scanBasePackages = {"com.taskify.iam", "com.taskify.common"})
 @EnableDiscoveryClient
 public class IamServiceApplication {
 

@@ -1,14 +1,9 @@
 package com.taskify.iam.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
-    protected String errorCode;
+import com.taskify.common.error.BusinessException;
 
+public class ResourceNotFoundException extends BusinessException {
     public ResourceNotFoundException(String message, String errorCode) {
-        super(message);
-        this.errorCode = errorCode;
-    }
-
-    public String getErrorCode() {
-        return errorCode;
+        super(message, errorCode);
     }
 }
