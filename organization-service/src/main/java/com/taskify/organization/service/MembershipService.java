@@ -1,10 +1,10 @@
 package com.taskify.organization.service;
 
+import com.taskify.common.error.OrganizationNotFoundException;
 import com.taskify.organization.dto.membership.MembershipCollectionRequest;
 import com.taskify.organization.entity.LocalUser;
 import com.taskify.organization.entity.Membership;
 import com.taskify.organization.entity.Organization;
-import com.taskify.organization.exception.OrganizationNotFoundException;
 
 import com.taskify.organization.repository.MembershipRepository;
 import com.taskify.organization.repository.OrganizationRepository;

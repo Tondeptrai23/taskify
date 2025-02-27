@@ -1,7 +1,7 @@
 package com.taskify.auth.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.taskify.auth.dto.common.BaseCollectionResponse;
+import com.taskify.common.dto.BaseCollectionResponse;
 import com.taskify.auth.dto.user.*;
 import com.taskify.auth.entity.User;
 import com.taskify.auth.mapper.UserMapper;

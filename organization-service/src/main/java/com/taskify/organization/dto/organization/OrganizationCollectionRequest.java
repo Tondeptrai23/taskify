@@ -1,6 +1,6 @@
 package com.taskify.organization.dto.organization;
 
-import com.taskify.organization.dto.common.BaseCollectionRequest;
+import com.taskify.common.dto.BaseCollectionRequest;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;

@@ -1,4 +1,4 @@
-package com.taskify.auth.exception;
+package com.taskify.common.error;
 
 public class UserNotFoundException extends ResourceNotFoundException {
     public UserNotFoundException(String message) {

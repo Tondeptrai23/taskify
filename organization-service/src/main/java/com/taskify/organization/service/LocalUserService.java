@@ -2,7 +2,6 @@ package com.taskify.organization.service;
 
 import com.taskify.organization.dto.user.CreateLocalUserDto;
 import com.taskify.organization.entity.LocalUser;
-import com.taskify.organization.exception.ResourceNotFoundException;
 import com.taskify.organization.mapper.LocalUserMapper;
 import com.taskify.organization.repository.LocalUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,10 +53,5 @@ public class LocalUserService {
             // Create new user
             return createUser(createLocalUserDto);
         }
-    }
-
-    public LocalUser getUserById(UUID id) {
-        return localUserRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found", "USER_NOT_FOUND"));
     }
 }

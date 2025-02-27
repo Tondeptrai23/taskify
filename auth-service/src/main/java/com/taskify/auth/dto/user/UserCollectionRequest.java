@@ -1,6 +1,6 @@
 package com.taskify.auth.dto.user;
 
-import com.taskify.auth.dto.common.BaseCollectionRequest;
+import com.taskify.common.dto.BaseCollectionRequest;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;

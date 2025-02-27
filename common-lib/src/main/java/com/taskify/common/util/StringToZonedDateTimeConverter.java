@@ -1,4 +1,4 @@
-package com.taskify.auth.util;
+package com.taskify.common.util;
 
 import org.springframework.core.convert.converter.Converter;
 

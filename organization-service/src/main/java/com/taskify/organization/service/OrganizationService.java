@@ -1,13 +1,13 @@
 package com.taskify.organization.service;
 
+import com.taskify.common.error.OrganizationNotFoundException;
+import com.taskify.common.error.UserNotFoundException;
 import com.taskify.organization.dto.organization.CreateOrganizationDto;
 import com.taskify.organization.dto.organization.OrganizationCollectionRequest;
 import com.taskify.organization.dto.organization.UpdateOrganizationDto;
 import com.taskify.organization.entity.LocalUser;
 import com.taskify.organization.entity.Membership;
 import com.taskify.organization.entity.Organization;
-import com.taskify.organization.exception.OrganizationNotFoundException;
-import com.taskify.organization.exception.ResourceNotFoundException;
 import com.taskify.organization.mapper.OrganizationMapper;
 import com.taskify.organization.repository.LocalUserRepository;
 import com.taskify.organization.repository.MembershipRepository;
@@ -67,7 +67,7 @@ public class OrganizationService {
     public Organization createOrganization(CreateOrganizationDto createOrganizationDto, UUID ownerId) {
         // Ensure owner exists
         LocalUser owner = localUserRepository.findById(ownerId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found", "USER_NOT_FOUND"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         // Create organization
         Organization organization = organizationMapper.toEntity(createOrganizationDto);

@@ -1,6 +1,6 @@
-package com.taskify.auth.config;
+package com.taskify.common.config;
 
-import com.taskify.auth.util.StringToZonedDateTimeConverter;
+import com.taskify.common.util.StringToZonedDateTimeConverter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;

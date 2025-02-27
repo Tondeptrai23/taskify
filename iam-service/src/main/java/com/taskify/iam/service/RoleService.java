@@ -2,9 +2,8 @@ package com.taskify.iam.service;
 
 import com.taskify.iam.dto.role.CreateRoleDto;
 import com.taskify.iam.entity.Role;
-import com.taskify.common.error.ConflictException;
 import com.taskify.iam.exception.DefaultRoleDeletionException;
-import com.taskify.iam.exception.ResourceNotFoundException;
+import com.taskify.common.error.ResourceNotFoundException;
 import com.taskify.iam.mapper.RoleMapper;
 import com.taskify.iam.repository.OrganizationRepository;
 import com.taskify.iam.repository.PermissionRepository;

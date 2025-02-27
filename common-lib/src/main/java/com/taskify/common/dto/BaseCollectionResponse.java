@@ -1,4 +1,4 @@
-package com.taskify.organization.dto.common;
+package com.taskify.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

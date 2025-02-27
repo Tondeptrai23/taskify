@@ -1,6 +1,6 @@
 package com.taskify.organization.dto.user;
 
-import com.taskify.organization.dto.common.BaseCollectionRequest;
+import com.taskify.common.dto.BaseCollectionRequest;
 import lombok.Getter;
 import lombok.Setter;
 

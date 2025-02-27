@@ -1,4 +1,4 @@
-package com.taskify.auth.dto.common;
+package com.taskify.common.dto;
 
 import lombok.Getter;
 import lombok.Setter;

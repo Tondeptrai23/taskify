@@ -1,6 +1,6 @@
 package com.taskify.organization.controller;
 
-import com.taskify.organization.dto.common.BaseCollectionResponse;
+import com.taskify.common.dto.BaseCollectionResponse;
 import com.taskify.organization.dto.organization.*;
 import com.taskify.organization.entity.Organization;
 import com.taskify.organization.mapper.OrganizationMapper;

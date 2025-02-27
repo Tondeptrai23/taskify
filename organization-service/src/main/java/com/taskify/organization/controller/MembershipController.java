@@ -1,6 +1,6 @@
 package com.taskify.organization.controller;
 
-import com.taskify.organization.dto.common.BaseCollectionResponse;
+import com.taskify.common.dto.BaseCollectionResponse;
 import com.taskify.organization.dto.membership.BatchMemberOperationDto;
 import com.taskify.organization.dto.membership.MembershipCollectionRequest;
 import com.taskify.organization.dto.membership.MembershipDto;

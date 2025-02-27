@@ -1,13 +1,9 @@
 package com.taskify.auth.exception;
 
-public class UnauthorizedException extends RuntimeException {
-    protected String errorCode;
-    public UnauthorizedException(String message) {
-        super(message);
-        errorCode = "UNAUTHORIZED";
-    }
+import com.taskify.common.error.BusinessException;
 
-    public String getErrorCode() {
-        return errorCode;
+public class UnauthorizedException extends BusinessException {
+    public UnauthorizedException(String message) {
+        super(message, "UNAUTHORIZED");
     }
 }
