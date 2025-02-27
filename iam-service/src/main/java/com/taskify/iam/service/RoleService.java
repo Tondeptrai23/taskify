@@ -1,12 +1,12 @@
 package com.taskify.iam.service;
 
+import com.taskify.common.error.OrganizationNotFoundException;
+import com.taskify.common.error.RoleNotFoundException;
 import com.taskify.iam.dto.role.CreateRoleDto;
 import com.taskify.iam.entity.Role;
 import com.taskify.iam.exception.DefaultRoleDeletionException;
-import com.taskify.common.error.ResourceNotFoundException;
 import com.taskify.iam.mapper.RoleMapper;
 import com.taskify.iam.repository.OrganizationRepository;
-import com.taskify.iam.repository.PermissionRepository;
 import com.taskify.iam.repository.RoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -21,24 +21,25 @@ import java.util.UUID;
 @Service
 public class RoleService {
     private final RoleRepository _roleRepository;
-    private final PermissionRepository _permissionRepository;
     private final OrganizationRepository _organizationRepository;
     private final RoleMapper _roleMapper;
 
+    private final PermissionPrerequisiteValidator _permissionCreationValidator;
+
     @Autowired
     public RoleService(RoleRepository roleRepository,
-                       PermissionRepository permissionRepository,
-                          OrganizationRepository organizationRepository,
+                       PermissionPrerequisiteValidator permissionCreationValidator,
+                       OrganizationRepository organizationRepository,
                        RoleMapper roleMapper) {
         _roleRepository = roleRepository;
-        _permissionRepository = permissionRepository;
+        _permissionCreationValidator = permissionCreationValidator;
         _organizationRepository = organizationRepository;
         _roleMapper = roleMapper;
     }
 
     public Role getRole(UUID roleId, UUID organizationId) {
         return _roleRepository.findRoleByIdAndOrgIdWithPermissions(roleId, organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found", "ROLE_NOT_FOUND"));
+                .orElseThrow(() -> new RoleNotFoundException("Role not found"));
     }
 
     public List<Role> getRoles(UUID organizationId) {
@@ -55,11 +56,11 @@ public class RoleService {
         var createdRole = _roleRepository.save(newRole);
 
         var organization = _organizationRepository.findById(organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Organization not found", "ORG_NOT_FOUND"));
+                .orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
         createdRole.setOrganization(organization);
 
         if (role.getPermissions() != null) {
-            var permissions = _permissionRepository.findPermissionsByNameIn(role.getPermissions());
+            var permissions = _permissionCreationValidator.validatePermissionPrerequisites(role.getPermissions());
 
             createdRole.setPermissions(new HashSet<>(permissions));
         }
@@ -70,13 +71,13 @@ public class RoleService {
     @Transactional
     public Role updateRole(UUID roleId, CreateRoleDto role, UUID organizationId) {
         var existingRole = _roleRepository.findRoleByIdAndOrgId(roleId, organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found", "ROLE_NOT_FOUND"));
+                .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
         existingRole.setName(role.getName());
         existingRole.setDescription(role.getDescription());
 
         if (role.getPermissions() != null) {
-            var permissions = _permissionRepository.findPermissionsByNameIn(role.getPermissions());
+            var permissions = _permissionCreationValidator.validatePermissionPrerequisites(role.getPermissions());
 
             existingRole.setPermissions(new HashSet<>(permissions));
         }
@@ -87,7 +88,7 @@ public class RoleService {
     @Transactional
     public void deleteRole(UUID roleId, UUID organizationId) {
         var role = _roleRepository.findRoleByIdAndOrgId(roleId, organizationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found", "ROLE_NOT_FOUND"));
+                .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
         if (role.isDefault()){
             throw new DefaultRoleDeletionException();
