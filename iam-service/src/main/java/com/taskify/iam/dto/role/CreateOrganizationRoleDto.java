@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class CreateRoleDto {
+public class CreateOrganizationRoleDto {
     private String name;
     private String description;
     private List<String> permissions;
