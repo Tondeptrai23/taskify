@@ -25,4 +25,9 @@ public interface OrganizationRoleRepository extends Neo4jRepository<Organization
             "WHERE r.id = $roleId AND o.id = $orgId " +
             "RETURN r, o, hr, collect(h), collect(p)")
     Optional<OrganizationRole> findRoleByIdAndOrgIdWithPermissions(UUID roleId, UUID orgId);
+
+    @Query("MATCH (o:Organization)-[hr:HAS_ROLE]->(r:OrganizationRole) " +
+            "WHERE o.id = $orgId AND r.isDefault = true " +
+            "RETURN r, o, hr")
+    Optional<OrganizationRole> findDefaultRoleByOrgId(UUID orgId);
 }

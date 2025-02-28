@@ -20,7 +20,7 @@ import java.util.UUID;
 @Slf4j
 @Service
 public class RoleService {
-    private final OrganizationRoleRepository _roleRepository;
+    private final OrganizationRoleRepository _orgRoleRepository;
     private final OrganizationRepository _organizationRepository;
     private final RoleMapper _roleMapper;
 
@@ -31,19 +31,19 @@ public class RoleService {
                        PermissionPrerequisiteValidator permissionCreationValidator,
                        OrganizationRepository organizationRepository,
                        RoleMapper roleMapper) {
-        _roleRepository = roleRepository;
+        _orgRoleRepository = roleRepository;
         _permissionCreationValidator = permissionCreationValidator;
         _organizationRepository = organizationRepository;
         _roleMapper = roleMapper;
     }
 
     public OrganizationRole getRole(UUID roleId, UUID organizationId) {
-        return _roleRepository.findRoleByIdAndOrgIdWithPermissions(roleId, organizationId)
+        return _orgRoleRepository.findRoleByIdAndOrgIdWithPermissions(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
     }
 
     public List<OrganizationRole> getRoles(UUID organizationId) {
-        var roles = _roleRepository.findAllWithPermissionsInOrg(organizationId.toString());
+        var roles = _orgRoleRepository.findAllWithPermissionsInOrg(organizationId.toString());
 
         log.info("Roles: {}", roles);
 
@@ -53,7 +53,7 @@ public class RoleService {
     @Transactional
     public OrganizationRole createRole(CreateRoleDto role, UUID organizationId) {
         var newRole = _roleMapper.toEntity(role);
-        var createdRole = _roleRepository.save(newRole);
+        var createdRole = _orgRoleRepository.save(newRole);
 
         var organization = _organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
@@ -65,12 +65,12 @@ public class RoleService {
             createdRole.setPermissions(new HashSet<>(permissions));
         }
 
-        return _roleRepository.save(createdRole);
+        return _orgRoleRepository.save(createdRole);
     }
 
     @Transactional
     public OrganizationRole updateRole(UUID roleId, CreateRoleDto role, UUID organizationId) {
-        var existingRole = _roleRepository.findRoleByIdAndOrgId(roleId, organizationId)
+        var existingRole = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
         existingRole.setName(role.getName());
@@ -82,18 +82,43 @@ public class RoleService {
             existingRole.setPermissions(new HashSet<>(permissions));
         }
 
-        return _roleRepository.save(existingRole);
+        return _orgRoleRepository.save(existingRole);
     }
 
     @Transactional
     public void deleteRole(UUID roleId, UUID organizationId) {
-        var role = _roleRepository.findRoleByIdAndOrgId(roleId, organizationId)
+        var role = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
         if (role.isDefault()){
             throw new DefaultRoleDeletionException();
         }
 
-        _roleRepository.delete(role);
+        _orgRoleRepository.delete(role);
+    }
+
+    public OrganizationRole getDefaultRole(UUID organizationId) {
+        return _orgRoleRepository.findDefaultRoleByOrgId(organizationId)
+                .orElseThrow(() -> new RoleNotFoundException("Default role not found"));
+    }
+
+    @Transactional
+    public OrganizationRole setDefaultRole(UUID roleId, UUID organizationId) {
+        var role = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
+                .orElseThrow(() -> new RoleNotFoundException("Role not found"));
+
+        var defaultRole = _orgRoleRepository.findDefaultRoleByOrgId(organizationId)
+                .orElseThrow(() -> new RoleNotFoundException("Default role not found"));
+
+        if (defaultRole.getId().equals(roleId)) {
+            return role;
+        }
+
+        defaultRole.setDefault(false);
+        role.setDefault(true);
+
+        _orgRoleRepository.save(defaultRole);
+        return _orgRoleRepository.save(role);
     }
 }
+

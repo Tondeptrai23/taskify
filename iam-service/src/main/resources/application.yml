@@ -3,3 +3,30 @@ spring:
     name: iam-service
   config:
     import: optional:configserver:http://localhost:8888
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: thaitoan2311
+  data:
+    neo4j:
+      database: iam-service
+
+server:
+  port: 8084
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    diskspace:
+      enabled: false
+    db:
+      enabled: false
+    redis:
+      enabled: false

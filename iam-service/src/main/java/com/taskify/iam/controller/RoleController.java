@@ -64,4 +64,12 @@ public class RoleController {
         _roleService.deleteRole(roleId, organizationId);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{roleId}/default")
+    public ResponseEntity<RoleDto> setDefaultRole(
+            @PathVariable UUID roleId,
+            @RequestHeader("X-Organization-Context") UUID organizationId) {
+        var role = _roleService.setDefaultRole(roleId, organizationId);
+        return ResponseEntity.ok(_roleMapper.toDto(role));
+    }
 }
