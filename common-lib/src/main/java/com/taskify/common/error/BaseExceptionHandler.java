@@ -11,6 +11,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @Slf4j
 public class BaseExceptionHandler {
+    @ExceptionHandler(ServiceIntegrationException.class)
+    public ResponseEntity<ErrorResponse> handleServiceIntegrationException(ServiceIntegrationException ex) {
+        ErrorResponse error = new ErrorResponse(
+                ex.getMessage(),
+                ex.getErrorCode(),
+                HttpStatus.SERVICE_UNAVAILABLE.value()
+        );
+        return new ResponseEntity<>(error, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
         log.error("Conflict occurred: ", ex);

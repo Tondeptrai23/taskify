@@ -6,4 +6,15 @@ spring:
 
 services:
   iam:
+    name: iam-service
     url: lb://iam-service
+
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      iam-service:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 5

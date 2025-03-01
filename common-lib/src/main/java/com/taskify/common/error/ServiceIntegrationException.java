@@ -9,4 +9,9 @@ public class ServiceIntegrationException extends BusinessException {
         super(message, "SERVICE_INTEGRATION_ERROR");
         initCause(cause);
     }
+
+    public ServiceIntegrationException(String message, String errorCode, Throwable cause) {
+        super(message, errorCode);
+        initCause(cause);
+    }
 }

@@ -8,17 +8,24 @@ import com.taskify.common.error.OrganizationNotFoundException;
 import com.taskify.common.error.RoleNotFoundException;
 import com.taskify.common.error.ServiceIntegrationException;
 import com.taskify.organization.dto.role.OrganizationRoleDto;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+@Slf4j
 @Service
 public class IamServiceClient {
     private final IamWebClient iamWebClient;
     private final ObjectMapper objectMapper;
+
+    private static final Long DEFAULT_TIMEOUT_IN_SECONDS = 2L;
 
     @Autowired
     public IamServiceClient(IamWebClient iamWebClient, ObjectMapper objectMapper) {
@@ -26,34 +33,46 @@ public class IamServiceClient {
         this.objectMapper = objectMapper;
     }
 
+    @CircuitBreaker(name = "${services.iam.name}", fallbackMethod = "getDefaultOrganizationRoleFallback")
     public OrganizationRoleDto getDefaultOrganizationRole(UUID organizationId) {
-        try {
-            return iamWebClient
-                    .getDefaultOrganizationRole(organizationId.toString())
-                    .onErrorMap(this::handleIamServiceError)
-                    .block();
-        } catch (Exception ex) {
-            throw handleIamServiceError(ex);
-        }
+        return iamWebClient
+                .getDefaultOrganizationRole(organizationId.toString())
+                .onErrorMap(this::handleIamServiceError)
+                .timeout(Duration.ofSeconds(DEFAULT_TIMEOUT_IN_SECONDS))
+                .block();
     }
 
+    @CircuitBreaker(name = "${services.iam.name}", fallbackMethod = "getOrganizationRoleByIdFallback")
     public OrganizationRoleDto getOrganizationRoleById(UUID organizationId, UUID roleId) {
-        try {
-            return iamWebClient
-                    .getOrganizationRoleById(organizationId.toString(), roleId.toString())
-                    .onErrorMap(this::handleIamServiceError)
-                    .block();
-        } catch (Exception ex) {
-            throw handleIamServiceError(ex);
-        }
+        return iamWebClient
+                .getOrganizationRoleById(organizationId.toString(), roleId.toString())
+                .onErrorMap(this::handleIamServiceError)
+                .timeout(Duration.ofSeconds(DEFAULT_TIMEOUT_IN_SECONDS))
+                .block();
+    }
+
+    private OrganizationRoleDto getDefaultOrganizationRoleFallback(UUID organizationId, Throwable ex)  {
+        log.error("Failed to default organization role " +ex.getClass().getSimpleName());
+
+        throw handleIamServiceError(ex);
+    }
+
+    private OrganizationRoleDto getOrganizationRoleByIdFallback(UUID organizationId, UUID roleId, Throwable ex) {
+        log.error("Failed to get organization role by id " +ex.getClass().getSimpleName());
+
+        throw handleIamServiceError(ex);
     }
 
     private BusinessException handleIamServiceError(Throwable ex) {
         if (ex instanceof WebClientResponseException) {
             WebClientResponseException wcException = (WebClientResponseException) ex;
             return translateErrorResponse(wcException);
+        } else if (ex instanceof CallNotPermittedException) {
+            return new ServiceIntegrationException("IAM service is not available", "CIRCUIT_BREAKER", ex);
+        } else if (ex instanceof TimeoutException) {
+            return new ServiceIntegrationException("IAM service is not available", "TIMEOUT", ex);
         } else {
-            return new ServiceIntegrationException("IAM service error: " + ex.getMessage(), ex);
+            return new ServiceIntegrationException("Unexpected error from IAM service", ex);
         }
     }
 
