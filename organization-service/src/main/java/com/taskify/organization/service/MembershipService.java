@@ -2,10 +2,13 @@ package com.taskify.organization.service;
 
 import com.taskify.common.error.OrganizationNotFoundException;
 import com.taskify.organization.dto.membership.MembershipCollectionRequest;
+import com.taskify.organization.dto.role.OrganizationRoleDto;
 import com.taskify.organization.entity.LocalUser;
 import com.taskify.organization.entity.Membership;
 import com.taskify.organization.entity.Organization;
 
+import com.taskify.organization.integration.IamServiceClient;
+import com.taskify.organization.integration.IamWebClient;
 import com.taskify.organization.repository.MembershipRepository;
 import com.taskify.organization.repository.OrganizationRepository;
 import com.taskify.organization.specification.MembershipSpecifications;
@@ -29,16 +32,19 @@ public class MembershipService {
     private final MembershipRepository membershipRepository;
     private final OrganizationRepository organizationRepository;
     private final LocalUserService localUserService;
+    private final IamServiceClient iamServiceClient;
 
     @Autowired
     public MembershipService(
             MembershipRepository membershipRepository,
             OrganizationRepository organizationRepository,
-            LocalUserService localUserService
+            LocalUserService localUserService,
+            IamServiceClient iamServiceClient
     ) {
         this.membershipRepository = membershipRepository;
         this.organizationRepository = organizationRepository;
         this.localUserService = localUserService;
+        this.iamServiceClient = iamServiceClient;
     }
 
     public Page<Membership> getOrganizationMembers(UUID orgId, MembershipCollectionRequest filter) {
@@ -64,9 +70,9 @@ public class MembershipService {
         Organization organization = organizationRepository.findById(orgId)
                 .orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
 
-        // TODO: Add default role retrieval through IAM service
+        OrganizationRoleDto defaultRole = iamServiceClient.getDefaultOrganizationRole(organization.getId());
 
-        return updateOrganizationMemberships(organization, userIds,null, false);
+        return updateOrganizationMemberships(organization, userIds, defaultRole.getId(), false);
     }
 
     @Transactional
@@ -74,7 +80,9 @@ public class MembershipService {
         Organization organization = organizationRepository.findById(orgId)
                 .orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
 
-        return updateOrganizationMemberships(organization, userIds, roleId, true);
+        OrganizationRoleDto role = iamServiceClient.getOrganizationRoleById(organization.getId(), roleId);
+
+        return updateOrganizationMemberships(organization, userIds, role.getId(), true);
     }
 
     @Transactional
