@@ -8,6 +8,7 @@ import com.taskify.auth.entity.User;
 import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.repository.UserRepository;
 import com.taskify.auth.specification.UserSpecifications;
+import com.taskify.common.error.ConflictException;
 import com.taskify.common.error.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,11 +26,15 @@ import java.util.UUID;
 public class UserService {
     private final UserRepository _userRepository;
     private final UserMapper _userMapper;
+    private final PasswordEncoder _passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
+    public UserService(UserRepository userRepository,
+                       UserMapper userMapper,
+                       PasswordEncoder passwordEncoder) {
         this._userRepository = userRepository;
         this._userMapper = userMapper;
+        this._passwordEncoder = passwordEncoder;
     }
 
     public Page<User> getAllUsers(UserCollectionRequest filter) {
@@ -56,27 +62,24 @@ public class UserService {
     @Transactional
     public User createUser(CreateUserDto createUserDto) {
         User user = _userMapper.toEntity(createUserDto);
-        user.setPasswordHash(createUserDto.getPassword());
+        user.setPasswordHash(_passwordEncoder.encode(createUserDto.getPassword()));
         return _userRepository.save(user);
     }
 
     public User getUserById(UUID id) {
-        return _userRepository.findById(id).orElse(null);
+        return _userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
     @Transactional
     public User updateUserById(UUID id, UpdateUserDto updateUserDto) {
         User user = this.getUserById(id);
-        if (user == null) {
-            throw new UserNotFoundException("User not found");
-        }
 
         if (updateUserDto.getUsername() != null) {
             user.setEmail(updateUserDto.getUsername());
         }
 
         if (updateUserDto.getPassword() != null) {
-            user.setPasswordHash(updateUserDto.getPassword());
+            user.setPasswordHash(_passwordEncoder.encode(updateUserDto.getPassword()));
         }
         return _userRepository.save(user);
     }
@@ -84,32 +87,13 @@ public class UserService {
     @Transactional
     public User deleteUserById(UUID id) {
         User user = this.getUserById(id);
-        if (user == null) {
-            throw new UserNotFoundException("User not found");
-        }
 
         _userRepository.deleteById(id);
         return user;
     }
 
     public boolean existsByEmail(String email) {
-        User user = _userRepository.findUserByEmail(email);
-
-        return user != null;
-    }
-
-    public User authenticateUser(String email, String password) {
-        User user = _userRepository.findUserByEmail(email);
-        if (user == null) {
-            return null;
-        }
-
-        // TODO: Implement password hashing
-        if (!user.getPasswordHash().equals(password)) {
-            return null;
-        }
-
-        return user;
+        return _userRepository.existsByEmail(email);
     }
 
     public User createAdmin() {

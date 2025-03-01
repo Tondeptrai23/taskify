@@ -44,14 +44,14 @@ VALUES
     ('11111111-1111-1111-1111-111111111111',
      'admin@taskify.com',
      'system_admin',
-     'admin123', -- Raw text password
+     '$2a$10$vzGBFNtcS.aG3sGsZ/xJmeBVj9NlzrviNDHl7FDUqdqwYO.UpqP8y', -- 'admin123' hashed with BCrypt
      'SYSTEM_ADMIN',
      CURRENT_TIMESTAMP,
      CURRENT_TIMESTAMP),
     ('22222222-2222-2222-2222-222222222222',
      'user@taskify.com',
      'regular_user',
-     'user123', -- Raw text password
+     '$2a$10$8sKY.QfBfWF4Xw.OTK6sHu5gj5xLsO1Tw93pJek3gZlQYkd8kCKVC', -- 'user123' hashed with BCrypt
      'USER',
      CURRENT_TIMESTAMP,
      CURRENT_TIMESTAMP);

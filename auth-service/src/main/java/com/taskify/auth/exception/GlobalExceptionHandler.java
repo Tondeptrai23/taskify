@@ -2,6 +2,7 @@ package com.taskify.auth.exception;
 
 import com.taskify.common.dto.ErrorResponse;
 import com.taskify.common.error.BaseExceptionHandler;
+import com.taskify.common.error.UnauthorizedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

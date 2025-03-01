@@ -1,9 +1,11 @@
 package com.taskify.auth.mapper;
 
+import com.taskify.auth.dto.auth.RegisterRequest;
 import com.taskify.auth.dto.user.CreateUserDto;
 import com.taskify.auth.dto.user.UpdateUserDto;
 import com.taskify.auth.dto.user.UserBasicDto;
 import com.taskify.auth.dto.user.UserDto;
+import com.taskify.auth.entity.SystemRole;
 import com.taskify.auth.entity.User;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
@@ -23,6 +25,10 @@ public interface UserMapper {
 
     @Mapping(target = "systemRole", source = "role")
     User toEntity(CreateUserDto userCreateDto);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "systemRole", expression = "java(SystemRole.USER)")
+    User toEntity(RegisterRequest userCreateDto);
 
     User toEntity(UpdateUserDto userUpdateDto);
 

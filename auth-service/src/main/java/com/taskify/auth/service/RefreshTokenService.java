@@ -1,14 +1,12 @@
 package com.taskify.auth.service;
 
 import com.taskify.auth.entity.RefreshToken;
-import com.taskify.auth.entity.User;
-import com.taskify.auth.exception.UnauthorizedException;
+import com.taskify.common.error.UnauthorizedException;
 import com.taskify.auth.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;

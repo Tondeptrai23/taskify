@@ -1,39 +1,52 @@
 package com.taskify.auth.service;
 
 import com.taskify.auth.dto.auth.AuthTokens;
-import com.taskify.auth.entity.RefreshToken;
+import com.taskify.auth.dto.auth.RegisterRequest;
 import com.taskify.auth.entity.User;
-import com.taskify.auth.exception.UnauthorizedException;
+import com.taskify.auth.exception.EmailAlreadyExistsException;
+import com.taskify.auth.exception.InvalidCredentialException;
+import com.taskify.common.error.UnauthorizedException;
+import com.taskify.auth.exception.UsernameAlreadyExistsException;
+import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 public class AuthService {
-    private final UserService _userService;
     private final UserRepository _userRepository;
     private final JwtService _jwtService;
     private final RefreshTokenService _refreshTokenService;
+    private final PasswordEncoder _passwordEncoder;
+    private final UserMapper _userMapper;
 
     @Autowired
-    public AuthService(UserService userService,
-                       JwtService jwtService,
+    public AuthService(JwtService jwtService,
                        RefreshTokenService refreshTokenService,
-                       UserRepository userRepository) {
-        this._userService = userService;
+                       UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       UserMapper userMapper) {
         this._jwtService = jwtService;
         this._refreshTokenService = refreshTokenService;
         this._userRepository = userRepository;
+        this._passwordEncoder = passwordEncoder;
+        this._userMapper = userMapper;
     }
 
     public Pair<User, AuthTokens> login(String username, String password) {
-        User user = _userRepository.findUserByUsername(username);
-        if (user == null || !user.getPasswordHash().equals(password)) {
-            throw new UnauthorizedException("Invalid email or password");
+        User user = _userRepository.findUserByUsername(username).orElseThrow(
+                () -> new InvalidCredentialException("Invalid username")
+        );
+
+        var hashedPassword = _passwordEncoder.encode(password);
+        var userPassword = user.getPasswordHash();
+        if (!_passwordEncoder.matches(password, userPassword)) {
+            throw new InvalidCredentialException("Invalid password");
         }
 
         String token = _jwtService.generateToken(user);
@@ -41,27 +54,41 @@ public class AuthService {
         return Pair.of(user, new AuthTokens(token, refreshToken));
     }
 
+    @Transactional
+    public User registerUser(RegisterRequest request) {
+        // Check for existing username
+        if (_userRepository.existsByUsername(request.getUsername())) {
+            throw new UsernameAlreadyExistsException("Username already exists");
+        }
+
+        // Check for existing email
+        if (_userRepository.existsByEmail(request.getEmail())) {
+            throw new EmailAlreadyExistsException("Email already exists");
+        }
+
+        // Hash password
+        request.setPassword(_passwordEncoder.encode(request.getPassword()));
+
+        // Create and save user
+        User user = _userMapper.toEntity(request);
+        return _userRepository.save(user);
+    }
+
     public User verify(String token) {
         var tokenParts = token.split(" ");
 
         var claims = _jwtService.getClaims(tokenParts[1]);
 
-        User user = _userRepository.findUserById(UUID.fromString(claims.getSubject()));
-        if (user == null) {
-            throw new UnauthorizedException("Invalid token");
-        }
-
-        return user;
+        return _userRepository.findUserById(UUID.fromString(claims.getSubject()))
+                .orElseThrow(() -> new UnauthorizedException("Invalid token"));
     }
 
     @Transactional
     public AuthTokens refresh(String token) {
         var hashedToken = _refreshTokenService.findTokenByBase64Token(token);
 
-        User user = _userRepository.findUserById(hashedToken.getUserId());
-        if (user == null) {
-            throw new UnauthorizedException("Invalid token");
-        }
+        User user = _userRepository.findUserById(hashedToken.getUserId())
+                .orElseThrow(() -> new UnauthorizedException("Invalid token"));
 
         _refreshTokenService.verifyToken(hashedToken.getToken());
 
