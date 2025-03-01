@@ -43,7 +43,7 @@ public class OrganizationRoleService {
     }
 
     public List<OrganizationRole> getRoles(UUID organizationId) {
-        var roles = _orgRoleRepository.findAllWithPermissionsInOrg(organizationId.toString());
+        var roles = _orgRoleRepository.findAllWithPermissionsInOrg(organizationId);
 
         log.info("Roles: {}", roles);
 
@@ -114,11 +114,8 @@ public class OrganizationRoleService {
             return role;
         }
 
-        defaultRole.setDefault(false);
-        role.setDefault(true);
-
-        _orgRoleRepository.save(defaultRole);
-        return _orgRoleRepository.save(role);
+        _orgRoleRepository.updateDefaultRole(defaultRole.getId(), false);
+        return _orgRoleRepository.updateDefaultRole(roleId, true);
     }
 }
 

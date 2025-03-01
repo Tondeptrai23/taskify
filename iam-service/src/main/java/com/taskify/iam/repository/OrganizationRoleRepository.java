@@ -11,18 +11,20 @@ import java.util.UUID;
 
 @Repository
 public interface OrganizationRoleRepository extends Neo4jRepository<OrganizationRole, UUID> {
-    @Query("MATCH (o:Organization)-[hr:HAS_ROLE]->(r:OrganizationRole)-[h:HAS_PERMISSION]->(p:Permission) " +
+    @Query("MATCH (o:Organization)-[hr:HAS_ROLE]->(r:OrganizationRole) " +
             "WHERE o.id = $orgId " +
+            "OPTIONAL MATCH (r)-[h:HAS_PERMISSION]->(p:Permission) " +
             "RETURN r, o, hr, collect(h), collect(p)")
-    List<OrganizationRole> findAllWithPermissionsInOrg(String orgId);
+    List<OrganizationRole> findAllWithPermissionsInOrg(UUID orgId);
 
     @Query("MATCH (o:Organization)-[hr:HAS_ROLE]->(r:OrganizationRole) " +
             "WHERE r.id = $roleId AND o.id = $orgId " +
             "RETURN r, o, hr")
     Optional<OrganizationRole> findRoleByIdAndOrgId(UUID roleId, UUID orgId);
 
-    @Query("MATCH (o:Organization)-[hr:HAS_ROLE]->(r:OrganizationRole)-[h:HAS_PERMISSION]->(p:Permission) " +
+    @Query("MATCH (o:Organization)-[hr:HAS_ROLE]->(r:OrganizationRole) " +
             "WHERE r.id = $roleId AND o.id = $orgId " +
+            "OPTIONAL MATCH (r)-[h:HAS_PERMISSION]->(p:Permission) " +
             "RETURN r, o, hr, collect(h), collect(p)")
     Optional<OrganizationRole> findRoleByIdAndOrgIdWithPermissions(UUID roleId, UUID orgId);
 
@@ -30,4 +32,9 @@ public interface OrganizationRoleRepository extends Neo4jRepository<Organization
             "WHERE o.id = $orgId AND r.isDefault = true " +
             "RETURN r, o, hr")
     Optional<OrganizationRole> findDefaultRoleByOrgId(UUID orgId);
+
+    @Query("MATCH (o:Organization)-[hr:HAS_ROLE]->(r:OrganizationRole) " +
+            "WHERE r.id = $roleId AND r.isDefault = $isDefault " +
+            "RETURN r, o, hr")
+    OrganizationRole updateDefaultRole(UUID roleId, boolean isDefault);
 }

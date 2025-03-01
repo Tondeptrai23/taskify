@@ -14,14 +14,8 @@ import java.util.UUID;
 public class Project {
     @Id
     private UUID id;
-
-    private String name;
-    private String description;
     private UUID organizationId;
 
     @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
     private LocalOrganization organization;
-
-    @Relationship(type = "HAS_ROLE", direction = Relationship.Direction.OUTGOING)
-    private Set<ProjectRole> roles = new HashSet<>();
 }

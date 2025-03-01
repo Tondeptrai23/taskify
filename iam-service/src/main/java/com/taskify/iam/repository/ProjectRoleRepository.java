@@ -11,8 +11,9 @@ import java.util.UUID;
 
 @Repository
 public interface ProjectRoleRepository extends Neo4jRepository<ProjectRole, UUID> {
-    @Query("MATCH (p:Project)-[hr:HAS_ROLE]->(r:ProjectRole)-[h:HAS_PERMISSION]->(pm:Permission) " +
+    @Query("MATCH (p:Project)-[hr:HAS_ROLE]->(r:ProjectRole) " +
             "WHERE p.id = $projectId " +
+            "OPTIONAL MATCH (r)-[h:HAS_PERMISSION]->(pm:Permission) " +
             "RETURN r, p, hr, collect(h), collect(pm)")
     List<ProjectRole> findAllWithPermissionsInProject(UUID projectId);
 
@@ -21,8 +22,9 @@ public interface ProjectRoleRepository extends Neo4jRepository<ProjectRole, UUID
             "RETURN r, p, hr")
     Optional<ProjectRole> findRoleByIdAndProjectId(UUID roleId, UUID projectId);
 
-    @Query("MATCH (p:Project)-[hr:HAS_ROLE]->(r:ProjectRole)-[h:HAS_PERMISSION]->(pm:Permission) " +
+    @Query("MATCH (p:Project)-[hr:HAS_ROLE]->(r:ProjectRole) " +
             "WHERE r.id = $roleId AND p.id = $projectId " +
+            "OPTIONAL MATCH (r)-[h:HAS_PERMISSION]->(pm:Permission) " +
             "RETURN r, p, hr, collect(h), collect(pm)")
     Optional<ProjectRole> findRoleByIdAndProjectIdWithPermissions(UUID roleId, UUID projectId);
 
@@ -30,4 +32,10 @@ public interface ProjectRoleRepository extends Neo4jRepository<ProjectRole, UUID
             "WHERE p.id = $projectId AND r.isDefault = true " +
             "RETURN r, p, hr")
     Optional<ProjectRole> findDefaultRoleByProjectId(UUID projectId);
+
+    @Query("MATCH (p:Project)-[hr:HAS_ROLE]->(r:ProjectRole) " +
+            "WHERE r.id = $roleId " +
+            "SET r.isDefault = $isDefault " +
+            "RETURN r, p, hr")
+    ProjectRole updateDefaultRole(UUID roleId, boolean isDefault);
 }

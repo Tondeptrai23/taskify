@@ -2,7 +2,6 @@ package com.taskify.iam.controller;
 
 import com.taskify.iam.dto.role.OrganizationRoleDto;
 import com.taskify.iam.dto.role.ProjectRoleDto;
-import com.taskify.iam.entity.ProjectRole;
 import com.taskify.iam.mapper.OrganizationRoleMapper;
 import com.taskify.iam.mapper.ProjectRoleMapper;
 import com.taskify.iam.service.OrganizationRoleService;
@@ -15,22 +14,24 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/internal")
-public class InternalController {
+public class InternalIamController {
     private final OrganizationRoleService _orgRoleService;
     private final ProjectRoleService _projectRoleService;
     private final ProjectRoleMapper _projectRoleMapper;
     private final OrganizationRoleMapper _orgRoleMapper;
 
     @Autowired
-    public InternalController(OrganizationRoleService roleService,
-                              OrganizationRoleMapper roleMapper,
-                              ProjectRoleService projectRoleService,
-                              ProjectRoleMapper projectRoleMapper) {
-        _orgRoleService = roleService;
-        _orgRoleMapper = roleMapper;
+    public InternalIamController(OrganizationRoleService orgRoleService,
+                                 OrganizationRoleMapper orgRoleMapper,
+                                 ProjectRoleService projectRoleService,
+                                 ProjectRoleMapper projectRoleMapper) {
+        _orgRoleService = orgRoleService;
+        _orgRoleMapper = orgRoleMapper;
+        _projectRoleService = projectRoleService;
+        _projectRoleMapper = projectRoleMapper;
     }
 
-    @GetMapping("/roles/default")
+    @GetMapping("/orgs/roles/default")
     public ResponseEntity<OrganizationRoleDto> getDefaultRoleInOrg(
             @RequestHeader("X-Organization-Context") UUID orgId
     ){

@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 public interface ProjectRoleMapper {
     @Mapping(target = "permissions", source = "permissions", qualifiedByName = "permissionsToStringList")
     @Mapping(target = "projectId", source = "project.id")
-    @Mapping(target = "organizationId", source = "project.organizationId")
     @Named("toDto")
     ProjectRoleDto toDto(ProjectRole projectRole);
 

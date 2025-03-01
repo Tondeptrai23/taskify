@@ -15,7 +15,6 @@ public class ProjectRoleDto {
     private String description;
     private boolean isDefault;
     private UUID projectId;
-    private UUID organizationId;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
     private List<String> permissions;
