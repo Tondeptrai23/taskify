@@ -1,9 +1,11 @@
 package com.taskify.apigateway.filter;
 
+import com.taskify.apigateway.client.AuthClient;
 import com.taskify.apigateway.data.TokenVerificationResponse;
 import com.taskify.apigateway.exception.ApiGatewayException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpHeaders;
@@ -20,11 +22,14 @@ import reactor.core.publisher.Mono;
 @Component
 @Slf4j
 public class TokenTranslationFilter implements GatewayFilter {
-    private final WebClient.Builder webClientBuilder;
+    private final AuthClient authClient;
+    private final ReactiveCircuitBreakerFactory circuitBreakerFactory;
 
     @Autowired
-    public TokenTranslationFilter(WebClient.Builder webClientBuilder) {
-        this.webClientBuilder = webClientBuilder;
+    public TokenTranslationFilter(AuthClient authClient,
+                                  ReactiveCircuitBreakerFactory circuitBreakerFactory) {
+        this.authClient = authClient;
+        this.circuitBreakerFactory = circuitBreakerFactory;
     }
 
     @Override
@@ -43,12 +48,14 @@ public class TokenTranslationFilter implements GatewayFilter {
         }
 
         // Call Auth Service to verify token
-        return webClientBuilder.build()
+        return authClient.getWebClient()
                 .get()
-                .uri("lb://auth-service/internal/validate")
+                .uri("/internal/validate")
                 .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .retrieve()
                 .bodyToMono(TokenVerificationResponse.class)
+                .transform(mono -> circuitBreakerFactory.create("token-validation")
+                        .run(mono, this::handleAuthServiceFailure))
                 .flatMap(response -> {
                     // Create new request with X-User-Id header
                     ServerHttpRequest modifiedRequest = request.mutate()
@@ -59,13 +66,22 @@ public class TokenTranslationFilter implements GatewayFilter {
                             .build();
 
                     return chain.filter(exchange.mutate().request(modifiedRequest).build());
-                })
-                .onErrorResume(WebClientResponseException.class, e -> {
-                    log.error("Error verifying token", e);
-                    if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                        throw new ApiGatewayException(e.getMessage(), HttpStatus.UNAUTHORIZED);
-                    }
-                    throw new ApiGatewayException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
                 });
+    }
+
+    private Mono<TokenVerificationResponse> handleAuthServiceFailure(Throwable error) {
+        // Log the error
+        log.error("Auth service failure in circuit breaker", error);
+
+        // Return an error that will be mapped to an appropriate response
+        if (error instanceof WebClientResponseException) {
+            return Mono.error(new ApiGatewayException(error.getMessage(),
+                    HttpStatus.valueOf(((WebClientResponseException) error).getStatusCode().value())));
+        }
+
+        // For any other failure, return a 503 Service Unavailable
+        return Mono.error(new ApiGatewayException(
+                "Authentication service unavailable, please try again later",
+                HttpStatus.SERVICE_UNAVAILABLE));
     }
 }
