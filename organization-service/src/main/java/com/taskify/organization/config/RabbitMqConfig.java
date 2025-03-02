@@ -2,8 +2,8 @@ package com.taskify.organization.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.FanoutExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -18,23 +18,39 @@ public class RabbitMqConfig {
     @Value("${rabbitmq.exchange.user-events}")
     private String userEventsExchange;
 
-    @Value("${rabbitmq.queue.org-user-events}")
-    private String orgUserEventsQueue;
+    @Value("${rabbitmq.queue.org-user-created-events}")
+    private String orgUserCreatedEventsQueue;
+
+    @Value("${rabbitmq.queue.org-user-deleted-events}")
+    private String orgUserDeletedEventsQueue;
 
     @Bean
-    public FanoutExchange userEventsExchange() {
-        return new FanoutExchange(userEventsExchange);
+    public TopicExchange userEventsExchange() {
+        return new TopicExchange(userEventsExchange);
     }
 
     @Bean
-    public Queue orgUserEventsQueue() {
-        return new Queue(orgUserEventsQueue, true);
+    public Queue orgUserCreatedEventsQueue() {
+        return new Queue(orgUserCreatedEventsQueue, true);
     }
 
     @Bean
-    public Binding bindingUserEvents() {
-        return BindingBuilder.bind(orgUserEventsQueue())
-                .to(userEventsExchange());
+    public Queue orgUserDeletedEventsQueue() {
+        return new Queue(orgUserDeletedEventsQueue, true);
+    }
+
+    @Bean
+    public Binding bindingUserCreatedEvents() {
+        return BindingBuilder.bind(orgUserCreatedEventsQueue())
+                .to(userEventsExchange())
+                .with("user.created");
+    }
+
+    @Bean
+    public Binding bindingUserDeletedEvents() {
+        return BindingBuilder.bind(orgUserDeletedEventsQueue())
+                .to(userEventsExchange())
+                .with("user.deleted");
     }
 
     @Bean

@@ -49,4 +49,5 @@ rabbitmq:
   exchange:
     user-events: taskify.user.events
   queue:
-    iam-user-events: taskify.user.events.iam
+    iam-user-created-events: taskify.user-created.events.iam
+    iam-user-deleted-events: taskify.user-updated.events.iam

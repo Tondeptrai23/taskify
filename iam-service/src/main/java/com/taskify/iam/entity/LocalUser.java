@@ -17,8 +17,9 @@ public class LocalUser {
 
     private String username;
     private String email;
+
     private SystemRole systemRole;
-    private boolean isDeleted;
+    private boolean isDeleted = false;
 
     @Relationship(type = "HAS_ORG_ROLE", direction = Relationship.Direction.OUTGOING)
     private Set<OrganizationRole> organizationRoles;

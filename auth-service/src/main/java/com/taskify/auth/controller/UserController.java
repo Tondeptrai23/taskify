@@ -26,7 +26,7 @@ public class UserController {
         this._userMapper = userMapper;
     }
 
-    @GetMapping
+    @GetMapping({"/", ""})
     public ResponseEntity<BaseCollectionResponse<UserBasicDto>> findAll(
             @ModelAttribute UserCollectionRequest filter
     ) {
@@ -50,7 +50,7 @@ public class UserController {
         return ResponseEntity.ok(_userMapper.toDto(user));
     }
 
-    @PostMapping()
+    @PostMapping({"/", ""})
     public ResponseEntity<UserBasicDto> createUser(@RequestBody CreateUserDto createUserDto) {
         User user = _userService.createUser(createUserDto);
 

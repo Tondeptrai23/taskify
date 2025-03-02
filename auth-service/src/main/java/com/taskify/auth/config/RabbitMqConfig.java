@@ -1,6 +1,6 @@
 package com.taskify.auth.config;
 
-import org.springframework.amqp.core.FanoutExchange;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -15,8 +15,8 @@ public class RabbitMqConfig {
     private String userEventsExchange;
 
     @Bean
-    public FanoutExchange userEventsExchange() {
-        return new FanoutExchange(userEventsExchange);
+    public TopicExchange userEventsExchange() {
+        return new TopicExchange(userEventsExchange);
     }
 
     @Bean

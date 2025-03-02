@@ -99,6 +99,9 @@ public class UserService {
         User user = this.getUserById(id);
 
         _userRepository.deleteById(id);
+
+        _userEventPublisher.publishUserDeletedEvent(user);
+
         return user;
     }
 

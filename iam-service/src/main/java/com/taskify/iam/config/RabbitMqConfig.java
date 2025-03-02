@@ -1,9 +1,6 @@
 package com.taskify.iam.config;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.FanoutExchange;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -18,23 +15,40 @@ public class RabbitMqConfig {
     @Value("${rabbitmq.exchange.user-events}")
     private String userEventsExchange;
 
-    @Value("${rabbitmq.queue.iam-user-events}")
-    private String iamUserEventsQueue;
+    @Value("${rabbitmq.queue.iam-user-created-events}")
+    private String iamUserCreatedEventsQueue;
+
+    @Value("${rabbitmq.queue.iam-user-deleted-events}")
+    private String iamUserDeletedEventsQueue;
 
     @Bean
-    public FanoutExchange userEventsExchange() {
-        return new FanoutExchange(userEventsExchange);
+    public TopicExchange userEventsExchange() {
+        return new TopicExchange(userEventsExchange);
     }
 
     @Bean
-    public Queue iamUserEventsQueue() {
-        return new Queue(iamUserEventsQueue, true);
+    public Queue iamUserCreatedEventsQueue() {
+        return new Queue(iamUserCreatedEventsQueue, true);
     }
+
+    @Bean
+    public Queue iamUserDeletedEventsQueue() {
+        return new Queue(iamUserDeletedEventsQueue, true);
+    }
+
 
     @Bean
     public Binding bindingUserEvents() {
-        return BindingBuilder.bind(iamUserEventsQueue())
-                .to(userEventsExchange());
+        return BindingBuilder.bind(iamUserCreatedEventsQueue())
+                .to(userEventsExchange())
+                .with("user.created");
+    }
+
+    @Bean
+    public Binding bindingUserDeletedEvents() {
+        return BindingBuilder.bind(iamUserDeletedEventsQueue())
+                .to(userEventsExchange())
+                .with("user.deleted");
     }
 
     @Bean

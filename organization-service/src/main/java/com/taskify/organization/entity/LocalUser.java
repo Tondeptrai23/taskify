@@ -3,6 +3,8 @@ package com.taskify.organization.entity;
 import com.taskify.common.constant.SystemRole;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -14,6 +16,8 @@ import java.util.UUID;
 @Data
 @Entity
 @EntityListeners(AuditingEntityListener.class)
+@SQLDelete(sql = "UPDATE local_users SET is_deleted = true WHERE id = ?")
+@SQLRestriction("is_deleted = false")
 @Table(name = "local_users")
 public class LocalUser {
     @Id
@@ -33,6 +37,9 @@ public class LocalUser {
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private ZonedDateTime createdAt;
+
+    @Column(name = "is_deleted")
+    private boolean isDeleted = false;
 
     @OneToMany(mappedBy = "user")
     private Set<Membership> memberships;

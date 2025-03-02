@@ -30,4 +30,5 @@ rabbitmq:
   exchange:
     user-events: taskify.user.events
   queue:
-    org-user-events: taskify.user.events.org
+    org-user-created-events: taskify.user-created.events.org
+    org-user-deleted-events: taskify.user-updated.events.org

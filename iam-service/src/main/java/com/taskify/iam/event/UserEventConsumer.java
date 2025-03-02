@@ -2,6 +2,7 @@ package com.taskify.iam.event;
 
 import com.taskify.common.constant.SystemRole;
 import com.taskify.common.event.UserCreatedEvent;
+import com.taskify.common.event.UserDeletedEvent;
 import com.taskify.iam.entity.LocalUser;
 import com.taskify.iam.repository.LocalUserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ public class UserEventConsumer {
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-user-events}")
+    @RabbitListener(queues = "${rabbitmq.queue.iam-user-created-events}")
     public void handleUserCreatedEvent(@Payload UserCreatedEvent event) {
         try {
             log.info("Received user created event for user: {}", event.getId());
@@ -44,6 +45,22 @@ public class UserEventConsumer {
                     );
         } catch (Exception e) {
             log.error("Error processing user created event for user: {}", event.getId(), e);
+            // Consider implementing a dead-letter queue or retry mechanism
+        }
+    }
+
+    @Transactional
+    @RabbitListener(queues = "${rabbitmq.queue.iam-user-deleted-events}")
+    public void handleUserDeletedEvent(@Payload UserDeletedEvent event) {
+        try {
+            log.info("Received user deleted event for user: {}", event.getId());
+
+            // Delete user
+            userRepository.delete(event.getId());
+
+            log.info("Deleted user: {}", event.getId());
+        } catch (Exception e) {
+            log.error("Error processing user deleted event for user: {}", event.getId(), e);
             // Consider implementing a dead-letter queue or retry mechanism
         }
     }

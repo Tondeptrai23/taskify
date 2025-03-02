@@ -30,6 +30,14 @@ public class GatewayConfig {
                                 .rewritePath("/api/v1/auth/(?<segment>.*)", "/auth/${segment}"))
                         .uri("lb://auth-service"))
 
+                // Auth Service - User-level routes
+                .route("auth-service-user-routes", r -> r
+                        .path("/api/v1/auth/users/**")
+                        .filters(f -> f
+//                                .filter(_tokenTranslationFilter)
+                                .rewritePath("/api/v1/auth/users/(?<segment>.*)", "/users/${segment}"))
+                        .uri("lb://auth-service"))
+
                 // IAM Service - Organization-level routes
                 .route("iam-org-routes", r -> r
                         .path("/api/v1/identity/orgs/**")

@@ -30,6 +30,7 @@ CREATE TABLE local_users (
      username VARCHAR(255) NOT NULL,
      email VARCHAR(255) NOT NULL,
      system_role VARCHAR(255),
+     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
      created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
      CONSTRAINT local_users_username_unique UNIQUE (username),
      CONSTRAINT local_users_email_unique UNIQUE (email)
