@@ -2,6 +2,7 @@ package com.taskify.auth.service;
 
 import com.taskify.auth.dto.auth.AuthTokens;
 import com.taskify.auth.dto.auth.RegisterRequest;
+import com.taskify.auth.dto.user.CreateUserDto;
 import com.taskify.auth.entity.User;
 import com.taskify.auth.exception.EmailAlreadyExistsException;
 import com.taskify.auth.exception.InvalidCredentialException;
@@ -22,6 +23,7 @@ public class AuthService {
     private final UserRepository _userRepository;
     private final JwtService _jwtService;
     private final RefreshTokenService _refreshTokenService;
+    private final UserService _userService;
     private final PasswordEncoder _passwordEncoder;
     private final UserMapper _userMapper;
 
@@ -29,11 +31,13 @@ public class AuthService {
     public AuthService(JwtService jwtService,
                        RefreshTokenService refreshTokenService,
                        UserRepository userRepository,
+                       UserService userService,
                        PasswordEncoder passwordEncoder,
                        UserMapper userMapper) {
         this._jwtService = jwtService;
         this._refreshTokenService = refreshTokenService;
         this._userRepository = userRepository;
+        this._userService = userService;
         this._passwordEncoder = passwordEncoder;
         this._userMapper = userMapper;
     }
@@ -66,12 +70,8 @@ public class AuthService {
             throw new EmailAlreadyExistsException("Email already exists");
         }
 
-        // Hash password
-        request.setPassword(_passwordEncoder.encode(request.getPassword()));
-
-        // Create and save user
-        User user = _userMapper.toEntity(request);
-        return _userRepository.save(user);
+        var dto = new CreateUserDto(request.getUsername(), request.getEmail(), request.getPassword(), "USER");
+        return _userService.createUser(dto);
     }
 
     public User verify(String token) {

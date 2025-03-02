@@ -5,12 +5,14 @@ import com.taskify.auth.dto.user.UpdateUserDto;
 import com.taskify.auth.dto.user.UserCollectionRequest;
 import com.taskify.auth.entity.SystemRole;
 import com.taskify.auth.entity.User;
+import com.taskify.auth.event.UserEventPublisher;
 import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.repository.UserRepository;
 import com.taskify.auth.specification.UserSpecifications;
 import com.taskify.common.error.ConflictException;
 import com.taskify.common.error.UserNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,18 +24,22 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class UserService {
     private final UserRepository _userRepository;
     private final UserMapper _userMapper;
     private final PasswordEncoder _passwordEncoder;
+    private final UserEventPublisher _userEventPublisher;
 
     @Autowired
     public UserService(UserRepository userRepository,
                        UserMapper userMapper,
+                          UserEventPublisher userEventPublisher,
                        PasswordEncoder passwordEncoder) {
         this._userRepository = userRepository;
         this._userMapper = userMapper;
+        this._userEventPublisher = userEventPublisher;
         this._passwordEncoder = passwordEncoder;
     }
 
@@ -63,7 +69,12 @@ public class UserService {
     public User createUser(CreateUserDto createUserDto) {
         User user = _userMapper.toEntity(createUserDto);
         user.setPasswordHash(_passwordEncoder.encode(createUserDto.getPassword()));
-        return _userRepository.save(user);
+
+        var savedUser = _userRepository.save(user);
+
+        _userEventPublisher.publishUserCreatedEvent(savedUser);
+
+        return savedUser;
     }
 
     public User getUserById(UUID id) {

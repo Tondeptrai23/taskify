@@ -11,6 +11,20 @@ spring:
   data:
     neo4j:
       database: iam-service
+  # Add these properties to the iam-service.yml file
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          max-interval: 10000
+          multiplier: 2
 
 server:
   port: 8084
@@ -30,3 +44,9 @@ management:
       enabled: false
     redis:
       enabled: false
+
+rabbitmq:
+  exchange:
+    user-events: taskify.user.events
+  queue:
+    iam-user-events: taskify.user.events.iam
