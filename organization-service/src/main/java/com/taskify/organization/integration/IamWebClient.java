@@ -9,12 +9,10 @@ import reactor.core.publisher.Mono;
 @Component
 public class IamWebClient {
     private final WebClient webClient;
-    private final String iamServiceUrl;
 
     public IamWebClient(WebClient.Builder webClientBuilder,
                         @Value("${services.iam.url}") String iamServiceUrl) {
         this.webClient = webClientBuilder.baseUrl(iamServiceUrl).build();
-        this.iamServiceUrl = iamServiceUrl;
     }
 
     public Mono<OrganizationRoleDto> getOrganizationRoleById(String organizationId, String roleId) {

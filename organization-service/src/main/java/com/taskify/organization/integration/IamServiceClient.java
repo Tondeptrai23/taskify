@@ -3,10 +3,7 @@ package com.taskify.organization.integration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskify.common.dto.ErrorResponse;
-import com.taskify.common.error.BusinessException;
-import com.taskify.common.error.OrganizationNotFoundException;
-import com.taskify.common.error.RoleNotFoundException;
-import com.taskify.common.error.ServiceIntegrationException;
+import com.taskify.common.error.*;
 import com.taskify.organization.dto.role.OrganizationRoleDto;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -37,8 +34,8 @@ public class IamServiceClient {
     public OrganizationRoleDto getDefaultOrganizationRole(UUID organizationId) {
         return iamWebClient
                 .getDefaultOrganizationRole(organizationId.toString())
-                .onErrorMap(this::handleIamServiceError)
                 .timeout(Duration.ofSeconds(DEFAULT_TIMEOUT_IN_SECONDS))
+                .onErrorMap(this::handleIamServiceError)
                 .block();
     }
 
@@ -46,32 +43,50 @@ public class IamServiceClient {
     public OrganizationRoleDto getOrganizationRoleById(UUID organizationId, UUID roleId) {
         return iamWebClient
                 .getOrganizationRoleById(organizationId.toString(), roleId.toString())
-                .onErrorMap(this::handleIamServiceError)
                 .timeout(Duration.ofSeconds(DEFAULT_TIMEOUT_IN_SECONDS))
+                .onErrorMap(this::handleIamServiceError)
                 .block();
     }
 
-    private OrganizationRoleDto getDefaultOrganizationRoleFallback(UUID organizationId, Throwable ex)  {
+    private OrganizationRoleDto getDefaultOrganizationRoleFallback(UUID organizationId, Throwable ex) throws Throwable {
         log.error("Failed to default organization role " +ex.getClass().getSimpleName());
 
-        throw handleIamServiceError(ex);
+         if (ex instanceof CallNotPermittedException) {
+             throw new CircuitBreakerOpenedException(ex);
+        } else {
+            throw ex;
+        }
     }
 
-    private OrganizationRoleDto getOrganizationRoleByIdFallback(UUID organizationId, UUID roleId, Throwable ex) {
+    private OrganizationRoleDto getOrganizationRoleByIdFallback(UUID organizationId, UUID roleId, Throwable ex) throws Throwable {
         log.error("Failed to get organization role by id " +ex.getClass().getSimpleName());
 
-        throw handleIamServiceError(ex);
+        if (ex instanceof CallNotPermittedException) {
+            throw new CircuitBreakerOpenedException(ex);
+        } else {
+            throw ex;
+        }
     }
 
     private BusinessException handleIamServiceError(Throwable ex) {
+        log.error("Failed to get organization role by id " +ex.getClass());
+
         if (ex instanceof WebClientResponseException) {
             WebClientResponseException wcException = (WebClientResponseException) ex;
-            return translateErrorResponse(wcException);
-        } else if (ex instanceof CallNotPermittedException) {
-            return new ServiceIntegrationException("IAM service is not available", "CIRCUIT_BREAKER", ex);
+
+            // For server errors, throw ServiceIntegrationException which should trip the circuit breaker
+            if (wcException.getStatusCode().is5xxServerError()) {
+                return new ServiceIntegrationException(
+                        "IAM service server error: " + wcException.getMessage(),
+                        "SERVER_ERROR",
+                        ex);
+            } else {
+                return translateErrorResponse(wcException);
+            }
         } else if (ex instanceof TimeoutException) {
-            return new ServiceIntegrationException("IAM service is not available", "TIMEOUT", ex);
-        } else {
+            return new ServiceIntegrationException("Timeout while calling IAM service", "TIME_OUT", ex);
+        }
+        else {
             return new ServiceIntegrationException("Unexpected error from IAM service", ex);
         }
     }
@@ -89,7 +104,7 @@ public class IamServiceClient {
                 case "ORG_NOT_FOUND":
                     return new OrganizationNotFoundException(errorResponse.getMessage());
                 default:
-                    return new ServiceIntegrationException(
+                    return new BusinessException(
                             "IAM service error: " + errorResponse.getMessage(),
                             errorResponse.getErrorCode()
                     );
