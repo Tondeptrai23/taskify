@@ -3,6 +3,19 @@ spring:
     name: organization-service
   config:
     import: optional:configserver:http://localhost:8888
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          max-interval: 10000
+          multiplier: 2
 
 resilience4j:
   circuitbreaker:
@@ -12,3 +25,9 @@ resilience4j:
         failureRateThreshold: 50
         waitDurationInOpenState: 10000
         permittedNumberOfCallsInHalfOpenState: 5
+
+rabbitmq:
+  exchange:
+    user-events: taskify.user.events
+  queue:
+    org-user-events: taskify.user.events.org

@@ -29,10 +29,8 @@ CREATE TABLE local_users (
      id UUID PRIMARY KEY,
      username VARCHAR(255) NOT NULL,
      email VARCHAR(255) NOT NULL,
+     system_role VARCHAR(255),
      created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-     created_by VARCHAR(255) NOT NULL,
-     updated_by VARCHAR(255) NOT NULL,
      CONSTRAINT local_users_username_unique UNIQUE (username),
      CONSTRAINT local_users_email_unique UNIQUE (email)
 );
@@ -67,12 +65,12 @@ CREATE INDEX idx_memberships_role_id ON memberships(role_id);
 CREATE INDEX idx_memberships_is_active ON memberships(is_active);
 
 -- Insert local users (mirroring Auth Service users)
-INSERT INTO local_users (id, username, email, created_at, updated_at, created_by, updated_by)
+INSERT INTO local_users (id, username, email, created_at, system_role)
 VALUES
     ('11111111-1111-1111-1111-111111111111', 'system_admin', 'admin@taskify.com',
-     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM'),
+     CURRENT_TIMESTAMP, 'SYSTEM_ADMIN'),
     ('22222222-2222-2222-2222-222222222222', 'regular_user', 'user@taskify.com',
-     CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'SYSTEM', 'SYSTEM');
+     CURRENT_TIMESTAMP, 'USER');
 
 -- Create a default organization owned by the admin
 INSERT INTO organizations (

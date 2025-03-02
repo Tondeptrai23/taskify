@@ -1,5 +1,6 @@
 package com.taskify.auth.entity;
 
+import com.taskify.common.constant.SystemRole;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.SQLDelete;

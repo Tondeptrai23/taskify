@@ -1,5 +1,6 @@
 package com.taskify.organization.entity;
 
+import com.taskify.common.constant.SystemRole;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
@@ -25,13 +26,13 @@ public class LocalUser {
     @Column(name = "username", nullable = false)
     private String username;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "system_role", nullable = false)
+    private SystemRole systemRole;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private ZonedDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private ZonedDateTime updatedAt;
 
     @OneToMany(mappedBy = "user")
     private Set<Membership> memberships;

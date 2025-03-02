@@ -1,11 +1,12 @@
-package com.taskify.iam.event;
+package com.taskify.organization.event;
 
 import com.taskify.common.constant.SystemRole;
 import com.taskify.common.event.UserCreatedEvent;
-import com.taskify.iam.entity.LocalUser;
-import com.taskify.iam.repository.LocalUserRepository;
+import com.taskify.organization.entity.LocalUser;
+import com.taskify.organization.repository.LocalUserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,31 +15,31 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class UserEventConsumer {
 
-    private final LocalUserRepository userRepository;
+    private final LocalUserRepository _localUserRepository;
 
-    public UserEventConsumer(LocalUserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserEventConsumer(LocalUserRepository localUserRepository) {
+        this._localUserRepository = localUserRepository;
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-user-events}")
+    @RabbitListener(queues = "${rabbitmq.queue.org-user-events}")
     public void handleUserCreatedEvent(@Payload UserCreatedEvent event) {
         try {
             log.info("Received user created event for user: {}", event.getId());
 
             // Check if user already exists and update if needed
-            userRepository.findById(event.getId())
+            _localUserRepository.findById(event.getId())
                     .ifPresentOrElse(
                             existingUser -> {
                                 // Update existing user
                                 updateExistingUser(existingUser, event);
-                                userRepository.save(existingUser);
+                                _localUserRepository.save(existingUser);
                                 log.info("Updated existing user: {}", existingUser.getId());
                             },
                             () -> {
                                 // Create new user
                                 LocalUser newUser = createUserFromEvent(event);
-                                userRepository.save(newUser);
+                                _localUserRepository.save(newUser);
                                 log.info("Created new user: {}", newUser.getId());
                             }
                     );

@@ -1,5 +1,6 @@
 package com.taskify.iam.entity;
 
+import com.taskify.common.constant.SystemRole;
 import lombok.Data;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -10,13 +11,13 @@ import java.util.UUID;
 
 @Node("User")
 @Data
-public class User {
+public class LocalUser {
     @Id
     private UUID id;
 
     private String username;
     private String email;
-    private String systemRole;
+    private SystemRole systemRole;
     private boolean isDeleted;
 
     @Relationship(type = "HAS_ORG_ROLE", direction = Relationship.Direction.OUTGOING)
