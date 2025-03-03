@@ -1,6 +1,7 @@
 package com.taskify.organization.controller;
 
-import com.taskify.common.dto.BaseCollectionResponse;
+import com.taskify.common.dto.ApiResponse;
+import com.taskify.common.dto.ApiCollectionResponse;
 import com.taskify.organization.dto.organization.*;
 import com.taskify.organization.entity.Organization;
 import com.taskify.organization.mapper.OrganizationMapper;
@@ -13,7 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
-
 
 @Slf4j
 @RestController
@@ -32,7 +32,7 @@ public class OrganizationController {
     }
 
     @GetMapping({"/", ""})
-    public ResponseEntity<BaseCollectionResponse<OrganizationDto>> findAll(
+    public ResponseEntity<ApiResponse<ApiCollectionResponse<OrganizationDto>>> findAll(
             @RequestHeader("X-User-Id") UUID userId,
             @ModelAttribute OrganizationCollectionRequest filter
     ) {
@@ -41,45 +41,47 @@ public class OrganizationController {
         Page<Organization> organizations = organizationService.getAllOrganizations(filter);
         Page<OrganizationDto> organizationDtos = organizations.map(organizationMapper::toDto);
 
-        return ResponseEntity.ok(BaseCollectionResponse.from(organizationDtos));
+        var response = new ApiResponse<>(ApiCollectionResponse.from(organizationDtos));
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize(value = "@organizationService.isOwner(#id, #userId)")
     @PutMapping("/{id}")
-    public ResponseEntity<OrganizationDto> updateOrganization(
+    public ResponseEntity<ApiResponse<OrganizationDto>> updateOrganization(
             @PathVariable("id") UUID id,
             @RequestHeader("X-User-Id") String userId,
             @RequestBody UpdateOrganizationDto updateOrganizationDto
     ) {
         Organization organization = organizationService.updateOrganization(id, updateOrganizationDto);
-
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
+        var response = new ApiResponse<>(organizationMapper.toDto(organization));
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("@organizationService.isOwner(#id, #userId)")
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteOrganization(
+    public ResponseEntity<ApiResponse<String>> deleteOrganization(
             @PathVariable("id") UUID id,
             @RequestHeader("X-User-Id") String userId) {
         organizationService.deleteOrganization(id);
-        return ResponseEntity.ok("Organization deleted successfully");
+        var response = new ApiResponse<>("Organization deleted successfully");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<OrganizationDto> createOrganization(
+    public ResponseEntity<ApiResponse<OrganizationDto>> createOrganization(
             @RequestHeader("X-User-Id") UUID userId,
             @RequestBody CreateOrganizationDto createOrganizationDto
     ) {
         Organization organization = organizationService.createOrganization(createOrganizationDto, userId);
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
+        var response = new ApiResponse<>(organizationMapper.toDto(organization));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<OrganizationDto> getOrganizationById(
+    public ResponseEntity<ApiResponse<OrganizationDto>> getOrganizationById(
             @PathVariable("id") UUID id) {
         Organization organization = organizationService.getOrganizationById(id);
-
-        return ResponseEntity.ok(organizationMapper.toDto(organization));
+        var response = new ApiResponse<>(organizationMapper.toDto(organization));
+        return ResponseEntity.ok(response);
     }
 }
-

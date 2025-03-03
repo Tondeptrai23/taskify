@@ -3,6 +3,7 @@ package com.taskify.auth.controller;
 import com.taskify.auth.dto.user.UserDto;
 import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.service.AuthService;
+import com.taskify.common.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,11 +26,11 @@ public class InternalController {
     }
 
     @GetMapping("/validate")
-    public ResponseEntity<UserDto> verify(
+    public ResponseEntity<ApiResponse<UserDto>> verify(
             @RequestHeader("Authorization") String token
     ){
         log.info("Verifying token: {}", token);
         var response = _authService.verify(token);
-        return ResponseEntity.ok(_userMapper.toDto(response));
+        return ResponseEntity.ok(new ApiResponse<>(_userMapper.toDto(response)));
     }
 }

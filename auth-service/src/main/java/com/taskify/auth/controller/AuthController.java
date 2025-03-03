@@ -2,6 +2,7 @@ package com.taskify.auth.controller;
 
 import com.taskify.auth.dto.auth.*;
 import com.taskify.auth.service.AuthService;
+import com.taskify.common.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,24 +20,24 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
             @RequestBody LoginRequest loginRequest
     ){
         var response = _authService.login(loginRequest.getUsername(), loginRequest.getPassword());
-        return ResponseEntity.ok(new LoginResponse(response));
+        return ResponseEntity.ok(new ApiResponse<>(new LoginResponse(response)));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<RegisterResponse>> register(@RequestBody RegisterRequest request) {
         var response = _authService.registerUser(request);
-        return ResponseEntity.ok(new RegisterResponse(response));
+        return ResponseEntity.ok(new ApiResponse<>(new RegisterResponse(response)));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthTokens> refresh(
-             @RequestBody RefreshRequest req
+    public ResponseEntity<ApiResponse<AuthTokens>> refresh(
+            @RequestBody RefreshRequest req
     ){
         var response = _authService.refresh(req.getRefreshToken());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new ApiResponse<>(response));
     }
 }

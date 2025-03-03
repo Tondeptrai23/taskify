@@ -1,5 +1,6 @@
 package com.taskify.iam.controller;
 
+import com.taskify.common.dto.ApiResponse;
 import com.taskify.iam.dto.permission.PermissionDto;
 import com.taskify.iam.dto.permission.PermissionGroupDto;
 import com.taskify.iam.mapper.PermissionMapper;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 public class PermissionController {
@@ -24,15 +24,17 @@ public class PermissionController {
     }
 
     @GetMapping("/permissions")
-    public ResponseEntity<List<PermissionDto>> getPermissions(
+    public ResponseEntity<ApiResponse<List<PermissionDto>>> getPermissions(
             @RequestParam(required = false) Long groupId) {
         var permissions = _permissionService.getPermissions(groupId);
-        return ResponseEntity.ok(_permissionMapper.toDtoList(permissions));
+        var response = new ApiResponse<>(_permissionMapper.toDtoList(permissions));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/perm-groups")
-    public ResponseEntity<List<PermissionGroupDto>> getPermissionGroups() {
+    public ResponseEntity<ApiResponse<List<PermissionGroupDto>>> getPermissionGroups() {
         var groups = _permissionService.getPermissionGroups();
-        return ResponseEntity.ok(_permissionMapper.toGroupDtoList(groups));
+        var response = new ApiResponse<>(_permissionMapper.toGroupDtoList(groups));
+        return ResponseEntity.ok(response);
     }
 }

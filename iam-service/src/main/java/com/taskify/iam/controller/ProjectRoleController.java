@@ -1,5 +1,6 @@
 package com.taskify.iam.controller;
 
+import com.taskify.common.dto.ApiResponse;
 import com.taskify.iam.dto.role.CreateProjectRoleDto;
 import com.taskify.iam.dto.role.ProjectRoleDto;
 import com.taskify.iam.mapper.ProjectRoleMapper;
@@ -25,53 +26,59 @@ public class ProjectRoleController {
     }
 
     @GetMapping({"/", ""})
-    public ResponseEntity<List<ProjectRoleDto>> getRoles(
+    public ResponseEntity<ApiResponse<List<ProjectRoleDto>>> getRoles(
             @PathVariable UUID projectId,
             @RequestHeader("X-Organization-Context") UUID organizationId
     ) {
         var roles = projectRoleService.getRoles(projectId);
-        return ResponseEntity.ok(projectRoleMapper.toDtoList(roles));
+        var response = new ApiResponse<>(projectRoleMapper.toDtoList(roles));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<ProjectRoleDto> createRole(
+    public ResponseEntity<ApiResponse<ProjectRoleDto>> createRole(
             @PathVariable UUID projectId,
             @RequestBody CreateProjectRoleDto roleDto,
             @RequestHeader("X-Organization-Context") UUID organizationId) {
         var role = projectRoleService.createRole(roleDto, projectId, organizationId);
-        return ResponseEntity.ok(projectRoleMapper.toDto(role));
+        var response = new ApiResponse<>(projectRoleMapper.toDto(role));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{roleId}")
-    public ResponseEntity<ProjectRoleDto> getRole(
+    public ResponseEntity<ApiResponse<ProjectRoleDto>> getRole(
             @PathVariable UUID projectId,
             @PathVariable UUID roleId) {
         var role = projectRoleService.getRole(roleId, projectId);
-        return ResponseEntity.ok(projectRoleMapper.toDto(role));
+        var response = new ApiResponse<>(projectRoleMapper.toDto(role));
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{roleId}")
-    public ResponseEntity<ProjectRoleDto> updateRole(
+    public ResponseEntity<ApiResponse<ProjectRoleDto>> updateRole(
             @PathVariable UUID projectId,
             @PathVariable UUID roleId,
             @RequestBody CreateProjectRoleDto roleDto) {
         var role = projectRoleService.updateRole(roleId, roleDto, projectId);
-        return ResponseEntity.ok(projectRoleMapper.toDto(role));
+        var response = new ApiResponse<>(projectRoleMapper.toDto(role));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{roleId}")
-    public ResponseEntity<Void> deleteRole(
+    public ResponseEntity<ApiResponse<Void>> deleteRole(
             @PathVariable UUID projectId,
             @PathVariable UUID roleId) {
         projectRoleService.deleteRole(roleId, projectId);
-        return ResponseEntity.noContent().build();
+        var response = new ApiResponse<Void>(null);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{roleId}/default")
-    public ResponseEntity<ProjectRoleDto> setDefaultRole(
+    public ResponseEntity<ApiResponse<ProjectRoleDto>> setDefaultRole(
             @PathVariable UUID projectId,
             @PathVariable UUID roleId) {
         var role = projectRoleService.setDefaultRole(roleId, projectId);
-        return ResponseEntity.ok(projectRoleMapper.toDto(role));
+        var response = new ApiResponse<>(projectRoleMapper.toDto(role));
+        return ResponseEntity.ok(response);
     }
 }

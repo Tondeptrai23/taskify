@@ -1,7 +1,8 @@
 package com.taskify.auth.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.taskify.common.dto.BaseCollectionResponse;
+import com.taskify.common.dto.ApiResponse;
+import com.taskify.common.dto.ApiCollectionResponse;
 import com.taskify.auth.dto.user.*;
 import com.taskify.auth.entity.User;
 import com.taskify.auth.mapper.UserMapper;
@@ -27,56 +28,56 @@ public class UserController {
     }
 
     @GetMapping({"/", ""})
-    public ResponseEntity<BaseCollectionResponse<UserBasicDto>> findAll(
+    public ResponseEntity<ApiResponse<ApiCollectionResponse<UserBasicDto>>> findAll(
             @ModelAttribute UserCollectionRequest filter
     ) {
         Page<User> users = _userService.getAllUsers(filter);
         Page<UserBasicDto> userBasicDtos = users.map(_userMapper::toBasicDto);
 
-        return ResponseEntity.ok(BaseCollectionResponse.from(userBasicDtos));
+        var response = new ApiResponse<>(ApiCollectionResponse.from(userBasicDtos));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/batch")
-    public ResponseEntity<List<UserBasicDto>> getUsersByIds(@RequestBody @JsonProperty("ids") List<UUID> ids) {
+    public ResponseEntity<ApiResponse<List<UserBasicDto>>> getUsersByIds(@RequestBody @JsonProperty("ids") List<UUID> ids) {
         List<User> users = _userService.getUsersByIds(ids);
-
-        return ResponseEntity.ok(_userMapper.toBasicDtoList(users));
+        var response = new ApiResponse<>(_userMapper.toBasicDtoList(users));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable("id") UUID id) {
+    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable("id") UUID id) {
         User user = _userService.getUserById(id);
-
-        return ResponseEntity.ok(_userMapper.toDto(user));
+        var response = new ApiResponse<>(_userMapper.toDto(user));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<UserBasicDto> createUser(@RequestBody CreateUserDto createUserDto) {
+    public ResponseEntity<ApiResponse<UserBasicDto>> createUser(@RequestBody CreateUserDto createUserDto) {
         User user = _userService.createUser(createUserDto);
-
-        return ResponseEntity.ok(_userMapper.toBasicDto(user));
+        var response = new ApiResponse<>(_userMapper.toBasicDto(user));
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<UserBasicDto> updateUser(@PathVariable("id") UUID id, @RequestBody UpdateUserDto updateUserDto) {
+    public ResponseEntity<ApiResponse<UserBasicDto>> updateUser(@PathVariable("id") UUID id, @RequestBody UpdateUserDto updateUserDto) {
         User user = _userService.updateUserById(id, updateUserDto);
-
-        return ResponseEntity.ok(_userMapper.toBasicDto(user));
+        var response = new ApiResponse<>(_userMapper.toBasicDto(user));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable("id") UUID id) {
+    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable("id") UUID id) {
         User user = _userService.deleteUserById(id);
-
-        return ResponseEntity.ok("User with id " + user.getId() + " deleted");
+        var response = new ApiResponse<>("User with id " + user.getId() + " deleted");
+        return ResponseEntity.ok(response);
     }
-
 
     // For testing purposes
     @PostMapping("/admin")
-    public ResponseEntity<String> createAdmin() {
+    public ResponseEntity<ApiResponse<String>> createAdmin() {
         _userService.createAdmin();
-
-        return ResponseEntity.ok("Admin created");
+        var response = new ApiResponse<>("Admin created");
+        return ResponseEntity.ok(response);
     }
 }

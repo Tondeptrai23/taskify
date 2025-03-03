@@ -1,5 +1,6 @@
 package com.taskify.iam.controller;
 
+import com.taskify.common.dto.ApiResponse;
 import com.taskify.iam.dto.role.OrganizationRoleDto;
 import com.taskify.iam.dto.role.ProjectRoleDto;
 import com.taskify.iam.mapper.OrganizationRoleMapper;
@@ -32,16 +33,18 @@ public class InternalIamController {
     }
 
     @GetMapping("/orgs/roles/default")
-    public ResponseEntity<OrganizationRoleDto> getDefaultRoleInOrg(
+    public ResponseEntity<ApiResponse<OrganizationRoleDto>> getDefaultRoleInOrg(
             @RequestHeader("X-Organization-Context") UUID orgId
     ){
-        return ResponseEntity.ok(_orgRoleMapper.toDto(_orgRoleService.getDefaultRole(orgId)));
+        var response =  _orgRoleMapper.toDto(_orgRoleService.getDefaultRole(orgId));
+        return ResponseEntity.ok(new ApiResponse<>(response));
     }
 
     @GetMapping("projects/{projectId}/roles/default")
-    public ResponseEntity<ProjectRoleDto> getDefaultRoleInProject(
+    public ResponseEntity<ApiResponse<ProjectRoleDto>> getDefaultRoleInProject(
             @PathVariable UUID projectId
     ){
-        return ResponseEntity.ok(_projectRoleMapper.toDto(_projectRoleService.getDefaultRole(projectId)));
+        var response = _projectRoleMapper.toDto(_projectRoleService.getDefaultRole(projectId));
+        return ResponseEntity.ok(new ApiResponse<>(response));
     }
 }

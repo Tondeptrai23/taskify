@@ -1,5 +1,6 @@
 package com.taskify.iam.controller;
 
+import com.taskify.common.dto.ApiResponse;
 import com.taskify.iam.dto.role.CreateOrganizationRoleDto;
 import com.taskify.iam.dto.role.OrganizationRoleDto;
 import com.taskify.iam.mapper.OrganizationRoleMapper;
@@ -25,51 +26,57 @@ public class OrganizationRoleController {
     }
 
     @GetMapping({"/", ""})
-    public ResponseEntity<List<OrganizationRoleDto>> getRoles(
+    public ResponseEntity<ApiResponse<List<OrganizationRoleDto>>> getRoles(
             @RequestHeader("X-Organization-Context") UUID organizationId
     ) {
         var roles = _roleService.getRoles(organizationId);
-        return ResponseEntity.ok(_roleMapper.toDtoList(roles));
+        var response = new ApiResponse<>(_roleMapper.toDtoList(roles));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping({"/", ""})
-    public ResponseEntity<OrganizationRoleDto> createRole(
+    public ResponseEntity<ApiResponse<OrganizationRoleDto>> createRole(
             @RequestBody CreateOrganizationRoleDto roleDto,
             @RequestHeader("X-Organization-Context") UUID organizationId) {
         var role = _roleService.createRole(roleDto, organizationId);
-        return ResponseEntity.ok(_roleMapper.toDto(role));
+        var response = new ApiResponse<>(_roleMapper.toDto(role));
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{roleId}")
-    public ResponseEntity<OrganizationRoleDto> getRole(
+    public ResponseEntity<ApiResponse<OrganizationRoleDto>> getRole(
             @PathVariable UUID roleId,
             @RequestHeader("X-Organization-Context") UUID organizationId) {
         var role = _roleService.getRole(roleId, organizationId);
-        return ResponseEntity.ok(_roleMapper.toDto(role));
+        var response = new ApiResponse<>(_roleMapper.toDto(role));
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{roleId}")
-    public ResponseEntity<OrganizationRoleDto> updateRole(
+    public ResponseEntity<ApiResponse<OrganizationRoleDto>> updateRole(
             @PathVariable UUID roleId,
             @RequestBody CreateOrganizationRoleDto roleDto,
             @RequestHeader("X-Organization-Context") UUID organizationId) {
         var role = _roleService.updateRole(roleId, roleDto, organizationId);
-        return ResponseEntity.ok(_roleMapper.toDto(role));
+        var response = new ApiResponse<>(_roleMapper.toDto(role));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{roleId}")
-    public ResponseEntity<Void> deleteRole(
+    public ResponseEntity<ApiResponse<Void>> deleteRole(
             @PathVariable UUID roleId,
             @RequestHeader("X-Organization-Context") UUID organizationId) {
         _roleService.deleteRole(roleId, organizationId);
-        return ResponseEntity.noContent().build();
+        var response = new ApiResponse<Void>(null);
+        return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{roleId}/default")
-    public ResponseEntity<OrganizationRoleDto> setDefaultRole(
+    public ResponseEntity<ApiResponse<OrganizationRoleDto>> setDefaultRole(
             @PathVariable UUID roleId,
             @RequestHeader("X-Organization-Context") UUID organizationId) {
         var role = _roleService.setDefaultRole(roleId, organizationId);
-        return ResponseEntity.ok(_roleMapper.toDto(role));
+        var response = new ApiResponse<>(_roleMapper.toDto(role));
+        return ResponseEntity.ok(response);
     }
 }

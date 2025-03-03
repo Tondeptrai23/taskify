@@ -1,6 +1,7 @@
 package com.taskify.organization.controller;
 
-import com.taskify.common.dto.BaseCollectionResponse;
+import com.taskify.common.dto.ApiResponse;
+import com.taskify.common.dto.ApiCollectionResponse;
 import com.taskify.organization.dto.membership.BatchMemberOperationDto;
 import com.taskify.organization.dto.membership.MembershipCollectionRequest;
 import com.taskify.organization.dto.membership.MembershipDto;
@@ -29,43 +30,44 @@ public class MembershipController {
     }
 
     @GetMapping("/{id}/members")
-    public ResponseEntity<BaseCollectionResponse<MembershipDto>> getOrganizationMembers(
+    public ResponseEntity<ApiResponse<ApiCollectionResponse<MembershipDto>>> getOrganizationMembers(
             @PathVariable("id") UUID orgId,
             @ModelAttribute MembershipCollectionRequest filter
     ) {
         Page<MembershipDto> membershipDtos = membershipService.getOrganizationMembers(orgId, filter)
                 .map(membershipMapper::toDto);
 
-        return ResponseEntity.ok(BaseCollectionResponse.from(membershipDtos));
+        var response = new ApiResponse<>(ApiCollectionResponse.from(membershipDtos));
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/members")
-    public ResponseEntity<List<MembershipDto>> addMembers(
+    public ResponseEntity<ApiResponse<List<MembershipDto>>> addMembers(
             @PathVariable("id") UUID orgId,
             @RequestBody List<UUID> userIds
     ) {
         List<Membership> memberships = membershipService.addMembers(orgId, userIds);
-
-        return ResponseEntity.ok(membershipMapper.toDtoList(memberships));
+        var response = new ApiResponse<>(membershipMapper.toDtoList(memberships));
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}/members")
-    public ResponseEntity<String> removeMembers(
+    public ResponseEntity<ApiResponse<String>> removeMembers(
             @PathVariable("id") UUID orgId,
             @RequestBody List<UUID> userIds
     ) {
         membershipService.deactivateMembers(orgId, userIds);
-
-        return ResponseEntity.ok("Members removed successfully");
+        var response = new ApiResponse<>("Members removed successfully");
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/members")
-    public ResponseEntity<List<MembershipDto>> updateMembers(
+    public ResponseEntity<ApiResponse<List<MembershipDto>>> updateMembers(
             @PathVariable("id") UUID orgId,
             @RequestBody BatchMemberOperationDto updateMembersDto
     ) {
         List<Membership> memberships = membershipService.updateMembers(orgId, updateMembersDto.getMembers(), updateMembersDto.getRoleId());
-
-        return ResponseEntity.ok(membershipMapper.toDtoList(memberships));
+        var response = new ApiResponse<>(membershipMapper.toDtoList(memberships));
+        return ResponseEntity.ok(response);
     }
 }
