@@ -1,7 +1,7 @@
 package com.taskify.iam.service;
 
-import com.taskify.common.error.ProjectNotFoundException;
-import com.taskify.common.error.RoleNotFoundException;
+import com.taskify.common.error.resource.ProjectNotFoundException;
+import com.taskify.common.error.resource.RoleNotFoundException;
 import com.taskify.iam.dto.role.CreateProjectRoleDto;
 import com.taskify.iam.entity.Project;
 import com.taskify.iam.entity.ProjectRole;

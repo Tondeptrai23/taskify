@@ -1,7 +1,7 @@
 package com.taskify.iam.service;
 
-import com.taskify.common.error.OrganizationNotFoundException;
-import com.taskify.common.error.RoleNotFoundException;
+import com.taskify.common.error.resource.OrganizationNotFoundException;
+import com.taskify.common.error.resource.RoleNotFoundException;
 import com.taskify.iam.dto.role.CreateOrganizationRoleDto;
 import com.taskify.iam.entity.OrganizationRole;
 import com.taskify.iam.exception.DefaultRoleDeletionException;

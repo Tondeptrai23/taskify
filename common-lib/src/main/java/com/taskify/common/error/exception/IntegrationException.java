@@ -1,10 +1,11 @@
 package com.taskify.common.error.exception;
 
+import com.taskify.common.error.CommonErrorCode;
 import com.taskify.common.error.ErrorCode;
 
 public class IntegrationException extends TaskifyException {
     public IntegrationException(String message) {
-        super(message, ErrorCode.INTEGRATION_ERROR);
+        super(message, CommonErrorCode.INTEGRATION_ERROR);
     }
 
     public IntegrationException(String message, ErrorCode errorCode) {
@@ -12,6 +13,6 @@ public class IntegrationException extends TaskifyException {
     }
 
     public IntegrationException(String message, Throwable cause) {
-        super(message, ErrorCode.INTEGRATION_ERROR, cause);
+        super(message, CommonErrorCode.INTEGRATION_ERROR, cause);
     }
 }

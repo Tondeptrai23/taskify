@@ -4,6 +4,7 @@ import com.taskify.common.dto.ApiError;
 import com.taskify.common.error.exception.TaskifyException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -16,8 +17,8 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class BaseExceptionHandler {
-
-    protected abstract String getServiceName();
+    @Value("${spring.application.name}")
+    private String serviceName;
 
     @ExceptionHandler(TaskifyException.class)
     public ResponseEntity<ApiError> handleTaskifyException(TaskifyException ex, HttpServletRequest request) {
@@ -30,7 +31,7 @@ public abstract class BaseExceptionHandler {
                 .code(errorCode.getCode())
                 .message(ex.getMessage())
                 .path(request.getRequestURI())
-                .service(getServiceName())
+                .service(serviceName)
                 .timestamp(ZonedDateTime.now())
                 .details(ex.getDetails())
                 .build();
@@ -56,10 +57,10 @@ public abstract class BaseExceptionHandler {
         ApiError apiError = ApiError.builder()
                 .success(false)
                 .status(HttpStatus.BAD_REQUEST.value())
-                .code(ErrorCode.VALIDATION_ERROR.getCode())
+                .code(CommonErrorCode.VALIDATION_ERROR.getCode())
                 .message("Validation failed")
                 .path(request.getRequestURI())
-                .service(getServiceName())
+                .service(serviceName)
                 .timestamp(ZonedDateTime.now())
                 .details(validationErrors)
                 .build();
@@ -75,10 +76,10 @@ public abstract class BaseExceptionHandler {
         ApiError apiError = ApiError.builder()
                 .success(false)
                 .status(HttpStatus.FORBIDDEN.value())
-                .code(ErrorCode.FORBIDDEN.getCode())
+                .code(CommonErrorCode.FORBIDDEN.getCode())
                 .message("Access denied: You don't have permission to perform this action")
                 .path(request.getRequestURI())
-                .service(getServiceName())
+                .service(serviceName)
                 .timestamp(ZonedDateTime.now())
                 .details(null)
                 .build();
@@ -94,10 +95,10 @@ public abstract class BaseExceptionHandler {
         ApiError apiError = ApiError.builder()
                 .success(false)
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .code(ErrorCode.INTERNAL_ERROR.getCode())
+                .code(CommonErrorCode.INTERNAL_ERROR.getCode())
                 .message("An unexpected error occurred")
                 .path(request.getRequestURI())
-                .service(getServiceName())
+                .service(serviceName)
                 .timestamp(ZonedDateTime.now())
                 .details(null)
                 .build();

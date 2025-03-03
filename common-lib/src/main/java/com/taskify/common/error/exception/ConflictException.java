@@ -1,10 +1,11 @@
 package com.taskify.common.error.exception;
 
+import com.taskify.common.error.CommonErrorCode;
 import com.taskify.common.error.ErrorCode;
 
 public class ConflictException extends TaskifyException {
     public ConflictException(String message) {
-        super(message, ErrorCode.CONFLICT);
+        super(message, CommonErrorCode.CONFLICT);
     }
 
     public ConflictException(String message, ErrorCode errorCode) {

@@ -1,9 +1,9 @@
 package com.taskify.iam.exception;
 
-import com.taskify.common.error.ConflictException;
+import com.taskify.common.error.exception.ConflictException;
 
 public class DefaultRoleDeletionException extends ConflictException {
     public DefaultRoleDeletionException() {
-        super("Cannot delete default role", "DEFAULT_ROLE_DELETION");
+        super("Cannot delete default role", IamErrorCode.DEFAULT_ROLE_DELETION);
     }
 }
