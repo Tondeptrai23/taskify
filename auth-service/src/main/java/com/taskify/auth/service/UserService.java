@@ -9,7 +9,7 @@ import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.repository.UserRepository;
 import com.taskify.auth.specification.UserSpecifications;
 import com.taskify.common.constant.SystemRole;
-import com.taskify.common.error.UserNotFoundException;
+import com.taskify.common.error.resource.UserNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

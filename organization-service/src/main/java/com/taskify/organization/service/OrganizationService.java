@@ -1,7 +1,7 @@
 package com.taskify.organization.service;
 
-import com.taskify.common.error.OrganizationNotFoundException;
-import com.taskify.common.error.UserNotFoundException;
+import com.taskify.common.error.resource.OrganizationNotFoundException;
+import com.taskify.common.error.resource.UserNotFoundException;
 import com.taskify.organization.dto.organization.CreateOrganizationDto;
 import com.taskify.organization.dto.organization.OrganizationCollectionRequest;
 import com.taskify.organization.dto.organization.UpdateOrganizationDto;

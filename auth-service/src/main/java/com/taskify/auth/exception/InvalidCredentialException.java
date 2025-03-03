@@ -1,9 +1,9 @@
 package com.taskify.auth.exception;
 
-import com.taskify.common.error.UnauthorizedException;
+import com.taskify.common.error.exception.UnauthorizedException;
 
 public class InvalidCredentialException extends UnauthorizedException {
     public InvalidCredentialException(String message) {
-        super(message, "INVALID_CREDENTIALS");
+        super(message, AuthErrorCode.INVALID_CREDENTIALS);
     }
 }

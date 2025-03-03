@@ -6,11 +6,12 @@ import com.taskify.auth.dto.user.CreateUserDto;
 import com.taskify.auth.entity.User;
 import com.taskify.auth.exception.EmailAlreadyExistsException;
 import com.taskify.auth.exception.InvalidCredentialException;
-import com.taskify.common.error.UnauthorizedException;
+import com.taskify.common.error.exception.UnauthorizedException;
 import com.taskify.auth.exception.UsernameAlreadyExistsException;
 import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class AuthService {
     private final UserRepository _userRepository;
@@ -47,7 +49,6 @@ public class AuthService {
                 () -> new InvalidCredentialException("Invalid username")
         );
 
-        var hashedPassword = _passwordEncoder.encode(password);
         var userPassword = user.getPasswordHash();
         if (!_passwordEncoder.matches(password, userPassword)) {
             throw new InvalidCredentialException("Invalid password");

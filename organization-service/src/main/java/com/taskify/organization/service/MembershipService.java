@@ -1,6 +1,6 @@
 package com.taskify.organization.service;
 
-import com.taskify.common.error.OrganizationNotFoundException;
+import com.taskify.common.error.resource.OrganizationNotFoundException;
 import com.taskify.organization.dto.membership.MembershipCollectionRequest;
 import com.taskify.organization.dto.role.OrganizationRoleDto;
 import com.taskify.organization.entity.LocalUser;

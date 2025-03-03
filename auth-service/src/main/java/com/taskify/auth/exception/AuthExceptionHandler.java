@@ -1,4 +1,4 @@
-package com.taskify.organization.exception;
+package com.taskify.auth.exception;
 
 import com.taskify.common.error.BaseExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +7,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler extends BaseExceptionHandler {
-    // Service-specific exception handlers here
+public class AuthExceptionHandler extends BaseExceptionHandler {
+    //
 }
