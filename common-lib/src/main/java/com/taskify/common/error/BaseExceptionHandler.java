@@ -1,68 +1,118 @@
 package com.taskify.common.error;
 
-import com.taskify.common.dto.ErrorResponse;
+import com.taskify.common.dto.ApiError;
+import com.taskify.common.error.exception.TaskifyException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.time.ZonedDateTime;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
-public class BaseExceptionHandler {
-    @ExceptionHandler(ServiceIntegrationException.class)
-    public ResponseEntity<ErrorResponse> handleServiceIntegrationException(ServiceIntegrationException ex) {
-        ErrorResponse error = new ErrorResponse(
-                ex.getMessage(),
-                ex.getErrorCode(),
-                HttpStatus.SERVICE_UNAVAILABLE.value()
-        );
-        return new ResponseEntity<>(error, HttpStatus.SERVICE_UNAVAILABLE);
+public abstract class BaseExceptionHandler {
+
+    protected abstract String getServiceName();
+
+    @ExceptionHandler(TaskifyException.class)
+    public ResponseEntity<ApiError> handleTaskifyException(TaskifyException ex, HttpServletRequest request) {
+        ErrorCode errorCode = ex.getErrorCodeEnum();
+        HttpStatus status = errorCode.getStatus();
+
+        ApiError apiError = ApiError.builder()
+                .success(false)
+                .status(status.value())
+                .code(errorCode.getCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .service(getServiceName())
+                .timestamp(ZonedDateTime.now())
+                .details(ex.getDetails())
+                .build();
+
+        logError(ex, apiError);
+
+        return new ResponseEntity<>(apiError, status);
     }
 
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
-        log.error("Conflict occurred: ", ex);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
+        Map<String, String> validationErrors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(
+                        fieldError -> fieldError.getField(),
+                        fieldError -> fieldError.getDefaultMessage() == null ?
+                                "Invalid value" : fieldError.getDefaultMessage(),
+                        (error1, error2) -> error1 // In case of duplicate keys
+                ));
 
-        ErrorResponse error = new ErrorResponse(ex.getMessage(), ex.getErrorCode(), HttpStatus.CONFLICT.value());
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
-    }
+        ApiError apiError = ApiError.builder()
+                .success(false)
+                .status(HttpStatus.BAD_REQUEST.value())
+                .code(ErrorCode.VALIDATION_ERROR.getCode())
+                .message("Validation failed")
+                .path(request.getRequestURI())
+                .service(getServiceName())
+                .timestamp(ZonedDateTime.now())
+                .details(validationErrors)
+                .build();
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFoundException(ResourceNotFoundException ex) {
-        log.error("Resource not found: ", ex);
+        logError(ex, apiError);
 
-        ErrorResponse error = new ErrorResponse(ex.getMessage(), ex.getErrorCode(), HttpStatus.NOT_FOUND.value());
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(AuthorizationDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException ex) {
-        ErrorResponse error = new ErrorResponse(
-                "Access denied: You don't have permission to perform this action",
-                "AUTHORIZATION_DENIED",
-                HttpStatus.FORBIDDEN.value()
-        );
-        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        ErrorResponse error = new ErrorResponse(
-                "Access denied: You don't have permission to perform this action",
-                "ACCESS_DENIED",
-                HttpStatus.FORBIDDEN.value()
-        );
-        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    public ResponseEntity<ApiError> handleAccessDenied(
+            AccessDeniedException ex, HttpServletRequest request) {
+        ApiError apiError = ApiError.builder()
+                .success(false)
+                .status(HttpStatus.FORBIDDEN.value())
+                .code(ErrorCode.FORBIDDEN.getCode())
+                .message("Access denied: You don't have permission to perform this action")
+                .path(request.getRequestURI())
+                .service(getServiceName())
+                .timestamp(ZonedDateTime.now())
+                .details(null)
+                .build();
+
+        logError(ex, apiError);
+
+        return new ResponseEntity<>(apiError, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
-        ErrorResponse error = new ErrorResponse(ex.getMessage(), "INTERNAL_ERROR", HttpStatus.INTERNAL_SERVER_ERROR.value());
+    public ResponseEntity<ApiError> handleAllUncaughtException(
+            Exception ex, HttpServletRequest request) {
+        ApiError apiError = ApiError.builder()
+                .success(false)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .code(ErrorCode.INTERNAL_ERROR.getCode())
+                .message("An unexpected error occurred")
+                .path(request.getRequestURI())
+                .service(getServiceName())
+                .timestamp(ZonedDateTime.now())
+                .details(null)
+                .build();
 
-        log.error("An error occurred: ", ex);
+        logError(ex, apiError);
 
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    private void logError(Throwable ex, ApiError apiError) {
+        if (apiError.getStatus() >= 500) {
+            log.error("Error response: {}", apiError, ex);
+        } else {
+            log.warn("Error response: {}", apiError);
+            log.debug("Error details:", ex);
+        }
     }
 }
