@@ -3,7 +3,8 @@ package com.taskify.iam.service;
 import com.taskify.common.error.resource.OrganizationNotFoundException;
 import com.taskify.common.error.resource.RoleNotFoundException;
 import com.taskify.iam.dto.role.CreateOrganizationRoleDto;
-import com.taskify.iam.entity.OrganizationRole;
+import com.taskify.iam.entity.LocalOrganization;
+import com.taskify.iam.entity.Role;
 import com.taskify.iam.exception.DefaultRoleDeletionException;
 import com.taskify.iam.mapper.OrganizationRoleMapper;
 import com.taskify.iam.repository.OrganizationRepository;
@@ -23,7 +24,6 @@ public class OrganizationRoleService {
     private final OrganizationRoleRepository _orgRoleRepository;
     private final OrganizationRepository _organizationRepository;
     private final OrganizationRoleMapper _roleMapper;
-
     private final PermissionPrerequisiteValidator _permissionCreationValidator;
 
     @Autowired
@@ -31,54 +31,49 @@ public class OrganizationRoleService {
                                    PermissionPrerequisiteValidator permissionCreationValidator,
                                    OrganizationRepository organizationRepository,
                                    OrganizationRoleMapper roleMapper) {
-        _orgRoleRepository = roleRepository;
-        _permissionCreationValidator = permissionCreationValidator;
-        _organizationRepository = organizationRepository;
-        _roleMapper = roleMapper;
+        this._orgRoleRepository = roleRepository;
+        this._permissionCreationValidator = permissionCreationValidator;
+        this._organizationRepository = organizationRepository;
+        this._roleMapper = roleMapper;
     }
 
-    public OrganizationRole getRole(UUID roleId, UUID organizationId) {
+    public Role getRole(UUID roleId, UUID organizationId) {
         return _orgRoleRepository.findRoleByIdAndOrgIdWithPermissions(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
     }
 
-    public List<OrganizationRole> getRoles(UUID organizationId) {
+    public List<Role> getRoles(UUID organizationId) {
         var roles = _orgRoleRepository.findAllWithPermissionsInOrg(organizationId);
-
         log.info("Roles: {}", roles);
-
         return roles;
     }
 
     @Transactional
-    public OrganizationRole createRole(CreateOrganizationRoleDto role, UUID organizationId) {
-        var newRole = _roleMapper.toEntity(role);
-        var createdRole = _orgRoleRepository.save(newRole);
-
-        var organization = _organizationRepository.findById(organizationId)
+    public Role createRole(CreateOrganizationRoleDto roleDto, UUID organizationId) {
+        LocalOrganization organization = _organizationRepository.findById(organizationId)
                 .orElseThrow(() -> new OrganizationNotFoundException("Organization not found"));
-        createdRole.setOrganization(organization);
 
-        if (role.getPermissions() != null) {
-            var permissions = _permissionCreationValidator.validatePermissionPrerequisites(role.getPermissions());
+        Role newRole = _roleMapper.toEntity(roleDto);
+        newRole.setOrganization(organization);
 
-            createdRole.setPermissions(new HashSet<>(permissions));
+        if (roleDto.getPermissions() != null) {
+            var permissions = _permissionCreationValidator.validatePermissionPrerequisites(roleDto.getPermissions());
+            newRole.setPermissions(new HashSet<>(permissions));
         }
 
-        return _orgRoleRepository.save(createdRole);
+        return _orgRoleRepository.save(newRole);
     }
 
     @Transactional
-    public OrganizationRole updateRole(UUID roleId, CreateOrganizationRoleDto role, UUID organizationId) {
-        var existingRole = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
+    public Role updateRole(UUID roleId, CreateOrganizationRoleDto roleDto, UUID organizationId) {
+        Role existingRole = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
-        existingRole.setName(role.getName());
-        existingRole.setDescription(role.getDescription());
+        existingRole.setName(roleDto.getName());
+        existingRole.setDescription(roleDto.getDescription());
 
-        if (role.getPermissions() != null) {
-            var permissions = _permissionCreationValidator.validatePermissionPrerequisites(role.getPermissions());
-
+        if (roleDto.getPermissions() != null) {
+            var permissions = _permissionCreationValidator.validatePermissionPrerequisites(roleDto.getPermissions());
             existingRole.setPermissions(new HashSet<>(permissions));
         }
 
@@ -87,35 +82,37 @@ public class OrganizationRoleService {
 
     @Transactional
     public void deleteRole(UUID roleId, UUID organizationId) {
-        var role = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
+        Role role = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
-        if (role.isDefault()){
+        if (role.isDefault()) {
             throw new DefaultRoleDeletionException();
         }
 
         _orgRoleRepository.delete(role);
     }
 
-    public OrganizationRole getDefaultRole(UUID organizationId) {
+    public Role getDefaultRole(UUID organizationId) {
         return _orgRoleRepository.findDefaultRoleByOrgId(organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Default role not found"));
     }
 
     @Transactional
-    public OrganizationRole setDefaultRole(UUID roleId, UUID organizationId) {
-        var role = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
+    public Role setDefaultRole(UUID roleId, UUID organizationId) {
+        Role role = _orgRoleRepository.findRoleByIdAndOrgId(roleId, organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Role not found"));
 
-        var defaultRole = _orgRoleRepository.findDefaultRoleByOrgId(organizationId)
+        Role defaultRole = _orgRoleRepository.findDefaultRoleByOrgId(organizationId)
                 .orElseThrow(() -> new RoleNotFoundException("Default role not found"));
 
         if (defaultRole.getId().equals(roleId)) {
             return role;
         }
 
-        _orgRoleRepository.updateDefaultRole(defaultRole.getId(), false);
-        return _orgRoleRepository.updateDefaultRole(roleId, true);
+        defaultRole.setDefault(false);
+        _orgRoleRepository.save(defaultRole);
+
+        role.setDefault(true);
+        return _orgRoleRepository.save(role);
     }
 }
-

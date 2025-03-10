@@ -1,10 +1,10 @@
 package com.taskify.iam.mapper;
 
-
 import com.taskify.iam.dto.role.CreateOrganizationRoleDto;
 import com.taskify.iam.dto.role.OrganizationRoleDto;
 import com.taskify.iam.entity.Permission;
-import com.taskify.iam.entity.OrganizationRole;
+import com.taskify.iam.entity.Role;
+import com.taskify.iam.entity.RoleType;
 import org.mapstruct.IterableMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface OrganizationRoleMapper {
     @Mapping(target = "permissions", source = "permissions", qualifiedByName = "permissionsToStringList")
-    @Mapping(target = "organizationId", source = "organization.id")
+    @Mapping(target = "organizationId", expression = "java(organizationRole.getOrganization() != null ? organizationRole.getOrganization().getId() : null)")
     @Named("toDto")
-    OrganizationRoleDto toDto(OrganizationRole organizationRole);
+    OrganizationRoleDto toDto(Role organizationRole);
 
     @IterableMapping(qualifiedByName = "toDto")
-    List<OrganizationRoleDto> toDtoList(List<OrganizationRole> organizationRoles);
+    List<OrganizationRoleDto> toDtoList(List<Role> organizationRoles);
 
     @Named("permissionsToStringList")
     default List<String> permissionsToStringList(Set<Permission> permissions) {
@@ -35,7 +35,10 @@ public interface OrganizationRoleMapper {
     }
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "permissions", source = "permissions", ignore = true)
+    @Mapping(target = "permissions", ignore = true)
+    @Mapping(target = "organization", ignore = true)
+    @Mapping(target = "project", ignore = true)
+    @Mapping(target = "roleType", constant = "ORGANIZATION")
     @Named("toEntity")
-    OrganizationRole toEntity(CreateOrganizationRoleDto role);
+    Role toEntity(CreateOrganizationRoleDto role);
 }

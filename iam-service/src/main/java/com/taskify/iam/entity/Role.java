@@ -13,9 +13,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Node("ProjectRole")
+@Node("Role")
 @Data
-public class ProjectRole {
+public class Role {
     @Id
     @GeneratedValue(GeneratedValue.UUIDGenerator.class)
     private UUID id;
@@ -23,6 +23,9 @@ public class ProjectRole {
     private String name;
     private String description;
     private boolean isDefault;
+
+    // Role type to distinguish between organization and project roles
+    private RoleType roleType;
 
     @CreatedDate
     private ZonedDateTime createdAt;
@@ -33,6 +36,18 @@ public class ProjectRole {
     @Relationship(type = "HAS_PERMISSION", direction = Relationship.Direction.OUTGOING)
     private Set<Permission> permissions = new HashSet<>();
 
-    @Relationship(type = "HAS_ROLE", direction = Relationship.Direction.INCOMING)
+    // Organization context (for organization roles)
+    @Relationship(type = "BELONGS_TO_ORG", direction = Relationship.Direction.OUTGOING)
+    private LocalOrganization organization;
+
+    // Project context (for project roles)
+    @Relationship(type = "BELONGS_TO_PROJECT", direction = Relationship.Direction.OUTGOING)
     private Project project;
+
+    // Helper methods
+    public UUID getContextId() {
+        return RoleType.ORGANIZATION.equals(roleType) ?
+                (organization != null ? organization.getId() : null) :
+                (project != null ? project.getId() : null);
+    }
 }

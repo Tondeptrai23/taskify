@@ -22,8 +22,8 @@ public class LocalUser {
     private boolean isDeleted = false;
 
     @Relationship(type = "HAS_ORG_ROLE", direction = Relationship.Direction.OUTGOING)
-    private Set<OrganizationRole> organizationRoles;
+    private Set<Role> organizationRoles;
 
     @Relationship(type = "HAS_PROJECT_ROLE", direction = Relationship.Direction.OUTGOING)
-    private Set<ProjectRole> projectRoles;
+    private Set<Role> projectRoles;
 }

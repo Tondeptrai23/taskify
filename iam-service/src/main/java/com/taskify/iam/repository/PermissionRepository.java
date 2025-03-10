@@ -20,21 +20,22 @@ public interface PermissionRepository extends Neo4jRepository<Permission, Long> 
             "WHERE pg.id = $groupId RETURN p")
     List<Permission> findPermissionsByGroupId(Long groupId);
 
-    @Query("MATCH (u:User)-[r:HAS_ORG_ROLE {organizationId: $organizationId}]->(role:OrganizationRole)-[hp:HAS_PERMISSION]->(p:Permission) " +
-            "WHERE u.id = $userId AND u.isDeleted = false " +
+    @Query("MATCH (u:User)-[r:HAS_ORG_ROLE {organizationId: $organizationId}]->(role:Role)-[hp:HAS_PERMISSION]->(p:Permission) " +
+            "WHERE u.id = $userId AND u.isDeleted = false AND role.roleType = 'ORGANIZATION' " +
             "RETURN DISTINCT p")
     List<Permission> findOrganizationPermissionsOfUser(UUID organizationId, UUID userId);
 
-    @Query("MATCH (u:User)-[r:HAS_PROJECT_ROLE {projectId: $projectId}]->(role:ProjectRole)-[hp:HAS_PERMISSION]->(p:Permission) " +
-            "WHERE u.id = $userId AND u.isDeleted = false " +
-            "RETURN DISTINCT p")
-    List<Permission> findProjectPermissionsOfUser(UUID projectId, UUID userId);
-
-    @Query("MATCH (u:User)-[r:HAS_PROJECT_ROLE {projectId: $projectId}]->(role:ProjectRole)-[hp:HAS_PERMISSION]->(p1:Permission) " +
-            "WHERE u.id = $userId AND u.isDeleted = false " +
+    @Query("MATCH (u:User)-[r:HAS_PROJECT_ROLE {projectId: $projectId}]->(role:Role)-[hp:HAS_PERMISSION]->(p1:Permission) " +
+            "WHERE u.id = $userId AND u.isDeleted = false AND role.roleType = 'PROJECT' " +
             "WITH u, COLLECT(DISTINCT p1) AS projectPermissions " +
-            "MATCH (u)-[:HAS_ORG_ROLE {organizationId: $organizationId}]->(orgRole:OrganizationRole)-[:HAS_PERMISSION]->(p2:Permission) " +
+            "MATCH (u)-[:HAS_ORG_ROLE {organizationId: $organizationId}]->(orgRole:Role)-[:HAS_PERMISSION]->(p2:Permission) " +
+            "WHERE orgRole.roleType = 'ORGANIZATION' " +
             "WITH u, projectPermissions, COLLECT(DISTINCT p2) AS orgPermissions " +
             "RETURN projectPermissions + orgPermissions AS allPermissions")
     List<Permission> findPermissionsOfUser(UUID userId, UUID projectId, UUID organizationId);
+
+    @Query("MATCH (u:User)-[r:HAS_PROJECT_ROLE {projectId: $projectId}]->(role:Role)-[hp:HAS_PERMISSION]->(p:Permission) " +
+            "WHERE u.id = $userId AND u.isDeleted = false AND role.roleType = 'PROJECT' " +
+            "RETURN DISTINCT p")
+    List<Permission> findProjectPermissionsOfUser(UUID projectId, UUID userId);
 }
