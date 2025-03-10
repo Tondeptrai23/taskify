@@ -1,4 +1,4 @@
-package com.taskify.iam.service;
+package com.taskify.iam.service.permission;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Service
 public class PermissionVerificationService {
-    private PermissionService _permissionService;
+    private final PermissionService _permissionService;
 
     @Autowired
     public PermissionVerificationService(PermissionService permissionService) {

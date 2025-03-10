@@ -4,7 +4,7 @@ import com.taskify.common.dto.ApiResponse;
 import com.taskify.iam.dto.permission.PermissionDto;
 import com.taskify.iam.dto.permission.PermissionGroupDto;
 import com.taskify.iam.mapper.PermissionMapper;
-import com.taskify.iam.service.PermissionService;
+import com.taskify.iam.service.permission.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

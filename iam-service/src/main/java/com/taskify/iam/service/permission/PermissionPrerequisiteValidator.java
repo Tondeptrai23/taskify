@@ -1,4 +1,4 @@
-package com.taskify.iam.service;
+package com.taskify.iam.service.permission;
 
 import com.taskify.iam.entity.Permission;
 import com.taskify.iam.exception.MissingPermissionPrerequisiteException;
@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 @Service
 public class PermissionPrerequisiteValidator {

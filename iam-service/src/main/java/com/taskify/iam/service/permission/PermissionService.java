@@ -1,4 +1,4 @@
-package com.taskify.iam.service;
+package com.taskify.iam.service.permission;
 
 import com.taskify.iam.entity.Permission;
 import com.taskify.iam.entity.PermissionGroup;

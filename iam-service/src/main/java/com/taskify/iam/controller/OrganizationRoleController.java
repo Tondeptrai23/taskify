@@ -4,7 +4,7 @@ import com.taskify.common.dto.ApiResponse;
 import com.taskify.iam.dto.role.CreateOrganizationRoleDto;
 import com.taskify.iam.dto.role.OrganizationRoleDto;
 import com.taskify.iam.mapper.OrganizationRoleMapper;
-import com.taskify.iam.service.OrganizationRoleService;
+import com.taskify.iam.service.role.OrganizationRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

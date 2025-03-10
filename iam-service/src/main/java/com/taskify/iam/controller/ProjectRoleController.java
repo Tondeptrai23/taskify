@@ -4,7 +4,7 @@ import com.taskify.common.dto.ApiResponse;
 import com.taskify.iam.dto.role.CreateProjectRoleDto;
 import com.taskify.iam.dto.role.ProjectRoleDto;
 import com.taskify.iam.mapper.ProjectRoleMapper;
-import com.taskify.iam.service.ProjectRoleService;
+import com.taskify.iam.service.role.ProjectRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,14 +15,14 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/projects/{projectId}/roles")
 public class ProjectRoleController {
-    private final ProjectRoleService projectRoleService;
-    private final ProjectRoleMapper projectRoleMapper;
+    private final ProjectRoleService _projectRoleService;
+    private final ProjectRoleMapper _projectRoleMapper;
 
     @Autowired
     public ProjectRoleController(ProjectRoleService projectRoleService,
                                  ProjectRoleMapper projectRoleMapper) {
-        this.projectRoleService = projectRoleService;
-        this.projectRoleMapper = projectRoleMapper;
+        this._projectRoleService = projectRoleService;
+        this._projectRoleMapper = projectRoleMapper;
     }
 
     @GetMapping({"/", ""})
@@ -30,8 +30,8 @@ public class ProjectRoleController {
             @PathVariable UUID projectId,
             @RequestHeader("X-Organization-Context") UUID organizationId
     ) {
-        var roles = projectRoleService.getRoles(projectId);
-        var response = new ApiResponse<>(projectRoleMapper.toDtoList(roles));
+        var roles = _projectRoleService.getRoles(projectId);
+        var response = new ApiResponse<>(_projectRoleMapper.toDtoList(roles));
         return ResponseEntity.ok(response);
     }
 
@@ -40,8 +40,8 @@ public class ProjectRoleController {
             @PathVariable UUID projectId,
             @RequestBody CreateProjectRoleDto roleDto,
             @RequestHeader("X-Organization-Context") UUID organizationId) {
-        var role = projectRoleService.createRole(roleDto, projectId, organizationId);
-        var response = new ApiResponse<>(projectRoleMapper.toDto(role));
+        var role = _projectRoleService.createRole(roleDto, projectId, organizationId);
+        var response = new ApiResponse<>(_projectRoleMapper.toDto(role));
         return ResponseEntity.ok(response);
     }
 
@@ -49,8 +49,8 @@ public class ProjectRoleController {
     public ResponseEntity<ApiResponse<ProjectRoleDto>> getRole(
             @PathVariable UUID projectId,
             @PathVariable UUID roleId) {
-        var role = projectRoleService.getRole(roleId, projectId);
-        var response = new ApiResponse<>(projectRoleMapper.toDto(role));
+        var role = _projectRoleService.getRole(roleId, projectId);
+        var response = new ApiResponse<>(_projectRoleMapper.toDto(role));
         return ResponseEntity.ok(response);
     }
 
@@ -59,8 +59,8 @@ public class ProjectRoleController {
             @PathVariable UUID projectId,
             @PathVariable UUID roleId,
             @RequestBody CreateProjectRoleDto roleDto) {
-        var role = projectRoleService.updateRole(roleId, roleDto, projectId);
-        var response = new ApiResponse<>(projectRoleMapper.toDto(role));
+        var role = _projectRoleService.updateRole(roleId, roleDto, projectId);
+        var response = new ApiResponse<>(_projectRoleMapper.toDto(role));
         return ResponseEntity.ok(response);
     }
 
@@ -68,7 +68,7 @@ public class ProjectRoleController {
     public ResponseEntity<ApiResponse<Void>> deleteRole(
             @PathVariable UUID projectId,
             @PathVariable UUID roleId) {
-        projectRoleService.deleteRole(roleId, projectId);
+        _projectRoleService.deleteRole(roleId, projectId);
         var response = new ApiResponse<Void>(null);
         return ResponseEntity.ok(response);
     }
@@ -77,8 +77,8 @@ public class ProjectRoleController {
     public ResponseEntity<ApiResponse<ProjectRoleDto>> setDefaultRole(
             @PathVariable UUID projectId,
             @PathVariable UUID roleId) {
-        var role = projectRoleService.setDefaultRole(roleId, projectId);
-        var response = new ApiResponse<>(projectRoleMapper.toDto(role));
+        var role = _projectRoleService.setDefaultRole(roleId, projectId);
+        var response = new ApiResponse<>(_projectRoleMapper.toDto(role));
         return ResponseEntity.ok(response);
     }
 }
