@@ -2,6 +2,7 @@ package com.taskify.iam.controller;
 
 import com.taskify.common.dto.ApiResponse;
 import com.taskify.iam.dto.permission.UserPermissionsResponse;
+import com.taskify.iam.dto.permission.VerifyPermissionRequest;
 import com.taskify.iam.dto.role.OrganizationRoleDto;
 import com.taskify.iam.dto.role.ProjectRoleDto;
 import com.taskify.iam.mapper.OrganizationRoleMapper;
@@ -9,6 +10,7 @@ import com.taskify.iam.mapper.PermissionMapper;
 import com.taskify.iam.mapper.ProjectRoleMapper;
 import com.taskify.iam.service.OrganizationRoleService;
 import com.taskify.iam.service.PermissionService;
+import com.taskify.iam.service.PermissionVerificationService;
 import com.taskify.iam.service.ProjectRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,7 @@ public class InternalIamController {
     private final OrganizationRoleMapper _orgRoleMapper;
     private final PermissionService _permissionService;
     private final PermissionMapper _permissionMapper;
+    private final PermissionVerificationService _permissionVerificationService;
 
     @Autowired
     public InternalIamController(OrganizationRoleService orgRoleService,
@@ -33,12 +36,14 @@ public class InternalIamController {
                                  ProjectRoleService projectRoleService,
                                  PermissionService permissionService,
                                  PermissionMapper permissionMapper,
+                                    PermissionVerificationService permissionVerificationService,
                                  ProjectRoleMapper projectRoleMapper) {
         _orgRoleService = orgRoleService;
         _orgRoleMapper = orgRoleMapper;
         _projectRoleService = projectRoleService;
         _permissionService = permissionService;
         _permissionMapper = permissionMapper;
+        _permissionVerificationService = permissionVerificationService;
         _projectRoleMapper = projectRoleMapper;
     }
 
@@ -81,5 +86,20 @@ public class InternalIamController {
         return ResponseEntity.ok(new ApiResponse<>(
                 new UserPermissionsResponse(orgId, permissions)
         ));
+    }
+
+    @PostMapping("/permissions/verify")
+    public ResponseEntity<ApiResponse<Boolean>> verifyPermission(
+            @RequestBody VerifyPermissionRequest request,
+            @RequestHeader("X-User-Id") UUID userId,
+            @RequestHeader("X-Organization-Context") UUID orgId
+    ){
+        var response = _permissionVerificationService.hasPermission(
+                userId,
+                orgId,
+                UUID.fromString(request.getProjectId()),
+                request.getPermission()
+        );
+        return ResponseEntity.ok(new ApiResponse<>(response));
     }
 }
