@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -33,5 +34,13 @@ public class PermissionService {
 
     public List<PermissionGroup> getPermissionGroups() {
         return _permissionGroupRepository.findAllWithPermissions();
+    }
+
+    public List<Permission> getOrganizationPermissionsOfUser(UUID orgId, UUID userId) {
+        return _permissionRepository.findOrganizationPermissionsOfUser(orgId, userId);
+    }
+
+    public List<Permission> getProjectPermissionsOfUser(UUID projectId, UUID userId, UUID orgId) {
+        return _permissionRepository.findPermissionsOfUser(userId, projectId, orgId);
     }
 }

@@ -10,6 +10,8 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface PermissionMapper {
@@ -24,4 +26,13 @@ public interface PermissionMapper {
 
     @IterableMapping(qualifiedByName = "toGroupDto")
     List<PermissionGroupDto> toGroupDtoList(List<PermissionGroup> groups);
+
+    default List<String> permissionsToStringList(Set<Permission> permissions) {
+        if (permissions == null) {
+            return null;
+        }
+        return permissions.stream()
+                .map(Permission::getName)
+                .collect(Collectors.toList());
+    }
 }

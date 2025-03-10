@@ -18,7 +18,8 @@ CREATE (admin:User {
   email: 'admin@taskify.com',
   systemRole: 'SYSTEM_ADMIN',
   createdAt: datetime(),
-  updatedAt: datetime()
+  updatedAt: datetime(),
+  isDeleted: false
 });
 
 CREATE (user:User {
@@ -27,7 +28,8 @@ CREATE (user:User {
   email: 'user@taskify.com',
   systemRole: 'USER',
   createdAt: datetime(),
-  updatedAt: datetime()
+  updatedAt: datetime(),
+  isDeleted: false
 });
 
 // Create Sample Projects with meaningful names
@@ -487,3 +489,133 @@ CREATE INDEX permission_id_index IF NOT EXISTS FOR (p:Permission) ON (p.id);
 CREATE INDEX permission_name_index IF NOT EXISTS FOR (p:Permission) ON (p.name);
 CREATE INDEX organization_id_index IF NOT EXISTS FOR (o:Organization) ON (o.id);
 CREATE INDEX project_id_index IF NOT EXISTS FOR (p:Project) ON (p.id);
+
+
+// For testing purpose
+
+CREATE (testUser:User {
+  id: '33333333-3333-3333-3333-333333333334',
+  username: 'test_user',
+  email: 'test@taskify.com',
+  systemRole: 'USER',
+  createdAt: datetime(),
+  updatedAt: datetime(),
+  isDeleted: false
+});
+
+CREATE (restrictedRole:OrganizationRole {
+  id: '88888888-8888-8888-8888-888888888889',
+  name: 'Restricted User',
+  description: 'User with minimal organization-level permissions',
+  isDefault: false,
+  createdAt: datetime(),
+  updatedAt: datetime(),
+  isDeleted: false
+});
+
+MATCH (r:OrganizationRole {name: 'Developer'})
+MATCH (p:Permission {name: 'CREATE_TASK'})
+MATCH (r)-[rel:HAS_PERMISSION]->(p)
+DELETE rel;
+
+CREATE (projectPowerUser:ProjectRole {
+  id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+  name: 'Project Power User',
+  description: 'Has project-specific permissions that exceed their org permissions',
+  isDefault: false,
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+MATCH (o:Organization {id: '33333333-3333-3333-3333-333333333333'})
+MATCH (r:OrganizationRole {name: 'Restricted User'})
+CREATE (o)-[:HAS_ROLE]->(r);
+
+MATCH (p:Project {id: '88888888-8888-8888-8888-888888888888'})
+MATCH (r:ProjectRole {name: 'Project Power User'})
+CREATE (p)-[:HAS_ROLE]->(r);
+
+MATCH (r:OrganizationRole {name: 'Restricted User'})
+MATCH (p:Permission)
+  WHERE p.name IN ['VIEW_PROJECT', 'VIEW_TASK', 'VIEW_MEMBER']
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+MATCH (r:ProjectRole {name: 'Project Power User'})
+MATCH (p:Permission)
+  WHERE p.name IN [
+    'VIEW_PROJECT', 'UPDATE_PROJECT',
+    'CREATE_TASK', 'UPDATE_TASK_STATUS', 'DELETE_TASK', 'VIEW_TASK',
+    'VIEW_MEMBER'
+  ]
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+MATCH (u:User {username: 'test_user'})
+MATCH (r:OrganizationRole {name: 'Restricted User'})
+CREATE (u)-[:HAS_ORG_ROLE {
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
+
+MATCH (u:User {username: 'test_user'})
+MATCH (r:ProjectRole {name: 'Project Power User'})
+CREATE (u)-[:HAS_PROJECT_ROLE {
+  projectId: '88888888-8888-8888-8888-888888888888',
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
+
+MATCH (u:User {username: 'regular_user'})
+MATCH (r:ProjectRole {name: 'Web Design Lead'})
+CREATE (u)-[:HAS_PROJECT_ROLE {
+  projectId: '88888888-8888-8888-8888-888888888888',
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
+
+CREATE (restrictedProjectUser:User {
+  id: '44444444-4444-4444-4444-444444444444',
+  username: 'restricted_project_user',
+  email: 'restricted_project@taskify.com',
+  systemRole: 'USER',
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+CREATE (restrictedProjectRole:ProjectRole {
+  id: 'aaaaaaaa-bbbb-cccc-dddd-ffffffffffff',
+  name: 'Restricted Project User',
+  description: 'Has fewer permissions in project than at org level',
+  isDefault: false,
+  createdAt: datetime(),
+  updatedAt: datetime()
+});
+
+MATCH (p:Project {id: '77777777-7777-7777-7777-777777777777'})
+MATCH (r:ProjectRole {name: 'Restricted Project User'})
+CREATE (p)-[:HAS_ROLE]->(r);
+
+MATCH (r:ProjectRole {name: 'Restricted Project User'})
+MATCH (p:Permission)
+  WHERE p.name IN ['VIEW_PROJECT', 'VIEW_TASK']
+CREATE (r)-[:HAS_PERMISSION]->(p);
+
+MATCH (u:User {username: 'restricted_project_user'})
+MATCH (r:OrganizationRole {name: 'Project Manager'})
+CREATE (u)-[:HAS_ORG_ROLE {
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
+
+// Assign restricted_project_user to Restricted Project Role
+MATCH (u:User {username: 'restricted_project_user'})
+MATCH (r:ProjectRole {name: 'Restricted Project User'})
+CREATE (u)-[:HAS_PROJECT_ROLE {
+  projectId: '77777777-7777-7777-7777-777777777777',
+  organizationId: '33333333-3333-3333-3333-333333333333',
+  grantedAt: datetime(),
+  grantedBy: 'SYSTEM'
+}]->(r);
