@@ -36,6 +36,7 @@ public class GlobalExceptionFilter implements GlobalFilter, Ordered {
     }
 
     private Mono<Void> handleError(ServerWebExchange exchange, Throwable throwable) {
+        log.error(throwable.getMessage(), throwable);
         ServerHttpRequest request = exchange.getRequest();
         HttpStatus status;
         String errorMessage;
