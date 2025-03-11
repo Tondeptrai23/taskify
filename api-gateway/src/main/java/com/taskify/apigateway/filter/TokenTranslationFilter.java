@@ -1,8 +1,10 @@
 package com.taskify.apigateway.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskify.apigateway.client.AuthClient;
 import com.taskify.apigateway.data.TokenVerificationResponse;
 import com.taskify.apigateway.exception.ApiGatewayException;
+import com.taskify.commoncore.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
@@ -11,9 +13,7 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -24,12 +24,15 @@ import reactor.core.publisher.Mono;
 public class TokenTranslationFilter implements GatewayFilter {
     private final AuthClient authClient;
     private final ReactiveCircuitBreakerFactory circuitBreakerFactory;
+    private final ObjectMapper objectMapper;
 
     @Autowired
     public TokenTranslationFilter(AuthClient authClient,
-                                  ReactiveCircuitBreakerFactory circuitBreakerFactory) {
+                                  ReactiveCircuitBreakerFactory circuitBreakerFactory,
+                                  ObjectMapper objectMapper) {
         this.authClient = authClient;
         this.circuitBreakerFactory = circuitBreakerFactory;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -47,13 +50,19 @@ public class TokenTranslationFilter implements GatewayFilter {
             throw new ApiGatewayException("Authorization header is not a Bearer token", HttpStatus.UNAUTHORIZED);
         }
 
-        // Call Auth Service to verify token
+        // Call Auth Service to verify token - now handling the ApiResponse wrapper
         return authClient.getWebClient()
                 .get()
                 .uri("/internal/validate")
                 .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .retrieve()
-                .bodyToMono(TokenVerificationResponse.class)
+                .bodyToMono(ApiResponse.class)
+                .map(response -> {
+                    if (response.getData() == null) {
+                        return null;
+                    }
+                    return objectMapper.convertValue(response.getData(), TokenVerificationResponse.class);
+                })
                 .transform(mono -> circuitBreakerFactory.create("token-validation")
                         .run(mono, this::handleAuthServiceFailure))
                 .flatMap(response -> {
@@ -73,7 +82,7 @@ public class TokenTranslationFilter implements GatewayFilter {
         // Log the error
         log.error("Auth service failure in circuit breaker", error);
 
-        // Return an error that will be mapped to an appropriate response
+        // Handle error responses in the ApiResponse format
         if (error instanceof WebClientResponseException) {
             return Mono.error(new ApiGatewayException(error.getMessage(),
                     HttpStatus.valueOf(((WebClientResponseException) error).getStatusCode().value())));
