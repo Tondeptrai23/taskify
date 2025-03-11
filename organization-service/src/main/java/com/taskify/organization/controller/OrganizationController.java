@@ -1,7 +1,8 @@
 package com.taskify.organization.controller;
 
-import com.taskify.common.dto.ApiResponse;
-import com.taskify.common.dto.ApiCollectionResponse;
+import com.taskify.commoncore.dto.ApiResponse;
+import com.taskify.commoncore.dto.ApiCollectionResponse;
+import com.taskify.organization.annotation.RequiresOwnership;
 import com.taskify.organization.dto.organization.*;
 import com.taskify.organization.entity.Organization;
 import com.taskify.organization.mapper.OrganizationMapper;
@@ -10,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -45,11 +45,10 @@ public class OrganizationController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize(value = "@organizationService.isOwner(#id, #userId)")
+    @RequiresOwnership
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<OrganizationDto>> updateOrganization(
             @PathVariable("id") UUID id,
-            @RequestHeader("X-User-Id") String userId,
             @RequestBody UpdateOrganizationDto updateOrganizationDto
     ) {
         Organization organization = organizationService.updateOrganization(id, updateOrganizationDto);
@@ -57,11 +56,10 @@ public class OrganizationController {
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("@organizationService.isOwner(#id, #userId)")
+    @RequiresOwnership
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteOrganization(
-            @PathVariable("id") UUID id,
-            @RequestHeader("X-User-Id") String userId) {
+            @PathVariable("id") UUID id) {
         organizationService.deleteOrganization(id);
         var response = new ApiResponse<>("Organization deleted successfully");
         return ResponseEntity.ok(response);

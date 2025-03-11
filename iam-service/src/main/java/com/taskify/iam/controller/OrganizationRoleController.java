@@ -1,6 +1,6 @@
 package com.taskify.iam.controller;
 
-import com.taskify.common.dto.ApiResponse;
+import com.taskify.commoncore.dto.ApiResponse;
 import com.taskify.iam.dto.role.CreateOrganizationRoleDto;
 import com.taskify.iam.dto.role.OrganizationRoleDto;
 import com.taskify.iam.mapper.OrganizationRoleMapper;

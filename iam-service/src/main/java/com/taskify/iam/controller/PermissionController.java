@@ -1,6 +1,6 @@
 package com.taskify.iam.controller;
 
-import com.taskify.common.dto.ApiResponse;
+import com.taskify.commoncore.dto.ApiResponse;
 import com.taskify.iam.dto.permission.PermissionDto;
 import com.taskify.iam.dto.permission.PermissionGroupDto;
 import com.taskify.iam.mapper.PermissionMapper;

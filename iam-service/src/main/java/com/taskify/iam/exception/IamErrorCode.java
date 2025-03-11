@@ -1,6 +1,6 @@
 package com.taskify.iam.exception;
 
-import com.taskify.common.error.ErrorCode;
+import com.taskify.commoncore.error.ErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum IamErrorCode implements ErrorCode {

@@ -1,6 +1,6 @@
 package com.taskify.organization.service;
 
-import com.taskify.common.error.resource.OrganizationNotFoundException;
+import com.taskify.commoncore.error.resource.OrganizationNotFoundException;
 import com.taskify.organization.dto.membership.MembershipCollectionRequest;
 import com.taskify.organization.dto.role.OrganizationRoleDto;
 import com.taskify.organization.entity.LocalUser;
@@ -8,7 +8,6 @@ import com.taskify.organization.entity.Membership;
 import com.taskify.organization.entity.Organization;
 
 import com.taskify.organization.integration.IamServiceClient;
-import com.taskify.organization.integration.IamWebClient;
 import com.taskify.organization.repository.MembershipRepository;
 import com.taskify.organization.repository.OrganizationRepository;
 import com.taskify.organization.specification.MembershipSpecifications;

@@ -1,6 +1,6 @@
 package com.taskify.auth.entity;
 
-import com.taskify.common.constant.SystemRole;
+import com.taskify.commoncore.constant.SystemRole;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.SQLDelete;
@@ -10,7 +10,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.ZonedDateTime;
-import java.util.Set;
 import java.util.UUID;
 
 @Data

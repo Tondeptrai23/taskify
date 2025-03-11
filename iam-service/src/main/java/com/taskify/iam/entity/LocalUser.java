@@ -1,6 +1,6 @@
 package com.taskify.iam.entity;
 
-import com.taskify.common.constant.SystemRole;
+import com.taskify.commoncore.constant.SystemRole;
 import lombok.Data;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;

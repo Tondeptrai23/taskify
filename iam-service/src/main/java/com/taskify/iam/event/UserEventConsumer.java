@@ -1,8 +1,8 @@
 package com.taskify.iam.event;
 
-import com.taskify.common.constant.SystemRole;
-import com.taskify.common.event.UserCreatedEvent;
-import com.taskify.common.event.UserDeletedEvent;
+import com.taskify.commoncore.constant.SystemRole;
+import com.taskify.commoncore.event.UserCreatedEvent;
+import com.taskify.commoncore.event.UserDeletedEvent;
 import com.taskify.iam.entity.LocalUser;
 import com.taskify.iam.repository.LocalUserRepository;
 import lombok.extern.slf4j.Slf4j;

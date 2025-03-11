@@ -1,7 +1,7 @@
 package com.taskify.organization.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.taskify.common.dto.ApiResponse;
+import com.taskify.commoncore.dto.ApiResponse;
 import com.taskify.organization.dto.role.OrganizationRoleDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

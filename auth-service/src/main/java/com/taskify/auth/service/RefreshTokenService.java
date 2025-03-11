@@ -1,7 +1,7 @@
 package com.taskify.auth.service;
 
 import com.taskify.auth.entity.RefreshToken;
-import com.taskify.common.error.exception.UnauthorizedException;
+import com.taskify.commoncore.error.exception.UnauthorizedException;
 import com.taskify.auth.repository.RefreshTokenRepository;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;

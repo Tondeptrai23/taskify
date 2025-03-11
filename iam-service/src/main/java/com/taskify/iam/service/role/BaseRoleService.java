@@ -1,11 +1,10 @@
 package com.taskify.iam.service.role;
 
-import com.taskify.common.error.resource.RoleNotFoundException;
+import com.taskify.commoncore.error.resource.RoleNotFoundException;
 import com.taskify.iam.entity.Role;
 import com.taskify.iam.exception.DefaultRoleDeletionException;
 import com.taskify.iam.service.permission.PermissionPrerequisiteValidator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;

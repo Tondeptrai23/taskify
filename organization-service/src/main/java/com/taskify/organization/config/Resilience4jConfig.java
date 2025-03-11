@@ -1,6 +1,6 @@
 package com.taskify.organization.config;
 
-import com.taskify.common.error.exception.IntegrationException;
+import com.taskify.commoncore.error.exception.IntegrationException;
 import io.github.resilience4j.common.circuitbreaker.configuration.CircuitBreakerConfigCustomizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

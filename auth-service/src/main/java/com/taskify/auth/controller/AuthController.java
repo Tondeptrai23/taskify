@@ -2,7 +2,7 @@ package com.taskify.auth.controller;
 
 import com.taskify.auth.dto.auth.*;
 import com.taskify.auth.service.AuthService;
-import com.taskify.common.dto.ApiResponse;
+import com.taskify.commoncore.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

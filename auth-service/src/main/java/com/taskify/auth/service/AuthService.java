@@ -6,7 +6,7 @@ import com.taskify.auth.dto.user.CreateUserDto;
 import com.taskify.auth.entity.User;
 import com.taskify.auth.exception.EmailAlreadyExistsException;
 import com.taskify.auth.exception.InvalidCredentialException;
-import com.taskify.common.error.exception.UnauthorizedException;
+import com.taskify.commoncore.error.exception.UnauthorizedException;
 import com.taskify.auth.exception.UsernameAlreadyExistsException;
 import com.taskify.auth.mapper.UserMapper;
 import com.taskify.auth.repository.UserRepository;

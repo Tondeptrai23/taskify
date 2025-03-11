@@ -34,7 +34,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.taskify</groupId>
-			<artifactId>common-lib</artifactId>
+			<artifactId>common-lib-web</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
