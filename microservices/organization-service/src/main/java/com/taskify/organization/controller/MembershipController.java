@@ -8,6 +8,8 @@ import com.taskify.organization.dto.membership.MembershipDto;
 import com.taskify.organization.entity.Membership;
 import com.taskify.organization.mapper.MembershipMapper;
 import com.taskify.organization.service.MembershipService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,59 +17,63 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @RestController
-@RequestMapping("/orgs")
+@RequestMapping("/members")
 public class MembershipController {
-    private final MembershipService membershipService;
-    private final MembershipMapper membershipMapper;
+    private final MembershipService _membershipService;
+    private final MembershipMapper _membershipMapper;
 
+    @Autowired
     public MembershipController(
             MembershipService membershipService,
             MembershipMapper membershipMapper
     ) {
-        this.membershipService = membershipService;
-        this.membershipMapper = membershipMapper;
+        _membershipService = membershipService;
+        _membershipMapper = membershipMapper;
     }
 
-    @GetMapping("/{id}/members")
-    public ResponseEntity<ApiResponse<ApiCollectionResponse<MembershipDto>>> getOrganizationMembers(
-            @PathVariable("id") UUID orgId,
-            @ModelAttribute MembershipCollectionRequest filter
+    @GetMapping({"", "/"})
+    public ResponseEntity<ApiCollectionResponse<MembershipDto>> getOrganizationMembers(
+            @RequestHeader("X-Organization-Context") UUID orgId,
+            @ModelAttribute MembershipCollectionRequest filter,
+            @RequestHeader("X-Permissions") String permissions
     ) {
-        Page<MembershipDto> membershipDtos = membershipService.getOrganizationMembers(orgId, filter)
-                .map(membershipMapper::toDto);
+        log.info("getOrganizationMembers method called, {}", permissions);
+        Page<MembershipDto> membershipDtos = _membershipService.getOrganizationMembers(orgId, filter)
+                .map(_membershipMapper::toDto);
 
-        var response = new ApiResponse<>(ApiCollectionResponse.from(membershipDtos));
+        var response = ApiCollectionResponse.from(membershipDtos);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{id}/members")
+    @PostMapping({"", "/"})
     public ResponseEntity<ApiResponse<List<MembershipDto>>> addMembers(
-            @PathVariable("id") UUID orgId,
+            @RequestHeader("X-Organization-Context") UUID orgId,
             @RequestBody List<UUID> userIds
     ) {
-        List<Membership> memberships = membershipService.addMembers(orgId, userIds);
-        var response = new ApiResponse<>(membershipMapper.toDtoList(memberships));
+        List<Membership> memberships = _membershipService.addMembers(orgId, userIds);
+        var response = new ApiResponse<>(_membershipMapper.toDtoList(memberships));
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}/members")
+    @DeleteMapping({"", "/"})
     public ResponseEntity<ApiResponse<String>> removeMembers(
-            @PathVariable("id") UUID orgId,
+            @RequestHeader("X-Organization-Context") UUID orgId,
             @RequestBody List<UUID> userIds
     ) {
-        membershipService.deactivateMembers(orgId, userIds);
+        _membershipService.deactivateMembers(orgId, userIds);
         var response = new ApiResponse<>("Members removed successfully");
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}/members")
+    @PutMapping({"", "/"})
     public ResponseEntity<ApiResponse<List<MembershipDto>>> updateMembers(
-            @PathVariable("id") UUID orgId,
+            @RequestHeader("X-Organization-Context") UUID orgId,
             @RequestBody BatchMemberOperationDto updateMembersDto
     ) {
-        List<Membership> memberships = membershipService.updateMembers(orgId, updateMembersDto.getMembers(), updateMembersDto.getRoleId());
-        var response = new ApiResponse<>(membershipMapper.toDtoList(memberships));
+        List<Membership> memberships = _membershipService.updateMembers(orgId, updateMembersDto.getMembers(), updateMembersDto.getRoleId());
+        var response = new ApiResponse<>(_membershipMapper.toDtoList(memberships));
         return ResponseEntity.ok(response);
     }
 }

@@ -1,6 +1,7 @@
 package com.taskify.apigateway.config;
 
 import com.taskify.apigateway.filter.OrgContextValidationFilter;
+import com.taskify.apigateway.filter.PermissionsInjectionFilter;
 import com.taskify.apigateway.filter.TokenTranslationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -12,12 +13,15 @@ import org.springframework.context.annotation.Configuration;
 public class GatewayConfig {
     private final TokenTranslationFilter _tokenTranslationFilter;
     private final OrgContextValidationFilter _orgContextFilter;
+    private final PermissionsInjectionFilter _permissionsInjectionFilter;
 
     @Autowired
     public GatewayConfig(TokenTranslationFilter tokenTranslationFilter,
-                         OrgContextValidationFilter orgContextValidationFilter) {
+                         OrgContextValidationFilter orgContextValidationFilter,
+                         PermissionsInjectionFilter permissionsInjectionFilter) {
         _tokenTranslationFilter = tokenTranslationFilter;
         _orgContextFilter = orgContextValidationFilter;
+        _permissionsInjectionFilter = permissionsInjectionFilter;
     }
 
     @Bean
@@ -57,12 +61,26 @@ public class GatewayConfig {
                         .uri("lb://iam-service"))
 
                 // Organization Service Routes (protected)
-                .route("organization-service", r -> r
+                .route("organization-service-membership", r -> r
+                        .path("/api/v1/members", "/api/v1/members/**")
+                        .filters(f -> f
+                                .filter(_orgContextFilter)
+                                .filter(_tokenTranslationFilter)
+                                .filter(_permissionsInjectionFilter)
+                                .rewritePath("/api/v1/(?<segment>.*)", "/${segment}"))
+                        .uri("lb://organization-service"))
+
+                // Organization Service - Other routes (without permissions injection)
+                .route("organization-service-other", r -> r
                         .path("/api/v1/orgs", "/api/v1/orgs/", "/api/v1/orgs/**")
-                    .filters(f -> f
+                        .and().not(p -> p.path("/api/v1/orgs/*/members", "/api/v1/orgs/*/members/**"))
+                        .filters(f -> f
+                                .filter(_orgContextFilter)
                                 .filter(_tokenTranslationFilter)
                                 .rewritePath("/api/v1/(?<segment>.*)", "/${segment}"))
                         .uri("lb://organization-service"))
+
+                // Other routes
                 .build();
     }
 }

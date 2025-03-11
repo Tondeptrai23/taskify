@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ApiCollectionResponse<T> {
     private boolean success;
-    private List<T> content;
+    private List<T> data;
     private Pagination pagination;
 
     @Getter
