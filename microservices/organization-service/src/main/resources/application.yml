@@ -29,6 +29,10 @@ resilience4j:
 rabbitmq:
   exchange:
     user-events: taskify.user.events
+    membership-events: taskify.membership.events
   queue:
     org-user-created-events: taskify.user-created.events.org
     org-user-deleted-events: taskify.user-updated.events.org
+    iam-membership-added-events: taskify.membership-added.events.iam
+    iam-membership-removed-events: taskify.membership-removed.events.iam
+    iam-membership-role-updated-events: taskify.membership-role-updated.events.iam

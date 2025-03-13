@@ -48,6 +48,10 @@ management:
 rabbitmq:
   exchange:
     user-events: taskify.user.events
+    membership-events: taskify.membership.events
   queue:
     iam-user-created-events: taskify.user-created.events.iam
     iam-user-deleted-events: taskify.user-updated.events.iam
+    iam-membership-added-events: taskify.membership-added.events.iam
+    iam-membership-removed-events: taskify.membership-removed.events.iam
+    iam-membership-role-updated-events: taskify.membership-role-updated.events.iam
