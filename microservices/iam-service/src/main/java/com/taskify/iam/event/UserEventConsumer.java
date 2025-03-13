@@ -1,5 +1,7 @@
 package com.taskify.iam.event;
 
+import com.taskify.commoncore.annotation.LoggingAround;
+import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.constant.SystemRole;
 import com.taskify.commoncore.event.UserCreatedEvent;
 import com.taskify.commoncore.event.UserDeletedEvent;
@@ -23,46 +25,33 @@ public class UserEventConsumer {
 
     @Transactional
     @RabbitListener(queues = "${rabbitmq.queue.iam-user-created-events}")
+    @LoggingAround
+    @LoggingException
     public void handleUserCreatedEvent(@Payload UserCreatedEvent event) {
-        try {
-            log.info("Received user created event for user: {}", event.getId());
-
-            // Check if user already exists and update if needed
-            userRepository.findById(event.getId())
-                    .ifPresentOrElse(
-                            existingUser -> {
-                                // Update existing user
-                                updateExistingUser(existingUser, event);
-                                userRepository.save(existingUser);
-                                log.info("Updated existing user: {}", existingUser.getId());
-                            },
-                            () -> {
-                                // Create new user
-                                LocalUser newUser = createUserFromEvent(event);
-                                userRepository.save(newUser);
-                                log.info("Created new user: {}", newUser.getId());
-                            }
-                    );
-        } catch (Exception e) {
-            log.error("Error processing user created event for user: {}", event.getId(), e);
-            // Consider implementing a dead-letter queue or retry mechanism
-        }
+        userRepository.findById(event.getId())
+                .ifPresentOrElse(
+                        existingUser -> {
+                            // Update existing user
+                            updateExistingUser(existingUser, event);
+                            userRepository.save(existingUser);
+                            log.info("Updated existing user: {}", existingUser.getId());
+                        },
+                        () -> {
+                            // Create new user
+                            LocalUser newUser = createUserFromEvent(event);
+                            userRepository.save(newUser);
+                            log.info("Created new user: {}", newUser.getId());
+                        }
+                );
     }
 
     @Transactional
     @RabbitListener(queues = "${rabbitmq.queue.iam-user-deleted-events}")
+    @LoggingAround
+    @LoggingException
     public void handleUserDeletedEvent(@Payload UserDeletedEvent event) {
-        try {
-            log.info("Received user deleted event for user: {}", event.getId());
-
-            // Delete user
-            userRepository.delete(event.getId());
-
-            log.info("Deleted user: {}", event.getId());
-        } catch (Exception e) {
-            log.error("Error processing user deleted event for user: {}", event.getId(), e);
-            // Consider implementing a dead-letter queue or retry mechanism
-        }
+        // Delete user
+        userRepository.delete(event.getId());
     }
 
     private LocalUser createUserFromEvent(UserCreatedEvent event) {
