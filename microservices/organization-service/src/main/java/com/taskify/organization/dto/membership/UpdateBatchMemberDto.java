@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class BatchMemberOperationDto {
+public class UpdateBatchMemberDto {
     private List<UUID> members;
     private UUID roleId;
 }

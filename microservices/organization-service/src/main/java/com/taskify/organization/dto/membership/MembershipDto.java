@@ -13,7 +13,6 @@ public class MembershipDto {
     private String username;
     private String email;
     private String roleId;
-    private String roleName;
     private boolean isAdmin;
     private boolean isActive;
     private ZonedDateTime joinedAt;

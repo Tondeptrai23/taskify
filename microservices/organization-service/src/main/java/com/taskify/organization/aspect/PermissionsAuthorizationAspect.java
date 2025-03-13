@@ -36,7 +36,7 @@ public class PermissionsAuthorizationAspect {
         var permissionsArray = permissions.split(",");
         Set<String> userPermissions = new HashSet<>(Arrays.asList(permissionsArray));
         for (var requiredPermission : requiresPermissions.value()) {
-            if (userPermissions.contains(requiredPermission)) {
+            if (userPermissions.contains(requiredPermission.getValue())) {
                 log.info("User has the required permissions");
                 return;
             }
