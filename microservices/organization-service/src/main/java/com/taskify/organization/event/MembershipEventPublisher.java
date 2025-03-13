@@ -14,65 +14,72 @@ import java.util.UUID;
 
 @Slf4j
 @Component
-public class MemberEventPublisher {
+public class MembershipEventPublisher {
     private final RabbitTemplate rabbitTemplate;
 
-    @Value("${rabbitmq.exchange.member-events}")
-    private String memberEventsExchange;
+    @Value("${rabbitmq.exchange.membership-events}")
+    private String membershipEventsExchange;
 
-    public MemberEventPublisher(RabbitTemplate rabbitTemplate) {
+    public MembershipEventPublisher(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
     }
 
     public void publishMemberAddedEvent(Membership membership) {
         try {
             MemberAddedEvent event = MemberAddedEvent.builder()
+                    .id(membership.getId())
                     .organizationId(membership.getOrganization().getId())
                     .userId(membership.getUser().getId())
                     .roleId(membership.getRoleId())
                     .isAdmin(membership.isAdmin())
-                    .joinedAt(membership.getJoinedAt())
+                    .timestamp(ZonedDateTime.now())
                     .build();
 
             log.info("Publishing member added event for user: {} in organization: {}",
                     membership.getUser().getId(), membership.getOrganization().getId());
-            rabbitTemplate.convertAndSend(memberEventsExchange, "member.added", event);
+            rabbitTemplate.convertAndSend(membershipEventsExchange, "membership.added", event);
         } catch (Exception e) {
-            log.error("Failed to publish member added event", e);
+            log.error("Failed to publish member added event for user: {} in organization: {}",
+                    membership.getUser().getId(), membership.getOrganization().getId(), e);
         }
     }
 
-    public void publishMemberRemovedEvent(Membership membership) {
+    public void publishMemberRemovedEvent(UUID membershipId, UUID organizationId, UUID userId) {
         try {
             MemberRemovedEvent event = MemberRemovedEvent.builder()
-                    .organizationId(membership.getOrganization().getId())
-                    .userId(membership.getUser().getId())
-                    .removedAt(ZonedDateTime.now())
+                    .id(membershipId)
+                    .organizationId(organizationId)
+                    .userId(userId)
+                    .timestamp(ZonedDateTime.now())
                     .build();
 
             log.info("Publishing member removed event for user: {} in organization: {}",
-                    membership.getUser().getId(), membership.getOrganization().getId());
-            rabbitTemplate.convertAndSend(memberEventsExchange, "member.removed", event);
+                    userId, organizationId);
+            rabbitTemplate.convertAndSend(membershipEventsExchange, "membership.removed", event);
         } catch (Exception e) {
-            log.error("Failed to publish member removed event", e);
+            log.error("Failed to publish member removed event for user: {} in organization: {}",
+                    userId, organizationId, e);
         }
     }
 
-    public void publishMemberRoleChangedEvent(Membership membership, UUID oldRoleId) {
+    public void publishMemberRoleUpdatedEvent(Membership membership, UUID oldRoleId) {
         try {
             MemberRoleUpdatedEvent event = MemberRoleUpdatedEvent.builder()
+                    .id(membership.getId())
                     .organizationId(membership.getOrganization().getId())
                     .userId(membership.getUser().getId())
-                    .oldRoleId(oldRoleId)
                     .newRoleId(membership.getRoleId())
-                    .updatedAt(ZonedDateTime.now())
+                    .oldRoleId(oldRoleId)
+                    .isAdmin(membership.isAdmin())
+                    .timestamp(ZonedDateTime.now())
                     .build();
 
-            log.info("Publishing member role changed event for user: {} in organization: {}",
+            log.info("Publishing member role updated event for user: {} in organization: {}",
                     membership.getUser().getId(), membership.getOrganization().getId());
-            rabbitTemplate.convertAndSend(memberEventsExchange, "member.role.changed", event);
+            rabbitTemplate.convertAndSend(membershipEventsExchange, "membership.role.updated", event);
         } catch (Exception e) {
-            log.error("Failed to publish member role changed event", e);
+            log.error("Failed to publish member role updated event for user: {} in organization: {}",
+                    membership.getUser().getId(), membership.getOrganization().getId(), e);
         }
     }
 }

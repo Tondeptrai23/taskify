@@ -6,7 +6,7 @@ import com.taskify.organization.dto.role.OrganizationRoleDto;
 import com.taskify.organization.entity.LocalUser;
 import com.taskify.organization.entity.Membership;
 import com.taskify.organization.entity.Organization;
-
+import com.taskify.organization.event.MembershipEventPublisher;
 import com.taskify.organization.integration.IamServiceClient;
 import com.taskify.organization.repository.MembershipRepository;
 import com.taskify.organization.repository.OrganizationRepository;
@@ -20,10 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,18 +29,21 @@ public class MembershipService {
     private final OrganizationRepository organizationRepository;
     private final LocalUserService localUserService;
     private final IamServiceClient iamServiceClient;
+    private final MembershipEventPublisher membershipEventPublisher;
 
     @Autowired
     public MembershipService(
             MembershipRepository membershipRepository,
             OrganizationRepository organizationRepository,
             LocalUserService localUserService,
-            IamServiceClient iamServiceClient
+            IamServiceClient iamServiceClient,
+            MembershipEventPublisher membershipEventPublisher
     ) {
         this.membershipRepository = membershipRepository;
         this.organizationRepository = organizationRepository;
         this.localUserService = localUserService;
         this.iamServiceClient = iamServiceClient;
+        this.membershipEventPublisher = membershipEventPublisher;
     }
 
     public Page<Membership> getOrganizationMembers(UUID orgId, MembershipCollectionRequest filter) {
@@ -71,7 +71,14 @@ public class MembershipService {
 
         OrganizationRoleDto defaultRole = iamServiceClient.getDefaultOrganizationRole(organization.getId());
 
-        return updateOrganizationMemberships(organization, userIds, defaultRole.getId(), false);
+        List<Membership> memberships = updateOrganizationMemberships(organization, userIds, defaultRole.getId(), false);
+
+        // Publish events for new memberships
+        memberships.stream()
+                .filter(m -> m.getJoinedAt() != null && m.getJoinedAt().isEqual(ZonedDateTime.now().withNano(0)))
+                .forEach(membershipEventPublisher::publishMemberAddedEvent);
+
+        return memberships;
     }
 
     @Transactional
@@ -81,7 +88,30 @@ public class MembershipService {
 
         OrganizationRoleDto role = iamServiceClient.getOrganizationRoleById(organization.getId(), roleId);
 
-        return updateOrganizationMemberships(organization, userIds, role.getId(), true);
+        // Get existing memberships to track old role IDs
+        List<Membership> existingMemberships = membershipRepository.findAllByOrgIdAndUserIdIn(orgId, userIds);
+
+        // Create a map of userId to oldRoleId
+        Map<UUID, UUID> oldRoleMap = existingMemberships.stream()
+                .collect(Collectors.toMap(
+                        m -> m.getUser().getId(),
+                        Membership::getRoleId
+                ));
+
+        List<Membership> memberships = updateOrganizationMemberships(organization, userIds, role.getId(), true);
+
+        // Publish events for updated roles
+        memberships.forEach(membership -> {
+            UUID userId = membership.getUser().getId();
+            UUID oldRoleId = oldRoleMap.get(userId);
+
+            // Only publish if the role actually changed
+            if (oldRoleId != null && !oldRoleId.equals(membership.getRoleId())) {
+                membershipEventPublisher.publishMemberRoleUpdatedEvent(membership, oldRoleId);
+            }
+        });
+
+        return memberships;
     }
 
     @Transactional
@@ -91,9 +121,17 @@ public class MembershipService {
 
         List<Membership> memberships = membershipRepository.findAllByOrgIdAndUserIdIn(orgId, userIds);
 
-        memberships.forEach(membership -> membership.setActive(false));
+        // Store membership details before deactivation for events
+        for (Membership membership : memberships) {
+            UUID membershipId = membership.getId();
+            UUID userId = membership.getUser().getId();
 
-        membershipRepository.saveAll(memberships);
+            membership.setActive(false);
+            membershipRepository.save(membership);
+
+            // Publish the member removed event
+            membershipEventPublisher.publishMemberRemovedEvent(membershipId, orgId, userId);
+        }
     }
 
     /**
@@ -101,6 +139,7 @@ public class MembershipService {
      *
      * @param organization    The organization
      * @param userIds         List of user IDs to add/update
+     * @param roleId          Role ID to assign
      * @param deactivateFirst Whether to deactivate existing memberships first
      */
     private List<Membership> updateOrganizationMemberships(
@@ -110,7 +149,9 @@ public class MembershipService {
             boolean deactivateFirst
     ) {
         if (deactivateFirst) {
-            deactivateMembers(organization.getId(), userIds);
+            // We don't want to publish events here since we're just modifying
+            // Call the internal method directly
+            deactivateMembersInternal(organization.getId(), userIds);
         }
 
         List<LocalUser> users = localUserService.getUsersByIds(userIds);
@@ -131,7 +172,11 @@ public class MembershipService {
 
         List<Membership> newMemberships = users.stream()
                 .filter(user -> !existingUserIds.contains(user.getId()))
-                .map(user -> new Membership(organization, user))
+                .map(user -> {
+                    Membership membership = new Membership(organization, user);
+                    membership.setRoleId(roleId);
+                    return membership;
+                })
                 .collect(Collectors.toList());
 
         // Save all memberships
@@ -142,5 +187,12 @@ public class MembershipService {
         allMemberships.addAll(existingMemberships);
         allMemberships.addAll(newMemberships);
         return allMemberships;
+    }
+
+    // Private method for internal deactivation without publishing events
+    private void deactivateMembersInternal(UUID orgId, List<UUID> userIds) {
+        List<Membership> memberships = membershipRepository.findAllByOrgIdAndUserIdIn(orgId, userIds);
+        memberships.forEach(membership -> membership.setActive(false));
+        membershipRepository.saveAll(memberships);
     }
 }
