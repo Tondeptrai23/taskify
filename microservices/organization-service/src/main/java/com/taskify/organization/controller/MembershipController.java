@@ -2,6 +2,7 @@ package com.taskify.organization.controller;
 
 import com.taskify.commoncore.dto.ApiResponse;
 import com.taskify.commoncore.dto.ApiCollectionResponse;
+import com.taskify.organization.annotation.RequiresPermissions;
 import com.taskify.organization.dto.membership.BatchMemberOperationDto;
 import com.taskify.organization.dto.membership.MembershipCollectionRequest;
 import com.taskify.organization.dto.membership.MembershipDto;
@@ -33,13 +34,12 @@ public class MembershipController {
         _membershipMapper = membershipMapper;
     }
 
+    @RequiresPermissions(value = {"VIEW_MEMBER"})
     @GetMapping({"", "/"})
     public ResponseEntity<ApiCollectionResponse<MembershipDto>> getOrganizationMembers(
             @RequestHeader("X-Organization-Context") UUID orgId,
-            @ModelAttribute MembershipCollectionRequest filter,
-            @RequestHeader("X-Permissions") String permissions
+            @ModelAttribute MembershipCollectionRequest filter
     ) {
-        log.info("getOrganizationMembers method called, {}", permissions);
         Page<MembershipDto> membershipDtos = _membershipService.getOrganizationMembers(orgId, filter)
                 .map(_membershipMapper::toDto);
 
@@ -47,6 +47,7 @@ public class MembershipController {
         return ResponseEntity.ok(response);
     }
 
+    @RequiresPermissions(value = {"INVITE_MEMBER"})
     @PostMapping({"", "/"})
     public ResponseEntity<ApiResponse<List<MembershipDto>>> addMembers(
             @RequestHeader("X-Organization-Context") UUID orgId,
@@ -57,6 +58,7 @@ public class MembershipController {
         return ResponseEntity.ok(response);
     }
 
+    @RequiresPermissions(value = {"REMOVE_MEMBER"})
     @DeleteMapping({"", "/"})
     public ResponseEntity<ApiResponse<String>> removeMembers(
             @RequestHeader("X-Organization-Context") UUID orgId,
@@ -68,6 +70,7 @@ public class MembershipController {
     }
 
     @PutMapping({"", "/"})
+    @RequiresPermissions(value = {"UPDATE_MEMBER_ROLE"})
     public ResponseEntity<ApiResponse<List<MembershipDto>>> updateMembers(
             @RequestHeader("X-Organization-Context") UUID orgId,
             @RequestBody BatchMemberOperationDto updateMembersDto
