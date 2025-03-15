@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RabbitMqConfig {
+public class AuthRabbitMqConfig {
     @Value("${rabbitmq.exchange.user-events}")
     private String userEventsExchange;
 

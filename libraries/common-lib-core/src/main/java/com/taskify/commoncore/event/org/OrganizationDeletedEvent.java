@@ -1,4 +1,4 @@
-package com.taskify.commoncore.event;
+package com.taskify.commoncore.event.org;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,12 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MemberRoleUpdatedEvent {
+public class OrganizationDeletedEvent {
     private UUID id;
-    private UUID organizationId;
-    private UUID userId;
-    private UUID newRoleId;
-    private UUID oldRoleId;
-    private boolean isAdmin;
     private ZonedDateTime timestamp;
 }

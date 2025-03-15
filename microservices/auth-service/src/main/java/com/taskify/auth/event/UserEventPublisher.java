@@ -1,8 +1,8 @@
 package com.taskify.auth.event;
 
 import com.taskify.auth.entity.User;
-import com.taskify.commoncore.event.UserCreatedEvent;
-import com.taskify.commoncore.event.UserDeletedEvent;
+import com.taskify.commoncore.event.user.UserCreatedEvent;
+import com.taskify.commoncore.event.user.UserDeletedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;

@@ -2,9 +2,9 @@ package com.taskify.iam.event;
 
 import com.taskify.commoncore.annotation.LoggingAround;
 import com.taskify.commoncore.annotation.LoggingException;
-import com.taskify.commoncore.event.MemberAddedEvent;
-import com.taskify.commoncore.event.MemberRemovedEvent;
-import com.taskify.commoncore.event.MemberRoleUpdatedEvent;
+import com.taskify.commoncore.event.member.MemberAddedEvent;
+import com.taskify.commoncore.event.member.MemberRemovedEvent;
+import com.taskify.commoncore.event.member.MemberRoleUpdatedEvent;
 import com.taskify.iam.service.user.UserRoleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -12,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Slf4j
 @Component

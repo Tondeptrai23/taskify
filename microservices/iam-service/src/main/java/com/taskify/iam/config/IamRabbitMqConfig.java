@@ -1,9 +1,6 @@
-package com.taskify.organization.config;
+package com.taskify.iam.config;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -13,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RabbitMqConfig {
+public class IamRabbitMqConfig {
 
     @Value("${rabbitmq.exchange.user-events}")
     private String userEventsExchange;
@@ -21,11 +18,14 @@ public class RabbitMqConfig {
     @Value("${rabbitmq.exchange.membership-events}")
     private String membershipEventsExchange;
 
-    @Value("${rabbitmq.queue.org-user-created-events}")
-    private String orgUserCreatedEventsQueue;
+    @Value("${rabbitmq.exchange.organization-events}")
+    private String organizationEventsExchange;
 
-    @Value("${rabbitmq.queue.org-user-deleted-events}")
-    private String orgUserDeletedEventsQueue;
+    @Value("${rabbitmq.queue.iam-user-created-events}")
+    private String iamUserCreatedEventsQueue;
+
+    @Value("${rabbitmq.queue.iam-user-deleted-events}")
+    private String iamUserDeletedEventsQueue;
 
     @Value("${rabbitmq.queue.iam-membership-added-events}")
     private String iamMembershipAddedEventsQueue;
@@ -35,6 +35,15 @@ public class RabbitMqConfig {
 
     @Value("${rabbitmq.queue.iam-membership-role-updated-events}")
     private String iamMembershipRoleUpdatedEventsQueue;
+
+    @Value("${rabbitmq.queue.iam-organization-created-events}")
+    private String iamOrganizationCreatedEventsQueue;
+
+    @Value("${rabbitmq.queue.iam-organization-updated-events}")
+    private String iamOrganizationUpdatedEventsQueue;
+
+    @Value("${rabbitmq.queue.iam-organization-deleted-events}")
+    private String iamOrganizationDeletedEventsQueue;
 
     @Bean
     public TopicExchange userEventsExchange() {
@@ -47,13 +56,18 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public Queue orgUserCreatedEventsQueue() {
-        return new Queue(orgUserCreatedEventsQueue, true);
+    public TopicExchange organizationEventsExchange() {
+        return new TopicExchange(organizationEventsExchange);
     }
 
     @Bean
-    public Queue orgUserDeletedEventsQueue() {
-        return new Queue(orgUserDeletedEventsQueue, true);
+    public Queue iamUserCreatedEventsQueue() {
+        return new Queue(iamUserCreatedEventsQueue, true);
+    }
+
+    @Bean
+    public Queue iamUserDeletedEventsQueue() {
+        return new Queue(iamUserDeletedEventsQueue, true);
     }
 
     @Bean
@@ -72,15 +86,30 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public Binding bindingUserCreatedEvents() {
-        return BindingBuilder.bind(orgUserCreatedEventsQueue())
+    public Queue iamOrganizationCreatedEventsQueue() {
+        return new Queue(iamOrganizationCreatedEventsQueue, true);
+    }
+
+    @Bean
+    public Queue iamOrganizationUpdatedEventsQueue() {
+        return new Queue(iamOrganizationUpdatedEventsQueue, true);
+    }
+
+    @Bean
+    public Queue iamOrganizationDeletedEventsQueue() {
+        return new Queue(iamOrganizationDeletedEventsQueue, true);
+    }
+
+    @Bean
+    public Binding bindingUserEvents() {
+        return BindingBuilder.bind(iamUserCreatedEventsQueue())
                 .to(userEventsExchange())
                 .with("user.created");
     }
 
     @Bean
     public Binding bindingUserDeletedEvents() {
-        return BindingBuilder.bind(orgUserDeletedEventsQueue())
+        return BindingBuilder.bind(iamUserDeletedEventsQueue())
                 .to(userEventsExchange())
                 .with("user.deleted");
     }
@@ -104,6 +133,27 @@ public class RabbitMqConfig {
         return BindingBuilder.bind(iamMembershipRoleUpdatedEventsQueue())
                 .to(membershipEventsExchange())
                 .with("membership.role.updated");
+    }
+
+    @Bean
+    public Binding bindingOrganizationCreatedEvents() {
+        return BindingBuilder.bind(iamOrganizationCreatedEventsQueue())
+                .to(organizationEventsExchange())
+                .with("organization.created");
+    }
+
+    @Bean
+    public Binding bindingOrganizationUpdatedEvents() {
+        return BindingBuilder.bind(iamOrganizationUpdatedEventsQueue())
+                .to(organizationEventsExchange())
+                .with("organization.updated");
+    }
+
+    @Bean
+    public Binding bindingOrganizationDeletedEvents() {
+        return BindingBuilder.bind(iamOrganizationDeletedEventsQueue())
+                .to(organizationEventsExchange())
+                .with("organization.deleted");
     }
 
     @Bean

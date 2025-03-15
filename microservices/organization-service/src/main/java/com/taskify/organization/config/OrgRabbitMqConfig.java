@@ -1,6 +1,9 @@
-package com.taskify.iam.config;
+package com.taskify.organization.config;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -10,7 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RabbitMqConfig {
+public class OrgRabbitMqConfig {
 
     @Value("${rabbitmq.exchange.user-events}")
     private String userEventsExchange;
@@ -18,11 +21,14 @@ public class RabbitMqConfig {
     @Value("${rabbitmq.exchange.membership-events}")
     private String membershipEventsExchange;
 
-    @Value("${rabbitmq.queue.iam-user-created-events}")
-    private String iamUserCreatedEventsQueue;
+    @Value("${rabbitmq.exchange.organization-events}")
+    private String organizationEventsExchange;
 
-    @Value("${rabbitmq.queue.iam-user-deleted-events}")
-    private String iamUserDeletedEventsQueue;
+    @Value("${rabbitmq.queue.org-user-created-events}")
+    private String orgUserCreatedEventsQueue;
+
+    @Value("${rabbitmq.queue.org-user-deleted-events}")
+    private String orgUserDeletedEventsQueue;
 
     @Value("${rabbitmq.queue.iam-membership-added-events}")
     private String iamMembershipAddedEventsQueue;
@@ -44,13 +50,18 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public Queue iamUserCreatedEventsQueue() {
-        return new Queue(iamUserCreatedEventsQueue, true);
+    public TopicExchange organizationEventsExchange() {
+        return new TopicExchange(organizationEventsExchange);
     }
 
     @Bean
-    public Queue iamUserDeletedEventsQueue() {
-        return new Queue(iamUserDeletedEventsQueue, true);
+    public Queue orgUserCreatedEventsQueue() {
+        return new Queue(orgUserCreatedEventsQueue, true);
+    }
+
+    @Bean
+    public Queue orgUserDeletedEventsQueue() {
+        return new Queue(orgUserDeletedEventsQueue, true);
     }
 
     @Bean
@@ -69,15 +80,15 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public Binding bindingUserEvents() {
-        return BindingBuilder.bind(iamUserCreatedEventsQueue())
+    public Binding bindingUserCreatedEvents() {
+        return BindingBuilder.bind(orgUserCreatedEventsQueue())
                 .to(userEventsExchange())
                 .with("user.created");
     }
 
     @Bean
     public Binding bindingUserDeletedEvents() {
-        return BindingBuilder.bind(iamUserDeletedEventsQueue())
+        return BindingBuilder.bind(orgUserDeletedEventsQueue())
                 .to(userEventsExchange())
                 .with("user.deleted");
     }

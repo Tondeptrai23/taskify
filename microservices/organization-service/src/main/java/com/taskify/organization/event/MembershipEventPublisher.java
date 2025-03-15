@@ -1,8 +1,8 @@
 package com.taskify.organization.event;
 
-import com.taskify.commoncore.event.MemberAddedEvent;
-import com.taskify.commoncore.event.MemberRemovedEvent;
-import com.taskify.commoncore.event.MemberRoleUpdatedEvent;
+import com.taskify.commoncore.event.member.MemberAddedEvent;
+import com.taskify.commoncore.event.member.MemberRemovedEvent;
+import com.taskify.commoncore.event.member.MemberRoleUpdatedEvent;
 import com.taskify.organization.entity.Membership;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
