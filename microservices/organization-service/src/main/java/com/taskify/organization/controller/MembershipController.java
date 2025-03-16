@@ -40,7 +40,7 @@ public class MembershipController {
     @GetMapping({"", "/"})
     public ResponseEntity<ApiCollectionResponse<MembershipDto>> getOrganizationMembers(
             @RequestHeader("X-Organization-Context") UUID orgId,
-            @RequestBody MembershipCollectionRequest filter
+            @ModelAttribute MembershipCollectionRequest filter
     ) {
         Page<MembershipDto> membershipDtos = _membershipService.getOrganizationMembers(orgId, filter)
                 .map(_membershipMapper::toDto);

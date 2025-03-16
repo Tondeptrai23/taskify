@@ -7,22 +7,25 @@ import com.taskify.organization.entity.LocalUser;
 import com.taskify.organization.entity.Membership;
 import com.taskify.organization.entity.Organization;
 import com.taskify.organization.event.MembershipEventPublisher;
+import com.taskify.organization.event.MembershipEventPublisher.MembershipWithOldRole;
 import com.taskify.organization.integration.IamServiceClient;
 import com.taskify.organization.repository.MembershipRepository;
 import com.taskify.organization.repository.OrganizationRepository;
 import com.taskify.organization.specification.MembershipSpecifications;
-import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class MembershipService {
     private final MembershipRepository membershipRepository;
@@ -73,10 +76,14 @@ public class MembershipService {
 
         List<Membership> memberships = updateOrganizationMemberships(organization, userIds, defaultRole.getId(), false);
 
-        // Publish events for new memberships
-        memberships.stream()
+        // Publish batch event for new memberships
+        List<Membership> newMemberships = memberships.stream()
                 .filter(m -> m.getJoinedAt() != null && m.getJoinedAt().isEqual(ZonedDateTime.now().withNano(0)))
-                .forEach(membershipEventPublisher::publishMemberAddedEvent);
+                .collect(Collectors.toList());
+
+        if (!newMemberships.isEmpty()) {
+            membershipEventPublisher.publishMemberAddedEvent(organization.getId(), newMemberships);
+        }
 
         return memberships;
     }
@@ -100,16 +107,28 @@ public class MembershipService {
 
         List<Membership> memberships = updateOrganizationMemberships(organization, userIds, role.getId(), true);
 
-        // Publish events for updated roles
-        memberships.forEach(membership -> {
-            UUID userId = membership.getUser().getId();
-            UUID oldRoleId = oldRoleMap.get(userId);
+        // Create list of memberships with old roles
+        List<MembershipWithOldRole> membershipsWithOldRoles = memberships.stream()
+                .filter(membership -> {
+                    UUID userId = membership.getUser().getId();
+                    UUID oldRoleId = oldRoleMap.get(userId);
+                    // Only include if the role actually changed
+                    return oldRoleId != null && !oldRoleId.equals(membership.getRoleId());
+                })
+                .map(membership -> new MembershipWithOldRole(
+                        membership,
+                        oldRoleMap.get(membership.getUser().getId())
+                ))
+                .collect(Collectors.toList());
 
-            // Only publish if the role actually changed
-            if (oldRoleId != null && !oldRoleId.equals(membership.getRoleId())) {
-                membershipEventPublisher.publishMemberRoleUpdatedEvent(membership, oldRoleId);
-            }
-        });
+        // Publish batch event for role updates
+        if (!membershipsWithOldRoles.isEmpty()) {
+            membershipEventPublisher.publishMemberRoleUpdatedEvent(
+                    organization.getId(),
+                    role.getId(),
+                    membershipsWithOldRoles
+            );
+        }
 
         return memberships;
     }
@@ -121,16 +140,24 @@ public class MembershipService {
 
         List<Membership> memberships = membershipRepository.findAllByOrgIdAndUserIdIn(orgId, userIds);
 
-        // Store membership details before deactivation for events
+        // Store membership details before deactivation for batch event
+        Map<UUID, UUID> membershipIdToUserIdMap = new HashMap<>();
         for (Membership membership : memberships) {
             UUID membershipId = membership.getId();
             UUID userId = membership.getUser().getId();
 
+            membershipIdToUserIdMap.put(membershipId, userId);
             membership.setActive(false);
-            membershipRepository.save(membership);
+        }
 
-            // Publish the member removed event
-            membershipEventPublisher.publishMemberRemovedEvent(membershipId, orgId, userId);
+        membershipRepository.saveAll(memberships);
+
+        // Publish batch event for removals
+        if (!membershipIdToUserIdMap.isEmpty()) {
+            membershipEventPublisher.publishMemberRemovedEvent(
+                    organization.getId(),
+                    membershipIdToUserIdMap
+            );
         }
     }
 

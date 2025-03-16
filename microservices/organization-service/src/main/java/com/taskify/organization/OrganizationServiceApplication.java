@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Import;
 
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class, ManagementWebSecurityAutoConfiguration.class})
 @Import({CommonLibWebApplication.class})
-@EnableAspectJAutoProxy
 @EnableDiscoveryClient
 public class OrganizationServiceApplication {
 
