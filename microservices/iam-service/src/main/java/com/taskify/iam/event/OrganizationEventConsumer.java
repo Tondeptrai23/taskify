@@ -2,6 +2,7 @@ package com.taskify.iam.event;
 
 import com.taskify.commoncore.annotation.LoggingAround;
 import com.taskify.commoncore.annotation.LoggingException;
+import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.org.OrganizationCreatedEvent;
 import com.taskify.commoncore.event.org.OrganizationDeletedEvent;
 import com.taskify.commoncore.event.org.OrganizationUpdatedEvent;
@@ -21,14 +22,17 @@ import java.util.Optional;
 public class OrganizationEventConsumer {
 
     private final OrganizationRepository organizationRepository;
+    private final EventConstants eventConstants;
 
     @Autowired
-    public OrganizationEventConsumer(OrganizationRepository organizationRepository) {
+    public OrganizationEventConsumer(OrganizationRepository organizationRepository,
+                                     EventConstants eventConstants) {
         this.organizationRepository = organizationRepository;
+        this.eventConstants = eventConstants;
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-organization-created-events}")
+    @RabbitListener(queues = "#{eventConstants.getIamOrganizationCreatedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleOrganizationCreatedEvent(@Payload OrganizationCreatedEvent event) {
@@ -50,7 +54,7 @@ public class OrganizationEventConsumer {
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-organization-updated-events}")
+    @RabbitListener(queues = "#{eventConstants.getIamOrganizationUpdatedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleOrganizationUpdatedEvent(@Payload OrganizationUpdatedEvent event) {
@@ -75,7 +79,7 @@ public class OrganizationEventConsumer {
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-organization-deleted-events}")
+    @RabbitListener(queues = "#{eventConstants.getIamOrganizationDeletedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleOrganizationDeletedEvent(@Payload OrganizationDeletedEvent event) {

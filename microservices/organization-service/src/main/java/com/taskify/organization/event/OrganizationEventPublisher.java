@@ -1,12 +1,12 @@
 package com.taskify.organization.event;
 
+import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.org.OrganizationDeletedEvent;
 import com.taskify.commoncore.event.org.OrganizationUpdatedEvent;
 import com.taskify.commoncore.event.org.OrganizationCreatedEvent;
 import com.taskify.organization.entity.Organization;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
@@ -16,12 +16,11 @@ import java.util.UUID;
 @Component
 public class OrganizationEventPublisher {
     private final RabbitTemplate rabbitTemplate;
+    private final EventConstants eventConstants;
 
-    @Value("${rabbitmq.exchange.organization-events}")
-    private String organizationEventsExchange;
-
-    public OrganizationEventPublisher(RabbitTemplate rabbitTemplate) {
+    public OrganizationEventPublisher(RabbitTemplate rabbitTemplate, EventConstants eventConstants) {
         this.rabbitTemplate = rabbitTemplate;
+        this.eventConstants = eventConstants;
     }
 
     public void publishOrganizationCreatedEvent(Organization organization) {
@@ -35,7 +34,10 @@ public class OrganizationEventPublisher {
                     .build();
 
             log.info("Publishing organization created event for organization: {}", organization.getId());
-            rabbitTemplate.convertAndSend(organizationEventsExchange, "organization.created", event);
+            rabbitTemplate.convertAndSend(
+                    eventConstants.getOrganizationEventsExchange(),
+                    eventConstants.getOrganizationCreatedRoutingKey(),
+                    event);
         } catch (Exception e) {
             log.error("Failed to publish organization created event for organization: {}", organization.getId(), e);
         }
@@ -52,7 +54,10 @@ public class OrganizationEventPublisher {
                     .build();
 
             log.info("Publishing organization updated event for organization: {}", organization.getId());
-            rabbitTemplate.convertAndSend(organizationEventsExchange, "organization.updated", event);
+            rabbitTemplate.convertAndSend(
+                    eventConstants.getOrganizationEventsExchange(),
+                    eventConstants.getOrganizationUpdatedRoutingKey(),
+                    event);
         } catch (Exception e) {
             log.error("Failed to publish organization updated event for organization: {}", organization.getId(), e);
         }
@@ -66,7 +71,10 @@ public class OrganizationEventPublisher {
                     .build();
 
             log.info("Publishing organization deleted event for organization: {}", organizationId);
-            rabbitTemplate.convertAndSend(organizationEventsExchange, "organization.deleted", event);
+            rabbitTemplate.convertAndSend(
+                    eventConstants.getOrganizationEventsExchange(),
+                    eventConstants.getOrganizationDeletedRoutingKey(),
+                    event);
         } catch (Exception e) {
             log.error("Failed to publish organization deleted event for organization: {}", organizationId, e);
         }

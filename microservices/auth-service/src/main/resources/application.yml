@@ -8,11 +8,3 @@ spring:
     port: 5672
     username: guest
     password: guest
-
-security:
-  refresh-token:
-    expiration: 86400000
-
-rabbitmq:
-  exchange:
-    user-events: taskify.user.events

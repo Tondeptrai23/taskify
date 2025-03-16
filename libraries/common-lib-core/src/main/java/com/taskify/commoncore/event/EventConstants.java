@@ -38,6 +38,7 @@ public class EventConstants {
     private final String orgUserCreatedQueue;
     private final String orgUserDeletedQueue;
 
+    @Autowired
     public EventConstants(
             // Exchange names
             @Value("${rabbitmq.exchange.user-events}") String userEventsExchange,

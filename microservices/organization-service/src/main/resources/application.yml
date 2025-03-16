@@ -3,37 +3,3 @@ spring:
     name: organization-service
   config:
     import: optional:configserver:http://localhost:8888
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    listener:
-      simple:
-        retry:
-          enabled: true
-          initial-interval: 1000
-          max-attempts: 3
-          max-interval: 10000
-          multiplier: 2
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      iam-service:
-        slidingWindowSize: 10
-        failureRateThreshold: 50
-        waitDurationInOpenState: 10000
-        permittedNumberOfCallsInHalfOpenState: 5
-
-rabbitmq:
-  exchange:
-    user-events: taskify.user.events
-    membership-events: taskify.membership.events
-    organization-events: taskify.organization.events
-  queue:
-    org-user-created-events: taskify.user-created.events.org
-    org-user-deleted-events: taskify.user-updated.events.org
-    iam-membership-added-events: taskify.membership-added.events.iam
-    iam-membership-removed-events: taskify.membership-removed.events.iam
-    iam-membership-role-updated-events: taskify.membership-role-updated.events.iam

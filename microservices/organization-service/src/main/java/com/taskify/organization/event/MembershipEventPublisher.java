@@ -1,5 +1,6 @@
 package com.taskify.organization.event;
 
+import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.member.MemberAddedEvent;
 import com.taskify.commoncore.event.member.MemberRemovedEvent;
 import com.taskify.commoncore.event.member.MemberRoleUpdatedEvent;
@@ -16,12 +17,12 @@ import java.util.UUID;
 @Component
 public class MembershipEventPublisher {
     private final RabbitTemplate rabbitTemplate;
+    private final EventConstants eventConstants;
 
-    @Value("${rabbitmq.exchange.membership-events}")
-    private String membershipEventsExchange;
-
-    public MembershipEventPublisher(RabbitTemplate rabbitTemplate) {
+    public MembershipEventPublisher(RabbitTemplate rabbitTemplate,
+                                    EventConstants eventConstants) {
         this.rabbitTemplate = rabbitTemplate;
+        this.eventConstants = eventConstants;
     }
 
     public void publishMemberAddedEvent(Membership membership) {
@@ -37,7 +38,10 @@ public class MembershipEventPublisher {
 
             log.info("Publishing member added event for user: {} in organization: {}",
                     membership.getUser().getId(), membership.getOrganization().getId());
-            rabbitTemplate.convertAndSend(membershipEventsExchange, "membership.added", event);
+            rabbitTemplate.convertAndSend(
+                    eventConstants.getMembershipEventsExchange(),
+                    eventConstants.getMembershipAddedRoutingKey(),
+                    event);
         } catch (Exception e) {
             log.error("Failed to publish member added event for user: {} in organization: {}",
                     membership.getUser().getId(), membership.getOrganization().getId(), e);
@@ -55,7 +59,10 @@ public class MembershipEventPublisher {
 
             log.info("Publishing member removed event for user: {} in organization: {}",
                     userId, organizationId);
-            rabbitTemplate.convertAndSend(membershipEventsExchange, "membership.removed", event);
+            rabbitTemplate.convertAndSend(
+                    eventConstants.getMembershipEventsExchange(),
+                    eventConstants.getMembershipRemovedRoutingKey(),
+                    event);
         } catch (Exception e) {
             log.error("Failed to publish member removed event for user: {} in organization: {}",
                     userId, organizationId, e);
@@ -76,7 +83,10 @@ public class MembershipEventPublisher {
 
             log.info("Publishing member role updated event for user: {} in organization: {}",
                     membership.getUser().getId(), membership.getOrganization().getId());
-            rabbitTemplate.convertAndSend(membershipEventsExchange, "membership.role.updated", event);
+            rabbitTemplate.convertAndSend(
+                    eventConstants.getMembershipEventsExchange(),
+                    eventConstants.getMembershipRoleUpdatedRoutingKey(),
+                    event);
         } catch (Exception e) {
             log.error("Failed to publish member role updated event for user: {} in organization: {}",
                     membership.getUser().getId(), membership.getOrganization().getId(), e);

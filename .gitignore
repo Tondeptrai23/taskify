@@ -59,6 +59,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# ENV
+application-dev.yml
+
+
 ### Test files
 
 TestController

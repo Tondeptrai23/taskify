@@ -3,10 +3,12 @@ package com.taskify.organization.event;
 import com.taskify.commoncore.annotation.LoggingAround;
 import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.constant.SystemRole;
+import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.user.UserCreatedEvent;
 import com.taskify.commoncore.event.user.UserDeletedEvent;
 import com.taskify.organization.entity.LocalUser;
 import com.taskify.organization.repository.LocalUserRepository;
+import com.taskify.organization.service.LocalUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -17,42 +19,45 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 public class UserEventConsumer {
 
-    private final LocalUserRepository _userRepository;
+    private final LocalUserRepository userRepository;
+    private final EventConstants eventConstants;
 
-    public UserEventConsumer(LocalUserRepository localUserRepository) {
-        this._userRepository = localUserRepository;
+    public UserEventConsumer(LocalUserRepository localUserRepository,
+                             EventConstants eventConstants) {
+        this.userRepository = localUserRepository;
+        this.eventConstants = eventConstants;
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.org-user-created-events}")
+    @RabbitListener(queues = "#{eventConstants.getOrgUserCreatedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleUserCreatedEvent(@Payload UserCreatedEvent event) {
         // Check if user already exists and update if needed
-        _userRepository.findById(event.getId())
+        userRepository.findById(event.getId())
                 .ifPresentOrElse(
                         existingUser -> {
                             // Update existing user
                             updateExistingUser(existingUser, event);
-                            _userRepository.save(existingUser);
+                            userRepository.save(existingUser);
                             log.info("Updated existing user: {}", existingUser.getId());
                         },
                         () -> {
                             // Create new user
                             LocalUser newUser = createUserFromEvent(event);
-                            _userRepository.save(newUser);
+                            userRepository.save(newUser);
                             log.info("Created new user: {}", newUser.getId());
                         }
                 );
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.org-user-deleted-events}")
+    @RabbitListener(queues = "#{eventConstants.getOrgUserDeletedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleUserDeletedEvent(@Payload UserDeletedEvent event) {
         // Delete user
-        _userRepository.deleteById(event.getId());
+        userRepository.deleteById(event.getId());
     }
 
     private LocalUser createUserFromEvent(UserCreatedEvent event) {

@@ -2,6 +2,7 @@ package com.taskify.iam.event;
 
 import com.taskify.commoncore.annotation.LoggingAround;
 import com.taskify.commoncore.annotation.LoggingException;
+import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.member.MemberAddedEvent;
 import com.taskify.commoncore.event.member.MemberRemovedEvent;
 import com.taskify.commoncore.event.member.MemberRoleUpdatedEvent;
@@ -18,14 +19,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class MembershipEventConsumer {
 
     private final UserRoleService userRoleService;
+    private final EventConstants eventConstants;
 
     @Autowired
-    public MembershipEventConsumer(UserRoleService userRoleService) {
+    public MembershipEventConsumer(UserRoleService userRoleService,
+                                   EventConstants eventConstants) {
         this.userRoleService = userRoleService;
+        this.eventConstants = eventConstants;
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-membership-added-events}")
+    @RabbitListener(queues = "#{eventConstants.getIamMembershipAddedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleMemberAddedEvent(@Payload MemberAddedEvent event) {
@@ -37,7 +41,7 @@ public class MembershipEventConsumer {
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-membership-removed-events}")
+    @RabbitListener(queues = "#{eventConstants.getIamMembershipRemovedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleMemberRemovedEvent(@Payload MemberRemovedEvent event) {
@@ -48,7 +52,7 @@ public class MembershipEventConsumer {
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-membership-role-updated-events}")
+    @RabbitListener(queues = "#{eventConstants.getIamMembershipRoleUpdatedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleMemberRoleUpdatedEvent(@Payload MemberRoleUpdatedEvent event) {

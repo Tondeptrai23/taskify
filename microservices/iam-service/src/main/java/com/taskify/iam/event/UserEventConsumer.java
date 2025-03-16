@@ -3,6 +3,7 @@ package com.taskify.iam.event;
 import com.taskify.commoncore.annotation.LoggingAround;
 import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.constant.SystemRole;
+import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.user.UserCreatedEvent;
 import com.taskify.commoncore.event.user.UserDeletedEvent;
 import com.taskify.iam.entity.LocalUser;
@@ -18,13 +19,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserEventConsumer {
 
     private final LocalUserRepository userRepository;
+    private final EventConstants eventConstants;
 
-    public UserEventConsumer(LocalUserRepository userRepository) {
+    public UserEventConsumer(LocalUserRepository userRepository,
+                             EventConstants eventConstants) {
         this.userRepository = userRepository;
+        this.eventConstants = eventConstants;
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-user-created-events}")
+    @RabbitListener(queues = "#{eventConstants.getIamUserCreatedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleUserCreatedEvent(@Payload UserCreatedEvent event) {
@@ -46,7 +50,7 @@ public class UserEventConsumer {
     }
 
     @Transactional
-    @RabbitListener(queues = "${rabbitmq.queue.iam-user-deleted-events}")
+    @RabbitListener(queues = "#{eventConstants.getIamUserDeletedQueue()}")
     @LoggingAround
     @LoggingException
     public void handleUserDeletedEvent(@Payload UserDeletedEvent event) {
