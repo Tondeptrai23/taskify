@@ -65,7 +65,7 @@ application-dev.yml
 
 ### Test files
 
-TestController
-TestService
+TestController.java
+TestService.java
 
 

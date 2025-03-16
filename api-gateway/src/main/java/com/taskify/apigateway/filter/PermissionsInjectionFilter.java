@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskify.apigateway.client.IamClient;
 import com.taskify.apigateway.data.PermissionsResponse;
 import com.taskify.apigateway.exception.ApiGatewayException;
+import com.taskify.commoncore.annotation.LoggingAfter;
+import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,7 @@ public class PermissionsInjectionFilter implements GatewayFilter {
     }
 
     @Override
+    @LoggingException
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String orgContextHeader = request.getHeaders().getFirst("X-Organization-Context");
@@ -46,12 +49,10 @@ public class PermissionsInjectionFilter implements GatewayFilter {
 
         // Validate required headers
         if (orgContextHeader == null) {
-            log.error("X-Organization-Context header is missing");
             throw new ApiGatewayException("X-Organization-Context header is missing", HttpStatus.BAD_REQUEST);
         }
 
         if (userIdHeader == null) {
-            log.error("X-User-Id header is missing");
             throw new ApiGatewayException("X-User-Id header is missing", HttpStatus.BAD_REQUEST);
         }
 

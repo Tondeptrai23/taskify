@@ -1,5 +1,6 @@
 package com.taskify.iam.controller;
 
+import com.taskify.commoncore.annotation.LoggingBefore;
 import com.taskify.commoncore.dto.ApiResponse;
 import com.taskify.iam.dto.permission.UserPermissionsResponse;
 import com.taskify.iam.dto.permission.VerifyPermissionRequest;
@@ -47,6 +48,7 @@ public class InternalIamController {
         _projectRoleMapper = projectRoleMapper;
     }
 
+    @LoggingBefore
     @GetMapping("/orgs/roles/default")
     public ResponseEntity<ApiResponse<OrganizationRoleDto>> getDefaultRoleInOrg(
             @RequestHeader("X-Organization-Context") UUID orgId
@@ -55,6 +57,7 @@ public class InternalIamController {
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
 
+    @LoggingBefore
     @GetMapping("projects/{projectId}/roles/default")
     public ResponseEntity<ApiResponse<ProjectRoleDto>> getDefaultRoleInProject(
             @PathVariable UUID projectId
@@ -63,6 +66,7 @@ public class InternalIamController {
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
 
+    @LoggingBefore
     @GetMapping("/orgs/permissions")
     public ResponseEntity<ApiResponse<UserPermissionsResponse>> getPermissionsInOrg(
             @RequestHeader("X-Organization-Context") UUID orgId,
@@ -75,6 +79,7 @@ public class InternalIamController {
         ));
     }
 
+    @LoggingBefore
     @GetMapping("/projects/{projectId}/permissions")
     public ResponseEntity<ApiResponse<UserPermissionsResponse>> getPermissionsInProject(
             @PathVariable UUID projectId,
@@ -88,6 +93,7 @@ public class InternalIamController {
         ));
     }
 
+    @LoggingBefore
     @PostMapping("/permissions/verify")
     public ResponseEntity<ApiResponse<Boolean>> verifyPermission(
             @RequestBody VerifyPermissionRequest request,

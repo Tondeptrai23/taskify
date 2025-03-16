@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.taskify.apigateway.client.AuthClient;
 import com.taskify.apigateway.data.TokenVerificationResponse;
 import com.taskify.apigateway.exception.ApiGatewayException;
+import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,17 +37,16 @@ public class TokenTranslationFilter implements GatewayFilter {
     }
 
     @Override
+    @LoggingException
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
         if (authHeader == null) {
-            log.error("Authorization header is missing");
             throw new ApiGatewayException("Authorization header is missing", HttpStatus.UNAUTHORIZED);
         }
 
         if (!authHeader.startsWith("Bearer ")) {
-            log.error("Authorization header is not a Bearer token");
             throw new ApiGatewayException("Authorization header is not a Bearer token", HttpStatus.UNAUTHORIZED);
         }
 

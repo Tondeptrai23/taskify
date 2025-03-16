@@ -1,6 +1,7 @@
 package com.taskify.auth.event;
 
 import com.taskify.auth.entity.User;
+import com.taskify.commoncore.annotation.LoggingAfter;
 import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.user.UserCreatedEvent;
@@ -22,41 +23,39 @@ public class UserEventPublisher {
         this.eventConstants = eventConstants;
     }
 
+    @LoggingException
+    @LoggingAfter(
+            value = "Publishing user created event for user: {}",
+            args = {"user.getId()"}
+    )
     public void publishUserCreatedEvent(User user) {
-        try {
-            UserCreatedEvent event = UserCreatedEvent.builder()
-                    .id(user.getId())
-                    .username(user.getUsername())
-                    .email(user.getEmail())
-                    .systemRole(user.getSystemRole().toString())
-                    .createdAt(user.getCreatedAt())
-                    .build();
+        UserCreatedEvent event = UserCreatedEvent.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .systemRole(user.getSystemRole().toString())
+                .createdAt(user.getCreatedAt())
+                .build();
 
-            log.info("Publishing user created event for user: {}", user.getId());
-            rabbitTemplate.convertAndSend(
-                    eventConstants.getUserEventsExchange(),
-                    eventConstants.getUserCreatedRoutingKey(),
-                    event
-            );
-        } catch (Exception e) {
-            log.error("Failed to publish user created event for user: {}", user.getId(), e);
-            // Consider implementing a retry mechanism or fallback strategy
-        }
+        rabbitTemplate.convertAndSend(
+                eventConstants.getUserEventsExchange(),
+                eventConstants.getUserCreatedRoutingKey(),
+                event
+        );
     }
 
+    @LoggingException
+    @LoggingAfter(
+            value = "Publishing user deleted event for user: {}",
+            args = {"user.getId()"}
+    )
     public void publishUserDeletedEvent(User user) {
-        try {
-            UserDeletedEvent event = new UserDeletedEvent(user.getId());
+        UserDeletedEvent event = new UserDeletedEvent(user.getId());
 
-            log.info("Publishing user deleted event for user: {}", user.getId());
-            rabbitTemplate.convertAndSend(
-                    eventConstants.getUserEventsExchange(),
-                    eventConstants.getUserDeletedRoutingKey(),
-                    event
-            );
-        } catch (Exception e) {
-            log.error("Failed to publish user deleted event for user: {}", user.getId(), e);
-            // Consider implementing a retry mechanism or fallback strategy
-        }
+        rabbitTemplate.convertAndSend(
+                eventConstants.getUserEventsExchange(),
+                eventConstants.getUserDeletedRoutingKey(),
+                event
+        );
     }
 }

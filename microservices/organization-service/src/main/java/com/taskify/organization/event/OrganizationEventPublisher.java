@@ -1,5 +1,7 @@
 package com.taskify.organization.event;
 
+import com.taskify.commoncore.annotation.LoggingAfter;
+import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.org.OrganizationDeletedEvent;
 import com.taskify.commoncore.event.org.OrganizationUpdatedEvent;
@@ -23,60 +25,60 @@ public class OrganizationEventPublisher {
         this.eventConstants = eventConstants;
     }
 
+    @LoggingException
+    @LoggingAfter(
+            value = "Publishing organization created event for organization: {}",
+            args = {"organization.getId()"}
+    )
     public void publishOrganizationCreatedEvent(Organization organization) {
-        try {
-            OrganizationCreatedEvent event = OrganizationCreatedEvent.builder()
-                    .id(organization.getId())
-                    .name(organization.getName())
-                    .description(organization.getDescription())
-                    .ownerId(organization.getOwnerId())
-                    .timestamp(ZonedDateTime.now())
-                    .build();
+        OrganizationCreatedEvent event = OrganizationCreatedEvent.builder()
+                .id(organization.getId())
+                .name(organization.getName())
+                .description(organization.getDescription())
+                .ownerId(organization.getOwnerId())
+                .timestamp(ZonedDateTime.now())
+                .build();
 
-            log.info("Publishing organization created event for organization: {}", organization.getId());
-            rabbitTemplate.convertAndSend(
-                    eventConstants.getOrganizationEventsExchange(),
-                    eventConstants.getOrganizationCreatedRoutingKey(),
-                    event);
-        } catch (Exception e) {
-            log.error("Failed to publish organization created event for organization: {}", organization.getId(), e);
-        }
+        rabbitTemplate.convertAndSend(
+                eventConstants.getOrganizationEventsExchange(),
+                eventConstants.getOrganizationCreatedRoutingKey(),
+                event);
     }
 
+    @LoggingException
+    @LoggingAfter(
+            value = "Publishing organization updated event for organization: {}",
+            args = {"organization.getId()"}
+    )
     public void publishOrganizationUpdatedEvent(Organization organization) {
-        try {
-            OrganizationUpdatedEvent event = OrganizationUpdatedEvent.builder()
-                    .id(organization.getId())
-                    .name(organization.getName())
-                    .description(organization.getDescription())
-                    .ownerId(organization.getOwnerId())
-                    .timestamp(ZonedDateTime.now())
-                    .build();
+        OrganizationUpdatedEvent event = OrganizationUpdatedEvent.builder()
+                .id(organization.getId())
+                .name(organization.getName())
+                .description(organization.getDescription())
+                .ownerId(organization.getOwnerId())
+                .timestamp(ZonedDateTime.now())
+                .build();
 
-            log.info("Publishing organization updated event for organization: {}", organization.getId());
-            rabbitTemplate.convertAndSend(
-                    eventConstants.getOrganizationEventsExchange(),
-                    eventConstants.getOrganizationUpdatedRoutingKey(),
-                    event);
-        } catch (Exception e) {
-            log.error("Failed to publish organization updated event for organization: {}", organization.getId(), e);
-        }
+        rabbitTemplate.convertAndSend(
+                eventConstants.getOrganizationEventsExchange(),
+                eventConstants.getOrganizationUpdatedRoutingKey(),
+                event);
     }
 
+    @LoggingException
+    @LoggingAfter(
+            value = "Publishing organization deleted event for organization: {}",
+            args = {"organizationId"}
+    )
     public void publishOrganizationDeletedEvent(UUID organizationId) {
-        try {
-            OrganizationDeletedEvent event = OrganizationDeletedEvent.builder()
-                    .id(organizationId)
-                    .timestamp(ZonedDateTime.now())
-                    .build();
+        OrganizationDeletedEvent event = OrganizationDeletedEvent.builder()
+                .id(organizationId)
+                .timestamp(ZonedDateTime.now())
+                .build();
 
-            log.info("Publishing organization deleted event for organization: {}", organizationId);
-            rabbitTemplate.convertAndSend(
-                    eventConstants.getOrganizationEventsExchange(),
-                    eventConstants.getOrganizationDeletedRoutingKey(),
-                    event);
-        } catch (Exception e) {
-            log.error("Failed to publish organization deleted event for organization: {}", organizationId, e);
-        }
+        rabbitTemplate.convertAndSend(
+                eventConstants.getOrganizationEventsExchange(),
+                eventConstants.getOrganizationDeletedRoutingKey(),
+                event);
     }
 }
