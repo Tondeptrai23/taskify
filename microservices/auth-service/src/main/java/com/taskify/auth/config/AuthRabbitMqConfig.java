@@ -1,5 +1,6 @@
 package com.taskify.auth.config;
 
+import com.taskify.commoncore.event.EventConstants;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -8,26 +9,21 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Configuration
+@Import({com.taskify.commonweb.config.CommonRabbitMqConfig.class})
 public class AuthRabbitMqConfig {
-    @Value("${rabbitmq.exchange.user-events}")
-    private String userEventsExchange;
 
+    private final EventConstants eventConstants;
+
+    public AuthRabbitMqConfig(EventConstants eventConstants) {
+        this.eventConstants = eventConstants;
+    }
+
+    // Exchanges
     @Bean
     public TopicExchange userEventsExchange() {
-        return new TopicExchange(userEventsExchange);
-    }
-
-    @Bean
-    public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
-
-    @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        final RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(jsonMessageConverter());
-        return rabbitTemplate;
+        return new TopicExchange(eventConstants.getUserEventsExchange());
     }
 }
