@@ -1,7 +1,9 @@
 package com.taskify.project.controller;
 
+import com.taskify.commoncore.constant.Permission;
 import com.taskify.commoncore.dto.ApiCollectionResponse;
 import com.taskify.commoncore.dto.ApiResponse;
+import com.taskify.project.annotation.RequiresPermissions;
 import com.taskify.project.dto.project.CreateProjectDto;
 import com.taskify.project.dto.project.ProjectCollectionRequest;
 import com.taskify.project.dto.project.ProjectDto;
@@ -33,6 +35,7 @@ public class ProjectController {
         this.projectMapper = projectMapper;
     }
 
+    @RequiresPermissions(value = {Permission.VIEW_PROJECT})
     @GetMapping({"", "/"})
     public ResponseEntity<ApiResponse<ApiCollectionResponse<ProjectDto>>> getAllProjects(
             @RequestHeader("X-Organization-Context") UUID organizationId,
@@ -45,6 +48,7 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @RequiresPermissions(value = {Permission.CREATE_PROJECT})
     @PostMapping({"", "/"})
     public ResponseEntity<ApiResponse<ProjectDto>> createProject(
             @RequestHeader("X-Organization-Context") UUID organizationId,
@@ -56,6 +60,7 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @RequiresPermissions(value = {Permission.VIEW_PROJECT})
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ProjectDto>> getProjectById(
             @PathVariable("id") UUID id,
@@ -66,6 +71,7 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @RequiresPermissions(value = {Permission.VIEW_PROJECT})
     @GetMapping("/key/{key}")
     public ResponseEntity<ApiResponse<ProjectDto>> getProjectByKey(
             @PathVariable("key") String key,
@@ -76,6 +82,7 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @RequiresPermissions(value = {Permission.UPDATE_PROJECT})
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProjectDto>> updateProject(
             @PathVariable("id") UUID id,
@@ -87,6 +94,7 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
+    @RequiresPermissions(value = {Permission.DELETE_PROJECT})
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<String>> deleteProject(
             @PathVariable("id") UUID id,
