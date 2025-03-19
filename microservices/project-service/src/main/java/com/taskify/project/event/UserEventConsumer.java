@@ -32,8 +32,6 @@ public class UserEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleUserCreatedEvent(@Payload UserCreatedEvent event) {
-        log.info("Received UserCreatedEvent for user: {}", event.getId());
-
         // Check if user already exists
         Optional<LocalUser> existingUser = localUserRepository.findById(event.getId());
 
@@ -62,8 +60,6 @@ public class UserEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleUserDeletedEvent(@Payload UserDeletedEvent event) {
-        log.info("Received UserDeletedEvent for user: {}", event.getId());
         localUserRepository.deleteById(event.getId());
-        log.info("Deleted user: {}", event.getId());
     }
 }

@@ -15,6 +15,7 @@ public class Project {
     @Id
     private UUID id;
     private UUID organizationId;
+    private String key;
 
     @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
     private LocalOrganization organization;
