@@ -8,7 +8,6 @@ import com.taskify.commoncore.event.user.UserCreatedEvent;
 import com.taskify.commoncore.event.user.UserDeletedEvent;
 import com.taskify.organization.entity.LocalUser;
 import com.taskify.organization.repository.LocalUserRepository;
-import com.taskify.organization.service.LocalUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.handler.annotation.Payload;

@@ -9,6 +9,7 @@ import com.taskify.organization.entity.Organization;
 import com.taskify.organization.event.MembershipEventPublisher;
 import com.taskify.organization.event.MembershipEventPublisher.MembershipWithOldRole;
 import com.taskify.organization.integration.IamServiceClient;
+import com.taskify.organization.repository.LocalUserRepository;
 import com.taskify.organization.repository.MembershipRepository;
 import com.taskify.organization.repository.OrganizationRepository;
 import com.taskify.organization.specification.MembershipSpecifications;
@@ -30,23 +31,22 @@ import java.util.stream.Collectors;
 public class MembershipService {
     private final MembershipRepository membershipRepository;
     private final OrganizationRepository organizationRepository;
-    private final LocalUserService localUserService;
     private final IamServiceClient iamServiceClient;
     private final MembershipEventPublisher membershipEventPublisher;
+    private final LocalUserRepository localUserRepository;
 
     @Autowired
     public MembershipService(
             MembershipRepository membershipRepository,
             OrganizationRepository organizationRepository,
-            LocalUserService localUserService,
             IamServiceClient iamServiceClient,
-            MembershipEventPublisher membershipEventPublisher
-    ) {
+            MembershipEventPublisher membershipEventPublisher,
+            LocalUserRepository localUserRepository) {
         this.membershipRepository = membershipRepository;
         this.organizationRepository = organizationRepository;
-        this.localUserService = localUserService;
         this.iamServiceClient = iamServiceClient;
         this.membershipEventPublisher = membershipEventPublisher;
+        this.localUserRepository = localUserRepository;
     }
 
     public Page<Membership> getOrganizationMembers(UUID orgId, MembershipCollectionRequest filter) {
@@ -181,7 +181,7 @@ public class MembershipService {
             deactivateMembersInternal(organization.getId(), userIds);
         }
 
-        List<LocalUser> users = localUserService.getUsersByIds(userIds);
+        List<LocalUser> users = localUserRepository.findAllById(userIds);
         List<Membership> existingMemberships = membershipRepository
                 .findAllByOrgIdAndUserIdIn(organization.getId(), userIds);
 
