@@ -1,4 +1,4 @@
-package com.taskify.project.entity;
+package com.taskify.commoncore.constant;
 
 public enum ProjectStatus {
     ACTIVE,

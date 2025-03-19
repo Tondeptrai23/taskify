@@ -1,12 +1,12 @@
 package com.taskify.project.service;
 
 import com.taskify.commoncore.error.exception.ConflictException;
-import com.taskify.commoncore.error.resource.OrganizationNotFoundException;
 import com.taskify.commoncore.error.resource.ProjectNotFoundException;
 import com.taskify.project.dto.project.CreateProjectDto;
 import com.taskify.project.dto.project.ProjectCollectionRequest;
 import com.taskify.project.dto.project.UpdateProjectDto;
 import com.taskify.project.entity.Project;
+import com.taskify.project.event.ProjectEventPublisher;
 import com.taskify.project.mapper.ProjectMapper;
 import com.taskify.project.repository.ProjectRepository;
 import com.taskify.project.specification.ProjectSpecifications;
@@ -27,14 +27,17 @@ import java.util.UUID;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final ProjectMapper projectMapper;
+    private final ProjectEventPublisher projectEventPublisher;
 
     @Autowired
     public ProjectService(
             ProjectRepository projectRepository,
-            ProjectMapper projectMapper
+            ProjectMapper projectMapper,
+            ProjectEventPublisher projectEventPublisher
     ) {
         this.projectRepository = projectRepository;
         this.projectMapper = projectMapper;
+        this.projectEventPublisher = projectEventPublisher;
     }
 
     public Page<Project> getAllProjects(UUID organizationId, ProjectCollectionRequest filter) {
@@ -69,7 +72,12 @@ public class ProjectService {
         // Ensure key is uppercase
         project.setKey(createProjectDto.getKey().toUpperCase());
 
-        return projectRepository.save(project);
+        Project savedProject = projectRepository.save(project);
+
+        // Publish event
+        projectEventPublisher.publishProjectCreatedEvent(savedProject);
+
+        return savedProject;
     }
 
     public Project getProjectById(UUID projectId, UUID organizationId) {
@@ -87,13 +95,21 @@ public class ProjectService {
         Project project = this.getProjectById(projectId, organizationId);
 
         projectMapper.updateEntity(project, updateProjectDto);
-        return projectRepository.save(project);
+        Project updatedProject = projectRepository.save(project);
+
+        // Publish event
+        projectEventPublisher.publishProjectUpdatedEvent(updatedProject);
+
+        return updatedProject;
     }
 
     @Transactional
     public void deleteProject(UUID projectId, UUID organizationId) {
         Project project = this.getProjectById(projectId, organizationId);
         projectRepository.delete(project);
+
+        // Publish event
+        projectEventPublisher.publishProjectDeletedEvent(projectId, organizationId);
     }
 
     public List<Project> getProjectsByOrganizationId(UUID organizationId) {

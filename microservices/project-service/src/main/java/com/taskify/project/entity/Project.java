@@ -1,5 +1,6 @@
 package com.taskify.project.entity;
 
+import com.taskify.commoncore.constant.ProjectStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.SQLDelete;
