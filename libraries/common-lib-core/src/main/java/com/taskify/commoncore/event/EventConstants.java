@@ -38,6 +38,10 @@ public class EventConstants {
     private final String orgUserCreatedQueue;
     private final String orgUserDeletedQueue;
 
+    // Queue names - direct definitions for Project service
+    private final String projectUserCreatedQueue;
+    private final String projectUserDeletedQueue;
+
     @Autowired
     public EventConstants(
             // Exchange names
@@ -67,7 +71,11 @@ public class EventConstants {
 
             // Organization service queues
             @Value("${rabbitmq.queue.org-user-created}") String orgUserCreatedQueue,
-            @Value("${rabbitmq.queue.org-user-deleted}") String orgUserDeletedQueue) {
+            @Value("${rabbitmq.queue.org-user-deleted}") String orgUserDeletedQueue,
+
+            // Project service queues
+            @Value("${rabbitmq.queue.project-user-created}") String projectUserCreatedQueue,
+            @Value("${rabbitmq.queue.project-user-deleted}") String projectUserDeletedQueue) {
 
         this.userEventsExchange = userEventsExchange;
         this.membershipEventsExchange = membershipEventsExchange;
@@ -93,5 +101,8 @@ public class EventConstants {
 
         this.orgUserCreatedQueue = orgUserCreatedQueue;
         this.orgUserDeletedQueue = orgUserDeletedQueue;
+
+        this.projectUserCreatedQueue = projectUserCreatedQueue;
+        this.projectUserDeletedQueue = projectUserDeletedQueue;
     }
 }
