@@ -24,7 +24,7 @@ public class IamWebClient {
 
     public Mono<OrganizationRoleDto> getOrganizationRoleById(String organizationId, String roleId) {
         return webClient.get()
-                .uri("/orgs/roles/{roleId}", organizationId, roleId)
+                .uri("/context/{organizationId}/roles/{roleId}", organizationId, roleId)
                 .header("X-Organization-Context", organizationId)
                 .retrieve()
                 .bodyToMono(ApiResponse.class)
@@ -38,7 +38,7 @@ public class IamWebClient {
 
     public Mono<OrganizationRoleDto> getDefaultOrganizationRole(String organizationId) {
         return webClient.get()
-                .uri("/internal/orgs/roles/default")
+                .uri("/internal/context/{organizationId}/roles/default", organizationId)
                 .header("X-Organization-Context", organizationId)
                 .retrieve()
                 .bodyToMono(ApiResponse.class)

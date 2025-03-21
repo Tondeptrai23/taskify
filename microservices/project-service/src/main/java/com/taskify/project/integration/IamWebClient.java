@@ -24,7 +24,7 @@ public class IamWebClient {
 
     public Mono<ProjectRoleDto> getProjectRoleById(String projectId, String roleId) {
         return webClient.get()
-                .uri("/projects/{projectId}/roles/{roleId}", projectId, roleId)
+                .uri("/context/{projectId}/roles/{roleId}", projectId, roleId)
                 .retrieve()
                 .bodyToMono(ApiResponse.class)
                 .map(response -> {
@@ -37,7 +37,7 @@ public class IamWebClient {
 
     public Mono<ProjectRoleDto> getDefaultProjectRole(String projectId) {
         return webClient.get()
-                .uri("/internal/projects/{projectId}/roles/default", projectId)
+                .uri("/internal/context/{projectId}/roles/default", projectId)
                 .retrieve()
                 .bodyToMono(ApiResponse.class)
                 .map(response -> {

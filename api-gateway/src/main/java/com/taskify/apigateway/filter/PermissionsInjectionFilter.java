@@ -59,7 +59,7 @@ public class PermissionsInjectionFilter implements GatewayFilter {
         // Call IAM Service to get permissions
         return iamClient.getWebClient()
                 .get()
-                .uri("/internal/orgs/permissions")
+                .uri("/internal/context/{organizationId}/permissions", orgContextHeader)
                 .header("X-Organization-Context", orgContextHeader)
                 .header("X-User-Id", userIdHeader)
                 .retrieve()

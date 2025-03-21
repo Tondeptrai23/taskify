@@ -42,22 +42,13 @@ public class GatewayConfig {
                                 .rewritePath("/api/v1/auth/users/(?<segment>.*)", "/users/${segment}"))
                         .uri("lb://auth-service"))
 
-                // IAM Service - Organization-level routes
-                .route("iam-org-routes", r -> r
-                        .path("/api/v1/identity/orgs/**")
+                // IAM Service routes
+                .route("iam-context-routes", r -> r
+                        .path("/api/v1/identity/(orgs|projects)/**") // Match both orgs and projects
                         .filters(f -> f
                                 .filter(_orgContextFilter)
                                 .filter(_tokenTranslationFilter)
-                                .rewritePath("/api/v1/identity/orgs/(?<segment>.*)", "/orgs/${segment}"))
-                        .uri("lb://iam-service"))
-
-                // IAM Service - Project-level routes
-                .route("iam-project-routes", r -> r
-                        .path("/api/v1/identity/projects/**")
-                        .filters(f -> f
-                                .filter(_orgContextFilter)
-                                .filter(_tokenTranslationFilter)
-                                .rewritePath("/api/v1/identity/projects/(?<segment>.*)", "/projects/${segment}"))
+                                .rewritePath("/api/v1/identity/(?<type>orgs|projects)/(?<segment>.*)", "/context/${segment}"))
                         .uri("lb://iam-service"))
 
                 // Organization Service Routes (protected)
