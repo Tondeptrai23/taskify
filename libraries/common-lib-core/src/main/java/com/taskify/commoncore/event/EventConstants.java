@@ -69,6 +69,7 @@ public class EventConstants {
             @Value("${rabbitmq.exchange.membership-events}") String membershipEventsExchange,
             @Value("${rabbitmq.exchange.organization-events}") String organizationEventsExchange,
             @Value("${rabbitmq.exchange.project-events}") String projectEventsExchange,
+            @Value("${rabbitmq.exchange.project-membership-events}") String projectMembershipEventsExchange,
 
             // Routing keys - User events
             @Value("${rabbitmq.routing-key.user-created}") String userCreatedRoutingKey,
@@ -86,6 +87,9 @@ public class EventConstants {
             @Value("${rabbitmq.routing-key.project-created}") String projectCreatedRoutingKey,
             @Value("${rabbitmq.routing-key.project-updated}") String projectUpdatedRoutingKey,
             @Value("${rabbitmq.routing-key.project-deleted}") String projectDeletedRoutingKey,
+            @Value("${rabbitmq.routing-key.project-member-added}") String projectMemberAddedRoutingKey,
+            @Value("${rabbitmq.routing-key.project-member-removed}") String projectMemberRemovedRoutingKey,
+            @Value("${rabbitmq.routing-key.project-member-role-updated}") String projectMemberRoleUpdatedRoutingKey,
 
             // IAM service queues
             @Value("${rabbitmq.queue.iam-user-created}") String iamUserCreatedQueue,
@@ -99,6 +103,9 @@ public class EventConstants {
             @Value("${rabbitmq.queue.iam-project-created}") String iamProjectCreatedQueue,
             @Value("${rabbitmq.queue.iam-project-updated}") String iamProjectUpdatedQueue,
             @Value("${rabbitmq.queue.iam-project-deleted}") String iamProjectDeletedQueue,
+            @Value("${rabbitmq.queue.iam-project-member-added}") String iamProjectMemberAddedQueue,
+            @Value("${rabbitmq.queue.iam-project-member-removed}") String iamProjectMemberRemovedQueue,
+            @Value("${rabbitmq.queue.iam-project-member-role-updated}") String iamProjectMemberRoleUpdatedQueue,
 
             // Organization service queues
             @Value("${rabbitmq.queue.org-user-created}") String orgUserCreatedQueue,
@@ -106,12 +113,14 @@ public class EventConstants {
 
             // Project service queues
             @Value("${rabbitmq.queue.project-user-created}") String projectUserCreatedQueue,
-            @Value("${rabbitmq.queue.project-user-deleted}") String projectUserDeletedQueue) {
+            @Value("${rabbitmq.queue.project-user-deleted}") String projectUserDeletedQueue
+    ) {
 
         this.userEventsExchange = userEventsExchange;
         this.membershipEventsExchange = membershipEventsExchange;
         this.organizationEventsExchange = organizationEventsExchange;
         this.projectEventsExchange = projectEventsExchange;
+        this.projectMembershipEventsExchange = projectMembershipEventsExchange;
 
         this.userCreatedRoutingKey = userCreatedRoutingKey;
         this.userDeletedRoutingKey = userDeletedRoutingKey;
@@ -124,6 +133,9 @@ public class EventConstants {
         this.projectCreatedRoutingKey = projectCreatedRoutingKey;
         this.projectUpdatedRoutingKey = projectUpdatedRoutingKey;
         this.projectDeletedRoutingKey = projectDeletedRoutingKey;
+        this.projectMemberAddedRoutingKey = projectMemberAddedRoutingKey;
+        this.projectMemberRemovedRoutingKey = projectMemberRemovedRoutingKey;
+        this.projectMemberRoleUpdatedRoutingKey = projectMemberRoleUpdatedRoutingKey;
 
         this.iamUserCreatedQueue = iamUserCreatedQueue;
         this.iamUserDeletedQueue = iamUserDeletedQueue;
@@ -136,6 +148,9 @@ public class EventConstants {
         this.iamProjectCreatedQueue = iamProjectCreatedQueue;
         this.iamProjectUpdatedQueue = iamProjectUpdatedQueue;
         this.iamProjectDeletedQueue = iamProjectDeletedQueue;
+        this.iamProjectMemberAddedQueue = iamProjectMemberAddedQueue;
+        this.iamProjectMemberRemovedQueue = iamProjectMemberRemovedQueue;
+        this.iamProjectMemberRoleUpdatedQueue = iamProjectMemberRoleUpdatedQueue;
 
         this.orgUserCreatedQueue = orgUserCreatedQueue;
         this.orgUserDeletedQueue = orgUserDeletedQueue;

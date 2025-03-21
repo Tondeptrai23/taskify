@@ -97,3 +97,35 @@ VALUES
         CURRENT_TIMESTAMP,
         CURRENT_TIMESTAMP
     );
+
+INSERT INTO project_memberships (
+    project_id, user_id, role_id, is_active, joined_at
+)
+VALUES
+    -- Website Redesign project - assign admin as a member with Web Design Lead role
+    ('88888888-8888-8888-8888-888888888888',
+     '11111111-1111-1111-1111-111111111111',
+     'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+     TRUE,
+     CURRENT_TIMESTAMP),
+
+    -- Website Redesign project - assign regular user as a member with UI/UX Designer role
+    ('88888888-8888-8888-8888-888888888888',
+     '22222222-2222-2222-2222-222222222222',
+     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+     TRUE,
+     CURRENT_TIMESTAMP),
+
+    -- Mobile App Development project - assign admin as a member with Mobile Development Lead role
+    ('77777777-7777-7777-7777-777777777777',
+     '11111111-1111-1111-1111-111111111111',
+     'dddddddd-dddd-dddd-dddd-dddddddddddd',
+     TRUE,
+     CURRENT_TIMESTAMP),
+
+    -- Mobile App Development project - assign regular user as a member with Mobile Developer role
+    ('77777777-7777-7777-7777-777777777777',
+     '22222222-2222-2222-2222-222222222222',
+     'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+     TRUE,
+     CURRENT_TIMESTAMP);
