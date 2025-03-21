@@ -6,8 +6,9 @@ import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.org.OrganizationCreatedEvent;
 import com.taskify.commoncore.event.org.OrganizationDeletedEvent;
 import com.taskify.commoncore.event.org.OrganizationUpdatedEvent;
-import com.taskify.iam.entity.LocalOrganization;
-import com.taskify.iam.repository.OrganizationRepository;
+import com.taskify.iam.entity.Context;
+import com.taskify.iam.entity.ContextType;
+import com.taskify.iam.repository.ContextRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,19 +16,21 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Component
 public class OrganizationEventConsumer {
 
-    private final OrganizationRepository organizationRepository;
+    private final ContextRepository contextRepository;
     private final EventConstants eventConstants;
 
     @Autowired
-    public OrganizationEventConsumer(OrganizationRepository organizationRepository,
+    public OrganizationEventConsumer(ContextRepository contextRepository,
                                      EventConstants eventConstants) {
-        this.organizationRepository = organizationRepository;
+        this.contextRepository = contextRepository;
         this.eventConstants = eventConstants;
     }
 
@@ -36,21 +39,23 @@ public class OrganizationEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleOrganizationCreatedEvent(@Payload OrganizationCreatedEvent event) {
-        organizationRepository.findById(event.getId())
-                .ifPresentOrElse(
-                        existingOrg -> {
-                            // Update existing organization
-                            updateExistingOrganization(existingOrg, event);
-                            organizationRepository.save(existingOrg);
-                            log.info("Updated existing organization: {}", existingOrg.getId());
-                        },
-                        () -> {
-                            // Create new organization
-                            LocalOrganization newOrg = createOrganizationFromEvent(event);
-                            organizationRepository.save(newOrg);
-                            log.info("Created new organization: {}", newOrg.getId());
-                        }
-                );
+        Optional<Context> existingContext = contextRepository.findByExternalIdAndType(
+                event.getId().toString(), ContextType.ORGANIZATION);
+
+        if (existingContext.isPresent()) {
+            log.info("Context for organization already exists: {}", event.getId());
+            return;
+        }
+
+        // Create a new context for this organization
+        Context newContext = new Context();
+        newContext.setId(event.getId());
+        newContext.setName(event.getName());
+        newContext.setType(ContextType.ORGANIZATION);
+        newContext.setPath("/orgs/" + event.getId());
+
+        contextRepository.save(newContext);
+        log.info("Created new context for organization: {}", event.getId());
     }
 
     @Transactional
@@ -58,24 +63,12 @@ public class OrganizationEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleOrganizationUpdatedEvent(@Payload OrganizationUpdatedEvent event) {
-        Optional<LocalOrganization> organizationOptional = organizationRepository.findById(event.getId());
-
-        if (organizationOptional.isPresent()) {
-            LocalOrganization organization = organizationOptional.get();
-            organization.setName(event.getName());
-            organization.setOwnerId(event.getOwnerId());
-            organizationRepository.save(organization);
-            log.info("Updated organization from event: {}", event.getId());
-        } else {
-            log.warn("Cannot update non-existent organization: {}", event.getId());
-            // Create the organization if it doesn't exist
-            LocalOrganization newOrg = new LocalOrganization();
-            newOrg.setId(event.getId());
-            newOrg.setName(event.getName());
-            newOrg.setOwnerId(event.getOwnerId());
-            organizationRepository.save(newOrg);
-            log.info("Created missing organization during update: {}", newOrg.getId());
-        }
+        contextRepository.findByExternalIdAndType(event.getId().toString(), ContextType.ORGANIZATION)
+                .ifPresent(context -> {
+                    context.setName(event.getName());
+                    contextRepository.save(context);
+                    log.info("Updated context for organization: {}", event.getId());
+                });
     }
 
     @Transactional
@@ -83,20 +76,16 @@ public class OrganizationEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleOrganizationDeletedEvent(@Payload OrganizationDeletedEvent event) {
-        organizationRepository.deleteById(event.getId());
-        log.info("Deleted organization: {}", event.getId());
-    }
+        contextRepository.findByExternalIdAndType(event.getId().toString(), ContextType.ORGANIZATION)
+                .ifPresent(context -> {
+                    // Delete all child contexts as well (e.g., projects)
+                    List<Context> descendants = contextRepository.findAllDescendants(context.getId());
+                    for (Context descendant : descendants) {
+                        contextRepository.delete(descendant);
+                    }
 
-    private LocalOrganization createOrganizationFromEvent(OrganizationCreatedEvent event) {
-        LocalOrganization organization = new LocalOrganization();
-        organization.setId(event.getId());
-        organization.setName(event.getName());
-        organization.setOwnerId(event.getOwnerId());
-        return organization;
-    }
-
-    private void updateExistingOrganization(LocalOrganization organization, OrganizationCreatedEvent event) {
-        organization.setName(event.getName());
-        organization.setOwnerId(event.getOwnerId());
+                    contextRepository.delete(context);
+                    log.info("Deleted context for organization: {}", event.getId());
+                });
     }
 }

@@ -20,7 +20,6 @@ public class ProjectUpdatedEvent {
     private String name;
     private String description;
     private String key;
-    private UUID organizationId;
     private UUID authorId;
     private ProjectStatus status;
     private ZonedDateTime timestamp;

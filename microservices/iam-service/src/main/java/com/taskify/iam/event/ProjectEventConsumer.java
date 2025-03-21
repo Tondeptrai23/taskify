@@ -3,13 +3,15 @@ package com.taskify.iam.event;
 import com.taskify.commoncore.annotation.LoggingAround;
 import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.event.EventConstants;
+import com.taskify.commoncore.event.org.OrganizationCreatedEvent;
+import com.taskify.commoncore.event.org.OrganizationDeletedEvent;
+import com.taskify.commoncore.event.org.OrganizationUpdatedEvent;
 import com.taskify.commoncore.event.project.ProjectCreatedEvent;
 import com.taskify.commoncore.event.project.ProjectDeletedEvent;
 import com.taskify.commoncore.event.project.ProjectUpdatedEvent;
-import com.taskify.iam.entity.LocalOrganization;
-import com.taskify.iam.entity.Project;
-import com.taskify.iam.repository.OrganizationRepository;
-import com.taskify.iam.repository.ProjectRepository;
+import com.taskify.iam.entity.Context;
+import com.taskify.iam.entity.ContextType;
+import com.taskify.iam.repository.ContextRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,17 +26,14 @@ import java.util.UUID;
 @Component
 public class ProjectEventConsumer {
 
-    private final ProjectRepository projectRepository;
-    private final OrganizationRepository organizationRepository;
+    private final ContextRepository contextRepository;
     private final EventConstants eventConstants;
 
     @Autowired
     public ProjectEventConsumer(
-            ProjectRepository projectRepository,
-            OrganizationRepository organizationRepository,
+            ContextRepository contextRepository,
             EventConstants eventConstants) {
-        this.projectRepository = projectRepository;
-        this.organizationRepository = organizationRepository;
+        this.contextRepository = contextRepository;
         this.eventConstants = eventConstants;
     }
 
@@ -43,21 +42,39 @@ public class ProjectEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleProjectCreatedEvent(@Payload ProjectCreatedEvent event) {
-        // Check if the project already exists
-        Optional<Project> existingProject = projectRepository.findById(event.getId());
+        // First check if project context already exists
+        Optional<Context> existingContext = contextRepository.findByExternalIdAndType(
+                event.getId().toString(), ContextType.PROJECT);
 
-        if (existingProject.isPresent()) {
-            // Update the existing project
-            Project project = existingProject.get();
-            updateProjectFromEvent(project, event);
-            projectRepository.save(project);
-            log.info("Updated existing project: {}", project.getId());
-        } else {
-            // Create a new project
-            Project newProject = createProjectFromEvent(event);
-            projectRepository.save(newProject);
-            log.info("Created new project: {}", newProject.getId());
+        if (existingContext.isPresent()) {
+            log.info("Context for project already exists: {}", event.getId());
+            return;
         }
+
+        // Find the parent organization context
+        Optional<Context> parentContext = contextRepository.findByExternalIdAndType(
+                event.getOrganizationId().toString(), ContextType.ORGANIZATION);
+
+        if (!parentContext.isPresent()) {
+            log.error("Parent organization context not found for project: {}", event.getId());
+            return;
+        }
+
+        // Create a new context for this project
+        Context newContext = new Context();
+        newContext.setId(event.getId());
+        newContext.setName(event.getName());
+        newContext.setType(ContextType.PROJECT);
+        newContext.setParent(parentContext.get());
+        newContext.setPath(parentContext.get().getPath() + "/projects/" + event.getId());
+
+        // Save the new context
+        Context savedContext = contextRepository.save(newContext);
+
+        // Update parent's children collection
+        Context parent = parentContext.get();
+        parent.getChildren().add(savedContext);
+        contextRepository.save(parent);
     }
 
     @Transactional
@@ -65,30 +82,12 @@ public class ProjectEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleProjectUpdatedEvent(@Payload ProjectUpdatedEvent event) {
-        Optional<Project> projectOptional = projectRepository.findById(event.getId());
-
-        if (projectOptional.isPresent()) {
-            Project project = projectOptional.get();
-            project.setKey(event.getKey());
-
-            // Set organization if it changes or is missing
-            if (project.getOrganization() == null ||
-                    !project.getOrganization().getId().equals(event.getOrganizationId())) {
-                setProjectOrganization(project, event.getOrganizationId());
-            }
-
-            projectRepository.save(project);
-            log.info("Updated project: {}", event.getId());
-        } else {
-            // If the project doesn't exist, create it (recovery mechanism)
-            log.warn("Project not found for update. Creating it: {}", event.getId());
-            Project newProject = new Project();
-            newProject.setId(event.getId());
-            newProject.setKey(event.getKey());
-            setProjectOrganization(newProject, event.getOrganizationId());
-
-            projectRepository.save(newProject);
-        }
+        contextRepository.findByExternalIdAndType(event.getId().toString(), ContextType.PROJECT)
+                .ifPresent(context -> {
+                    context.setName(event.getName());
+                    contextRepository.save(context);
+                    log.info("Updated context for project: {}", event.getId());
+                });
     }
 
     @Transactional
@@ -96,41 +95,17 @@ public class ProjectEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleProjectDeletedEvent(@Payload ProjectDeletedEvent event) {
-        projectRepository.deleteById(event.getId());
-    }
+        contextRepository.findByExternalIdAndType(event.getId().toString(), ContextType.PROJECT)
+                .ifPresent(context -> {
+                    // If it has a parent, update the parent's children list
+                    if (context.getParent() != null) {
+                        Context parent = context.getParent();
+                        parent.getChildren().remove(context);
+                        contextRepository.save(parent);
+                    }
 
-    private Project createProjectFromEvent(ProjectCreatedEvent event) {
-        Project project = new Project();
-        project.setId(event.getId());
-        project.setKey(event.getKey());
-
-        // Set organization
-        setProjectOrganization(project, event.getOrganizationId());
-
-        return project;
-    }
-
-    private void updateProjectFromEvent(Project project, ProjectCreatedEvent event) {
-        project.setKey(event.getKey());
-
-        // Update organization if it changes
-        if (project.getOrganization() == null ||
-                !project.getOrganization().getId().equals(event.getOrganizationId())) {
-            setProjectOrganization(project, event.getOrganizationId());
-        }
-    }
-
-    private void setProjectOrganization(Project project, UUID organizationId) {
-        organizationRepository.findById(organizationId).ifPresentOrElse(
-                project::setOrganization,
-                () -> {
-                    // Create organization placeholder if not found
-                    log.warn("Organization not found: {}. Creating placeholder.", organizationId);
-                    LocalOrganization org = new LocalOrganization();
-                    org.setId(organizationId);
-                    organizationRepository.save(org);
-                    project.setOrganization(org);
-                }
-        );
+                    contextRepository.delete(context);
+                    log.info("Deleted context for project: {}", event.getId());
+                });
     }
 }
