@@ -1,0 +1,20 @@
+package com.taskify.project.dto.membership;
+
+import com.taskify.commoncore.dto.BaseCollectionRequest;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.ZonedDateTime;
+import java.util.UUID;
+
+@Getter
+@Setter
+public class MembershipCollectionRequest extends BaseCollectionRequest {
+    private String username;
+    private String email;
+    private UUID roleId;
+    private Boolean isActive;
+    private ZonedDateTime joinedFrom;
+    private ZonedDateTime joinedTo;
+    private String sortBy = "joinedAt";
+}

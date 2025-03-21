@@ -40,6 +40,27 @@ CREATE TABLE local_users (
 -- Add index for local_users
 CREATE INDEX idx_local_users_email ON local_users(email);
 
+-- Project Memberships Table
+CREATE TABLE project_memberships (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    project_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    role_id UUID NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    joined_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT project_memberships_project_user_unique UNIQUE (project_id, user_id),
+    CONSTRAINT fk_project_memberships_project FOREIGN KEY (project_id)
+     REFERENCES projects(id) ON DELETE CASCADE,
+    CONSTRAINT fk_project_memberships_user FOREIGN KEY (user_id)
+     REFERENCES local_users(id) ON DELETE CASCADE
+);
+
+-- Add indexes for project_memberships
+CREATE INDEX idx_project_memberships_user_id ON project_memberships(user_id);
+CREATE INDEX idx_project_memberships_project_id ON project_memberships(project_id);
+CREATE INDEX idx_project_memberships_role_id ON project_memberships(role_id);
+CREATE INDEX idx_project_memberships_is_active ON project_memberships(is_active);
+
 -- Insert default users (mirroring the data from Auth service)
 INSERT INTO local_users (id, username, email, created_at, system_role)
 VALUES
