@@ -13,16 +13,17 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-@Node("Role")
+@Node("Context")
 @Data
-public class Role {
+public class Context {
     @Id
     @GeneratedValue(GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
     private String name;
-    private String description;
-    private boolean isDefault;
+    private ContextType type;
+    private String externalId;  // Original entity ID (org ID or project ID)
+    private String path;        // Hierarchical path for quick access
 
     @CreatedDate
     private ZonedDateTime createdAt;
@@ -30,10 +31,9 @@ public class Role {
     @LastModifiedDate
     private ZonedDateTime updatedAt;
 
-    @Relationship(type = "HAS_PERMISSION", direction = Relationship.Direction.OUTGOING)
-    private Set<Permission> permissions = new HashSet<>();
+    @Relationship(type = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
+    private Set<Context> children = new HashSet<>();
 
-    // New relationship - replace Organization and Project with Context
-    @Relationship(type = "BELONGS_TO_CONTEXT", direction = Relationship.Direction.OUTGOING)
-    private Context context;
+    @Relationship(type = "CHILD_OF", direction = Relationship.Direction.OUTGOING)
+    private Context parent;
 }

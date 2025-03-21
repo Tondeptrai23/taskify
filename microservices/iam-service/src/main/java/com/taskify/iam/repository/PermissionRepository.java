@@ -38,4 +38,9 @@ public interface PermissionRepository extends Neo4jRepository<Permission, Long> 
             "WHERE u.id = $userId AND u.isDeleted = false AND role.roleType = 'PROJECT' " +
             "RETURN DISTINCT p")
     List<Permission> findProjectPermissionsOfUser(UUID projectId, UUID userId);
+
+    @Query("MATCH (u:User {id: $userId})-[r:HAS_ROLE]->(role:Role)-[hp:HAS_PERMISSION]->(p:Permission) " +
+            "WHERE r.contextId IN $contextIds " +
+            "RETURN DISTINCT p")
+    List<Permission> findUserPermissionsInContexts(UUID userId, List<UUID> contextIds);
 }
