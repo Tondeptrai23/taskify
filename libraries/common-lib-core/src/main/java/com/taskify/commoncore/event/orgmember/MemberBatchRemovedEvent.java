@@ -1,4 +1,4 @@
-package com.taskify.commoncore.event.member;
+package com.taskify.commoncore.event.orgmember;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

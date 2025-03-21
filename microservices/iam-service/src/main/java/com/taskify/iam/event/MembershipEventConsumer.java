@@ -3,7 +3,7 @@ package com.taskify.iam.event;
 import com.taskify.commoncore.annotation.LoggingAround;
 import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.event.EventConstants;
-import com.taskify.commoncore.event.member.*;
+import com.taskify.commoncore.event.orgmember.*;
 import com.taskify.iam.service.user.UserRoleService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

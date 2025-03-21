@@ -1,4 +1,4 @@
-package com.taskify.commoncore.event.member;
+package com.taskify.commoncore.event.projectmember;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +15,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MemberBatchAddedEvent {
+public class ProjectMemberBatchAddedEvent {
+    private UUID projectId;
     private UUID organizationId;
     private List<MemberData> members;
     private ZonedDateTime timestamp;
@@ -29,6 +30,5 @@ public class MemberBatchAddedEvent {
         private UUID id;
         private UUID userId;
         private UUID roleId;
-        private boolean isAdmin;
     }
 }
