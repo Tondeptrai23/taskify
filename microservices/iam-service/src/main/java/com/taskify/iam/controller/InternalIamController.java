@@ -1,18 +1,14 @@
 package com.taskify.iam.controller;
 
-import com.taskify.commoncore.annotation.LoggingBefore;
 import com.taskify.commoncore.dto.ApiResponse;
 import com.taskify.iam.dto.permission.UserPermissionsResponse;
 import com.taskify.iam.dto.permission.VerifyPermissionRequest;
-import com.taskify.iam.dto.role.OrganizationRoleDto;
-import com.taskify.iam.dto.role.ProjectRoleDto;
-import com.taskify.iam.mapper.OrganizationRoleMapper;
 import com.taskify.iam.mapper.PermissionMapper;
-import com.taskify.iam.mapper.ProjectRoleMapper;
-import com.taskify.iam.service.role.OrganizationRoleService;
+import com.taskify.iam.mapper.RoleMapper;
 import com.taskify.iam.service.permission.PermissionService;
 import com.taskify.iam.service.permission.PermissionVerificationService;
-import com.taskify.iam.service.role.ProjectRoleService;
+import com.taskify.iam.service.role.RoleService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,93 +16,57 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Set;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/internal")
 public class InternalIamController {
-    private final OrganizationRoleService _orgRoleService;
-    private final ProjectRoleService _projectRoleService;
-    private final ProjectRoleMapper _projectRoleMapper;
-    private final OrganizationRoleMapper _orgRoleMapper;
-    private final PermissionService _permissionService;
-    private final PermissionMapper _permissionMapper;
-    private final PermissionVerificationService _permissionVerificationService;
+    private final PermissionService permissionService;
+    private final PermissionVerificationService permissionVerificationService;
+    private final PermissionMapper permissionMapper;
+    private final RoleService roleService;
 
     @Autowired
-    public InternalIamController(OrganizationRoleService orgRoleService,
-                                 OrganizationRoleMapper orgRoleMapper,
-                                 ProjectRoleService projectRoleService,
-                                 PermissionService permissionService,
-                                 PermissionMapper permissionMapper,
-                                    PermissionVerificationService permissionVerificationService,
-                                 ProjectRoleMapper projectRoleMapper) {
-        _orgRoleService = orgRoleService;
-        _orgRoleMapper = orgRoleMapper;
-        _projectRoleService = projectRoleService;
-        _permissionService = permissionService;
-        _permissionMapper = permissionMapper;
-        _permissionVerificationService = permissionVerificationService;
-        _projectRoleMapper = projectRoleMapper;
+    public InternalIamController(
+            PermissionService permissionService,
+            PermissionVerificationService permissionVerificationService,
+            PermissionMapper permissionMapper,
+            RoleService roleService) {
+        this.permissionService = permissionService;
+        this.permissionVerificationService = permissionVerificationService;
+        this.permissionMapper = permissionMapper;
+        this.roleService = roleService;
     }
 
-    @LoggingBefore
-    @GetMapping("/orgs/roles/default")
-    public ResponseEntity<ApiResponse<OrganizationRoleDto>> getDefaultRoleInOrg(
-            @RequestHeader("X-Organization-Context") UUID orgId
-    ){
-        var response =  _orgRoleMapper.toDto(_orgRoleService.getDefaultRole(orgId));
-        return ResponseEntity.ok(new ApiResponse<>(response));
+    @GetMapping("/contexts/{contextId}/roles/default")
+    public ResponseEntity<ApiResponse<UUID>> getDefaultRole(
+            @PathVariable UUID contextId) {
+        var defaultRole = roleService.getDefaultRole(contextId);
+        return ResponseEntity.ok(new ApiResponse<>(defaultRole.getId()));
     }
 
-    @LoggingBefore
-    @GetMapping("projects/{projectId}/roles/default")
-    public ResponseEntity<ApiResponse<ProjectRoleDto>> getDefaultRoleInProject(
-            @PathVariable UUID projectId
-    ){
-        var response = _projectRoleMapper.toDto(_projectRoleService.getDefaultRole(projectId));
-        return ResponseEntity.ok(new ApiResponse<>(response));
+    @GetMapping("/contexts/{contextId}/permissions")
+    public ResponseEntity<ApiResponse<UserPermissionsResponse>> getUserPermissionsInContext(
+            @PathVariable UUID contextId,
+            @RequestHeader("X-User-Id") UUID userId) {
+        var permissions = permissionService.getUserPermissionsInContext(contextId, userId);
+        var stringPermissions = permissionMapper.permissionsToStringList(Set.copyOf(permissions));
+
+        var response = new ApiResponse<>(
+                new UserPermissionsResponse(contextId, stringPermissions)
+        );
+        return ResponseEntity.ok(response);
     }
 
-    @LoggingBefore
-    @GetMapping("/orgs/permissions")
-    public ResponseEntity<ApiResponse<UserPermissionsResponse>> getPermissionsInOrg(
-            @RequestHeader("X-Organization-Context") UUID orgId,
-            @RequestHeader("X-User-Id") UUID userId
-    ){
-        var response = _permissionService.getOrganizationPermissionsOfUser(orgId, userId);
-        var permissions = _permissionMapper.permissionsToStringList(Set.copyOf(response));
-        return ResponseEntity.ok(new ApiResponse<>(
-                new UserPermissionsResponse(orgId, permissions)
-        ));
-    }
-
-    @LoggingBefore
-    @GetMapping("/projects/{projectId}/permissions")
-    public ResponseEntity<ApiResponse<UserPermissionsResponse>> getPermissionsInProject(
-            @PathVariable UUID projectId,
-            @RequestHeader("X-User-Id") UUID userId,
-            @RequestHeader("X-Organization-Context") UUID orgId
-    ){
-        var response = _permissionService.getProjectPermissionsOfUser(projectId, userId, orgId);
-        var permissions = _permissionMapper.permissionsToStringList(Set.copyOf(response));
-        return ResponseEntity.ok(new ApiResponse<>(
-                new UserPermissionsResponse(orgId, permissions)
-        ));
-    }
-
-    @LoggingBefore
-    @PostMapping("/permissions/verify")
+    @PostMapping("/contexts/{contextId}/permissions/verify")
     public ResponseEntity<ApiResponse<Boolean>> verifyPermission(
+            @PathVariable UUID contextId,
             @RequestBody VerifyPermissionRequest request,
-            @RequestHeader("X-User-Id") UUID userId,
-            @RequestHeader("X-Organization-Context") UUID orgId
-    ){
-        var response = _permissionVerificationService.hasPermission(
+            @RequestHeader("X-User-Id") UUID userId) {
+        boolean hasPermission = permissionVerificationService.hasPermission(
                 userId,
-                orgId,
-                UUID.fromString(request.getProjectId()),
+                contextId,
                 request.getPermission()
         );
-        return ResponseEntity.ok(new ApiResponse<>(response));
+        return ResponseEntity.ok(new ApiResponse<>(hasPermission));
     }
 }
-    

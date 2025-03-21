@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class OrganizationRoleDto {
+public class RoleDto {
     private UUID id;
     private String name;
     private String description;

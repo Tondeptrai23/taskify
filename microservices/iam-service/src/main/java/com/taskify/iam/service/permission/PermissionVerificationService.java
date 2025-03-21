@@ -1,28 +1,24 @@
 package com.taskify.iam.service.permission;
 
+import com.taskify.iam.entity.Permission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class PermissionVerificationService {
-    private final PermissionService _permissionService;
+    private final PermissionService permissionService;
 
     @Autowired
     public PermissionVerificationService(PermissionService permissionService) {
-        _permissionService = permissionService;
+        this.permissionService = permissionService;
     }
 
-    public boolean hasPermission(UUID userId, UUID orgId, UUID projectId, String permission) {
-        if (projectId == null) {
-            return _permissionService.getOrganizationPermissionsOfUser(orgId, userId)
-                    .stream()
-                    .anyMatch(p -> p.getName().equals(permission));
-        } else {
-            return _permissionService.getProjectPermissionsOfUser(projectId, userId, orgId)
-                    .stream()
-                    .anyMatch(p -> p.getName().equals(permission));
-        }
+    public boolean hasPermission(UUID userId, UUID contextId, String permission) {
+        List<Permission> permissions = permissionService.getUserPermissionsInContext(contextId, userId);
+        return permissions.stream()
+                .anyMatch(p -> p.getName().equals(permission));
     }
 }
