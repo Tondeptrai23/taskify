@@ -1,5 +1,7 @@
 # Disable Config Server for tests
 spring:
+  application:
+    name: auth-service
   cloud:
     config:
       enabled: false
@@ -28,6 +30,7 @@ spring:
     listener:
       simple:
         auto-startup: false
+
 
 # Mock service URLs (replaces service discovery)
 services:

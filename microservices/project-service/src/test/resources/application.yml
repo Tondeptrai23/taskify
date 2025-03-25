@@ -1,5 +1,7 @@
 # Disable Config Server for tests
 spring:
+  application:
+    name: project-service
   cloud:
     config:
       enabled: false
