@@ -6,6 +6,19 @@ pipeline {
         jdk 'JDK 17'
     }
     
+    environment {
+        // Define service paths for easier reference
+        COMMON_CORE_PATH = "libraries/common-lib-core"
+        COMMON_WEB_PATH = "libraries/common-lib-web"
+        DISCOVERY_PATH = "server-discovery"
+        CONFIG_PATH = "config-server"
+        AUTH_PATH = "microservices/auth-service"
+        IAM_PATH = "microservices/iam-service"
+        ORG_PATH = "microservices/organization-service" 
+        PROJECT_PATH = "microservices/project-service"
+        GATEWAY_PATH = "api-gateway"
+    }
+    
     stages {
         stage('Checkout') {
             steps {
@@ -13,27 +26,171 @@ pipeline {
             }
         }
         
+        stage('Detect Changes') {
+            steps {
+                script {
+                    // For multi-branch pipeline, compare with the target branch
+                    // For regular pipelines, compare the last two commits
+                    def changeSet = []
+                    
+                    if (env.CHANGE_TARGET) {
+                        // This is a PR build
+                        changeSet = sh(script: "git diff --name-only origin/${env.CHANGE_TARGET}..HEAD", returnStdout: true).trim().split('\n')
+                    } else {
+                        // This is a branch build
+                        changeSet = sh(script: "git diff --name-only HEAD~1..HEAD", returnStdout: true).trim().split('\n')
+                    }
+                    
+                    // Initialize change flags for each component
+                    env.COMMON_CORE_CHANGED = "false"
+                    env.COMMON_WEB_CHANGED = "false"
+                    env.DISCOVERY_CHANGED = "false"
+                    env.CONFIG_CHANGED = "false"
+                    env.AUTH_CHANGED = "false"
+                    env.IAM_CHANGED = "false"
+                    env.ORG_CHANGED = "false"
+                    env.PROJECT_CHANGED = "false"
+                    env.GATEWAY_CHANGED = "false"
+                    
+                    // Check each path in the change set
+                    for (change in changeSet) {
+                        if (change.startsWith(COMMON_CORE_PATH)) {
+                            env.COMMON_CORE_CHANGED = "true"
+                            echo "Common Core Library changes detected"
+                        }
+                        else if (change.startsWith(COMMON_WEB_PATH)) {
+                            env.COMMON_WEB_CHANGED = "true"
+                            echo "Common Web Library changes detected"
+                        }
+                        else if (change.startsWith(DISCOVERY_PATH)) {
+                            env.DISCOVERY_CHANGED = "true"
+                            echo "Discovery Service changes detected"
+                        }
+                        else if (change.startsWith(CONFIG_PATH)) {
+                            env.CONFIG_CHANGED = "true"
+                            echo "Config Server changes detected"
+                        }
+                        else if (change.startsWith(AUTH_PATH)) {
+                            env.AUTH_CHANGED = "true"
+                            echo "Auth Service changes detected"
+                        }
+                        else if (change.startsWith(IAM_PATH)) {
+                            env.IAM_CHANGED = "true"
+                            echo "IAM Service changes detected"
+                        }
+                        else if (change.startsWith(ORG_PATH)) {
+                            env.ORG_CHANGED = "true"
+                            echo "Organization Service changes detected"
+                        }
+                        else if (change.startsWith(PROJECT_PATH)) {
+                            env.PROJECT_CHANGED = "true"
+                            echo "Project Service changes detected"
+                        }
+                        else if (change.startsWith(GATEWAY_PATH)) {
+                            env.GATEWAY_CHANGED = "true"
+                            echo "API Gateway changes detected"
+                        }
+                        else if (change == "pom.xml" || change.endsWith("application.yml") || change.endsWith("application.properties")) {
+                            // Global configuration changes might require rebuilding everything
+                            echo "Global configuration change detected: ${change}"
+                            env.COMMON_CORE_CHANGED = "true"
+                            env.COMMON_WEB_CHANGED = "true"
+                            env.DISCOVERY_CHANGED = "true"
+                            env.CONFIG_CHANGED = "true"
+                            env.AUTH_CHANGED = "true"
+                            env.IAM_CHANGED = "true" 
+                            env.ORG_CHANGED = "true"
+                            env.PROJECT_CHANGED = "true"
+                            env.GATEWAY_CHANGED = "true"
+                        }
+                    }
+                    
+                    // If common libraries changed, mark all services as changed
+                    // since they depend on the libraries
+                    if (env.COMMON_CORE_CHANGED == "true") {
+                        env.AUTH_CHANGED = "true"
+                        env.IAM_CHANGED = "true"
+                        env.ORG_CHANGED = "true"
+                        env.PROJECT_CHANGED = "true"
+                        env.GATEWAY_CHANGED = "true"
+                        env.COMMON_WEB_CHANGED = "true"
+                        echo "Common Core Library change affects all services"
+                    }
+                    
+                    if (env.COMMON_WEB_CHANGED == "true") {
+                        env.AUTH_CHANGED = "true"
+                        env.IAM_CHANGED = "true"
+                        env.ORG_CHANGED = "true"
+                        env.PROJECT_CHANGED = "true"
+                        env.GATEWAY_CHANGED = "true"
+                        echo "Common Web Library change affects all microservices"
+                    }
+                    
+                    // Output summary of what will be built
+                    echo "Services to build:"
+                    echo "Common Core Library: ${env.COMMON_CORE_CHANGED}"
+                    echo "Common Web Library: ${env.COMMON_WEB_CHANGED}"
+                    echo "Discovery Service: ${env.DISCOVERY_CHANGED}"
+                    echo "Config Server: ${env.CONFIG_CHANGED}"
+                    echo "Auth Service: ${env.AUTH_CHANGED}"
+                    echo "IAM Service: ${env.IAM_CHANGED}"
+                    echo "Organization Service: ${env.ORG_CHANGED}"
+                    echo "Project Service: ${env.PROJECT_CHANGED}"
+                    echo "API Gateway: ${env.GATEWAY_CHANGED}"
+                }
+            }
+        }
+        
         // BUILD PHASE
         stage('Build Phase') {
             stages {
                 stage('Build Common Libraries') {
+                    when {
+                        expression { return env.COMMON_CORE_CHANGED == "true" || env.COMMON_WEB_CHANGED == "true" }
+                    }
                     steps {
-                        dir('libraries/common-lib-core') {
-                            sh 'mvn clean install package -DskipTests'
-                        }
-                        dir('libraries/common-lib-web') {
-                            sh 'mvn clean install package -DskipTests'
+                        script {
+                            if (env.COMMON_CORE_CHANGED == "true") {
+                                dir(COMMON_CORE_PATH) {
+                                    sh 'mvn clean install -DskipTests'
+                                    echo "Common Core Library built and installed to local maven repository"
+                                }
+                            }
+                            
+                            if (env.COMMON_WEB_CHANGED == "true") {
+                                dir(COMMON_WEB_PATH) {
+                                    sh 'mvn clean install -DskipTests'
+                                    echo "Common Web Library built and installed to local maven repository"
+                                }
+                            }
                         }
                     }
                 }
                 
                 stage('Build Infrastructure Services') {
-                    steps {
-                        dir('server-discovery') {
-                            sh 'mvn clean compile'
+                    parallel {
+                        stage('Discovery Service') {
+                            when {
+                                expression { return env.DISCOVERY_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(DISCOVERY_PATH) {
+                                    sh 'mvn clean compile'
+                                    echo "Discovery Service compiled"
+                                }
+                            }
                         }
-                        dir('config-server') {
-                            sh 'mvn clean compile'
+                        
+                        stage('Config Server') {
+                            when {
+                                expression { return env.CONFIG_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(CONFIG_PATH) {
+                                    sh 'mvn clean compile'
+                                    echo "Config Server compiled"
+                                }
+                            }
                         }
                     }
                 }
@@ -41,37 +198,61 @@ pipeline {
                 stage('Build Microservices') {
                     parallel {
                         stage('Auth Service') {
+                            when {
+                                expression { return env.AUTH_CHANGED == "true" }
+                            }
                             steps {
-                                dir('microservices/auth-service') {
+                                dir(AUTH_PATH) {
                                     sh 'mvn clean compile'
+                                    echo "Auth Service compiled"
                                 }
                             }
                         }
+                        
                         stage('IAM Service') {
+                            when {
+                                expression { return env.IAM_CHANGED == "true" }
+                            }
                             steps {
-                                dir('microservices/iam-service') {
+                                dir(IAM_PATH) {
                                     sh 'mvn clean compile'
+                                    echo "IAM Service compiled"
                                 }
                             }
                         }
+                        
                         stage('Organization Service') {
+                            when {
+                                expression { return env.ORG_CHANGED == "true" }
+                            }
                             steps {
-                                dir('microservices/organization-service') {
+                                dir(ORG_PATH) {
                                     sh 'mvn clean compile'
+                                    echo "Organization Service compiled"
                                 }
                             }
                         }
+                        
                         stage('Project Service') {
+                            when {
+                                expression { return env.PROJECT_CHANGED == "true" }
+                            }
                             steps {
-                                dir('microservices/project-service') {
+                                dir(PROJECT_PATH) {
                                     sh 'mvn clean compile'
+                                    echo "Project Service compiled"
                                 }
                             }
                         }
+                        
                         stage('API Gateway') {
+                            when {
+                                expression { return env.GATEWAY_CHANGED == "true" }
+                            }
                             steps {
-                                dir('api-gateway') {
+                                dir(GATEWAY_PATH) {
                                     sh 'mvn clean compile'
+                                    echo "API Gateway compiled"
                                 }
                             }
                         }
@@ -84,17 +265,39 @@ pipeline {
         stage('Test Phase') {
             stages {
                 stage('Test Infrastructure Services') {
-                    steps {
-                        dir('server-discovery') {
-                            sh 'mvn test'
+                    parallel {
+                        stage('Discovery Service') {
+                            when {
+                                expression { return env.DISCOVERY_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(DISCOVERY_PATH) {
+                                    sh 'mvn test'
+                                    echo "Discovery Service tests completed"
+                                }
+                            }
+                            post {
+                                always {
+                                    junit allowEmptyResults: true, testResults: "${DISCOVERY_PATH}/target/surefire-reports/TEST-*.xml"
+                                }
+                            }
                         }
-                        dir('config-server') {
-                            sh 'mvn test'
-                        }
-                    }
-                    post {
-                        always {
-                            junit '**/target/surefire-reports/TEST-*.xml'
+                        
+                        stage('Config Server') {
+                            when {
+                                expression { return env.CONFIG_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(CONFIG_PATH) {
+                                    sh 'mvn test'
+                                    echo "Config Server tests completed"
+                                }
+                            }
+                            post {
+                                always {
+                                    junit allowEmptyResults: true, testResults: "${CONFIG_PATH}/target/surefire-reports/TEST-*.xml"
+                                }
+                            }
                         }
                     }
                 }
@@ -102,62 +305,86 @@ pipeline {
                 stage('Test Microservices') {
                     parallel {
                         stage('Auth Service') {
+                            when {
+                                expression { return env.AUTH_CHANGED == "true" }
+                            }
                             steps {
-                                dir('microservices/auth-service') {
+                                dir(AUTH_PATH) {
                                     sh 'mvn test'
+                                    echo "Auth Service tests completed"
                                 }
                             }
                             post {
                                 always {
-                                    junit 'microservices/auth-service/target/surefire-reports/TEST-*.xml'
+                                    junit allowEmptyResults: true, testResults: "${AUTH_PATH}/target/surefire-reports/TEST-*.xml"
                                 }
                             }
                         }
+                        
                         stage('IAM Service') {
+                            when {
+                                expression { return env.IAM_CHANGED == "true" }
+                            }
                             steps {
-                                dir('microservices/iam-service') {
+                                dir(IAM_PATH) {
                                     sh 'mvn test'
+                                    echo "IAM Service tests completed"
                                 }
                             }
                             post {
                                 always {
-                                    junit 'microservices/iam-service/target/surefire-reports/TEST-*.xml'
+                                    junit allowEmptyResults: true, testResults: "${IAM_PATH}/target/surefire-reports/TEST-*.xml"
                                 }
                             }
                         }
+                        
                         stage('Organization Service') {
+                            when {
+                                expression { return env.ORG_CHANGED == "true" }
+                            }
                             steps {
-                                dir('microservices/organization-service') {
+                                dir(ORG_PATH) {
                                     sh 'mvn test'
+                                    echo "Organization Service tests completed"
                                 }
                             }
                             post {
                                 always {
-                                    junit 'microservices/organization-service/target/surefire-reports/TEST-*.xml'
+                                    junit allowEmptyResults: true, testResults: "${ORG_PATH}/target/surefire-reports/TEST-*.xml"
                                 }
                             }
                         }
+                        
                         stage('Project Service') {
+                            when {
+                                expression { return env.PROJECT_CHANGED == "true" }
+                            }
                             steps {
-                                dir('microservices/project-service') {
+                                dir(PROJECT_PATH) {
                                     sh 'mvn test'
+                                    echo "Project Service tests completed"
                                 }
                             }
                             post {
                                 always {
-                                    junit 'microservices/project-service/target/surefire-reports/TEST-*.xml'
+                                    junit allowEmptyResults: true, testResults: "${PROJECT_PATH}/target/surefire-reports/TEST-*.xml"
                                 }
                             }
                         }
+                        
                         stage('API Gateway') {
+                            when {
+                                expression { return env.GATEWAY_CHANGED == "true" }
+                            }
                             steps {
-                                dir('api-gateway') {
+                                dir(GATEWAY_PATH) {
                                     sh 'mvn test'
+                                    echo "API Gateway tests completed"
                                 }
                             }
                             post {
                                 always {
-                                    junit 'api-gateway/target/surefire-reports/TEST-*.xml'
+                                    junit allowEmptyResults: true, testResults: "${GATEWAY_PATH}/target/surefire-reports/TEST-*.xml"
                                 }
                             }
                         }
@@ -165,34 +392,113 @@ pipeline {
                 }
                 
                 stage('Package Applications') {
-                    steps {
-                        dir('server-discovery') {
-                            sh 'mvn package -DskipTests'
+                    parallel {
+                        stage('Discovery Service') {
+                            when {
+                                expression { return env.DISCOVERY_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(DISCOVERY_PATH) {
+                                    sh 'mvn package -DskipTests'
+                                    echo "Discovery Service packaged"
+                                }
+                            }
                         }
-                        dir('config-server') {
-                            sh 'mvn package -DskipTests'
+                        
+                        stage('Config Server') {
+                            when {
+                                expression { return env.CONFIG_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(CONFIG_PATH) {
+                                    sh 'mvn package -DskipTests'
+                                    echo "Config Server packaged"
+                                }
+                            }
                         }
-                        dir('microservices/auth-service') {
-                            sh 'mvn package -DskipTests'
+                        
+                        stage('Auth Service') {
+                            when {
+                                expression { return env.AUTH_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(AUTH_PATH) {
+                                    sh 'mvn package -DskipTests'
+                                    echo "Auth Service packaged"
+                                }
+                            }
                         }
-                        dir('microservices/iam-service') {
-                            sh 'mvn package -DskipTests'
+                        
+                        stage('IAM Service') {
+                            when {
+                                expression { return env.IAM_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(IAM_PATH) {
+                                    sh 'mvn package -DskipTests'
+                                    echo "IAM Service packaged"
+                                }
+                            }
                         }
-                        dir('microservices/organization-service') {
-                            sh 'mvn package -DskipTests'
+                        
+                        stage('Organization Service') {
+                            when {
+                                expression { return env.ORG_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(ORG_PATH) {
+                                    sh 'mvn package -DskipTests'
+                                    echo "Organization Service packaged"
+                                }
+                            }
                         }
-                        dir('microservices/project-service') {
-                            sh 'mvn package -DskipTests'
+                        
+                        stage('Project Service') {
+                            when {
+                                expression { return env.PROJECT_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(PROJECT_PATH) {
+                                    sh 'mvn package -DskipTests'
+                                    echo "Project Service packaged"
+                                }
+                            }
                         }
-                        dir('api-gateway') {
-                            sh 'mvn package -DskipTests'
+                        
+                        stage('API Gateway') {
+                            when {
+                                expression { return env.GATEWAY_CHANGED == "true" }
+                            }
+                            steps {
+                                dir(GATEWAY_PATH) {
+                                    sh 'mvn package -DskipTests'
+                                    echo "API Gateway packaged"
+                                }
+                            }
                         }
                     }
                 }
                 
                 stage('Archive Artifacts') {
                     steps {
-                        archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+                        script {
+                            def artifactPaths = []
+                            
+                            if (env.DISCOVERY_CHANGED == "true") artifactPaths.add("${DISCOVERY_PATH}/target/*.jar")
+                            if (env.CONFIG_CHANGED == "true") artifactPaths.add("${CONFIG_PATH}/target/*.jar")
+                            if (env.AUTH_CHANGED == "true") artifactPaths.add("${AUTH_PATH}/target/*.jar")
+                            if (env.IAM_CHANGED == "true") artifactPaths.add("${IAM_PATH}/target/*.jar")
+                            if (env.ORG_CHANGED == "true") artifactPaths.add("${ORG_PATH}/target/*.jar")
+                            if (env.PROJECT_CHANGED == "true") artifactPaths.add("${PROJECT_PATH}/target/*.jar")
+                            if (env.GATEWAY_CHANGED == "true") artifactPaths.add("${GATEWAY_PATH}/target/*.jar")
+                            
+                            if (!artifactPaths.isEmpty()) {
+                                archiveArtifacts artifacts: artifactPaths.join(','), fingerprint: true
+                                echo "Artifacts archived"
+                            } else {
+                                echo "No artifacts to archive"
+                            }
+                        }
                     }
                 }
             }
@@ -205,6 +511,10 @@ pipeline {
         }
         failure {
             echo 'Build or Test failed!'
+        }
+        always {
+            echo 'Cleaning workspace...'
+            cleanWs()
         }
     }
 }
