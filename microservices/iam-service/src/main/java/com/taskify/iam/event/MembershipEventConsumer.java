@@ -45,7 +45,7 @@ public class MembershipEventConsumer {
     @LoggingAround(value = "Processing batch member added event with {} members", args = {"event.getMembers().size()"})
     @LoggingException
     public void handleMemberBatchAddedEvent(@Payload MemberBatchAddedEvent event) {
-        processMemberBatchEvent(event.getOrganizationId(), ContextType.ORGANIZATION, event.getMembers(),
+        processMemberBatchEvent(event.getOrganizationId(), event.getMembers(),
                 (member, contextId) -> userRoleService.assignRoleToUser(member.getUserId(), contextId, member.getRoleId()));
     }
 
@@ -54,7 +54,7 @@ public class MembershipEventConsumer {
     @LoggingAround(value = "Processing batch member removed event with {} members", args = {"event.getMembers().size()"})
     @LoggingException
     public void handleMemberBatchRemovedEvent(@Payload MemberBatchRemovedEvent event) {
-        processMemberBatchEvent(event.getOrganizationId(), ContextType.ORGANIZATION, event.getMembers(),
+        processMemberBatchEvent(event.getOrganizationId(), event.getMembers(),
                 (member, contextId) -> userRoleService.removeRoleFromUser(member.getUserId(), contextId));
     }
 
@@ -63,7 +63,7 @@ public class MembershipEventConsumer {
     @LoggingAround(value = "Processing batch member role updated event with {} members", args = {"event.getMembers().size()"})
     @LoggingException
     public void handleMemberBatchRoleUpdatedEvent(@Payload MemberBatchRoleUpdatedEvent event) {
-        processMemberBatchEvent(event.getOrganizationId(), ContextType.ORGANIZATION, event.getMembers(),
+        processMemberBatchEvent(event.getOrganizationId(), event.getMembers(),
                 (member, contextId) -> userRoleService.updateUserRole(member.getUserId(), contextId, event.getNewRoleId()));
     }
 
@@ -72,7 +72,7 @@ public class MembershipEventConsumer {
     @LoggingAround(value = "Processing project member batch added event with {} members", args = {"event.getMembers().size()"})
     @LoggingException
     public void handleProjectMemberBatchAddedEvent(@Payload ProjectMemberBatchAddedEvent event) {
-        processMemberBatchEvent(event.getProjectId(), ContextType.PROJECT, event.getMembers(),
+        processMemberBatchEvent(event.getProjectId(), event.getMembers(),
                 (member, contextId) -> userRoleService.assignRoleToUser(member.getUserId(), contextId, member.getRoleId()));
     }
 
@@ -81,7 +81,7 @@ public class MembershipEventConsumer {
     @LoggingAround(value = "Processing project member batch removed event with {} members", args = {"event.getMembers().size()"})
     @LoggingException
     public void handleProjectMemberBatchRemovedEvent(@Payload ProjectMemberBatchRemovedEvent event) {
-        processMemberBatchEvent(event.getProjectId(), ContextType.PROJECT, event.getMembers(),
+        processMemberBatchEvent(event.getProjectId(), event.getMembers(),
                 (member, contextId) -> userRoleService.removeRoleFromUser(member.getUserId(), contextId));
     }
 
@@ -90,15 +90,15 @@ public class MembershipEventConsumer {
     @LoggingAround(value = "Processing project member batch role updated event with {} members", args = {"event.getMembers().size()"})
     @LoggingException
     public void handleProjectMemberBatchRoleUpdatedEvent(@Payload ProjectMemberBatchRoleUpdatedEvent event) {
-        processMemberBatchEvent(event.getProjectId(), ContextType.PROJECT, event.getMembers(),
+        processMemberBatchEvent(event.getProjectId(), event.getMembers(),
                 (member, contextId) -> userRoleService.updateUserRole(member.getUserId(), contextId, event.getNewRoleId()));
     }
 
-    private <T> void processMemberBatchEvent(UUID contextId, ContextType contextType, Iterable<T> members, BiConsumer<T, UUID> memberProcessor) {
-        Optional<Context> context = contextRepository.findByExternalIdAndType(contextId.toString(), contextType);
+    private <T> void processMemberBatchEvent(UUID contextId, Iterable<T> members, BiConsumer<T, UUID> memberProcessor) {
+        Optional<Context> context = contextRepository.findById(contextId);
 
         if (!context.isPresent()) {
-            log.error("Context not found for {}: {}", contextType, contextId);
+            log.error("Context not found with ID: {}", contextId);
             return;
         }
 

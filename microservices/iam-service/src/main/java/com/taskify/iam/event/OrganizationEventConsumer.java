@@ -39,8 +39,7 @@ public class OrganizationEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleOrganizationCreatedEvent(@Payload OrganizationCreatedEvent event) {
-        Optional<Context> existingContext = contextRepository.findByExternalIdAndType(
-                event.getId().toString(), ContextType.ORGANIZATION);
+        Optional<Context> existingContext = contextRepository.findById(event.getId());
 
         if (existingContext.isPresent()) {
             log.info("Context for organization already exists: {}", event.getId());
@@ -63,7 +62,7 @@ public class OrganizationEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleOrganizationUpdatedEvent(@Payload OrganizationUpdatedEvent event) {
-        contextRepository.findByExternalIdAndType(event.getId().toString(), ContextType.ORGANIZATION)
+        contextRepository.findById(event.getId())
                 .ifPresent(context -> {
                     context.setName(event.getName());
                     contextRepository.save(context);
@@ -76,7 +75,7 @@ public class OrganizationEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleOrganizationDeletedEvent(@Payload OrganizationDeletedEvent event) {
-        contextRepository.findByExternalIdAndType(event.getId().toString(), ContextType.ORGANIZATION)
+        contextRepository.findById(event.getId())
                 .ifPresent(context -> {
                     // Delete all child contexts as well (e.g., projects)
                     List<Context> descendants = contextRepository.findAllDescendants(context.getId());

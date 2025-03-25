@@ -7,13 +7,10 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface ContextRepository extends Neo4jRepository<Context, UUID> {
-    Optional<Context> findByExternalIdAndType(String externalId, ContextType type);
-
     @Query("MATCH (c:Context) WHERE c.type = $type RETURN c")
     List<Context> findAllByType(ContextType type);
 

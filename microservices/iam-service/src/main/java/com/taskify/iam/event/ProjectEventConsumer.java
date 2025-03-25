@@ -43,8 +43,7 @@ public class ProjectEventConsumer {
     @LoggingException
     public void handleProjectCreatedEvent(@Payload ProjectCreatedEvent event) {
         // First check if project context already exists
-        Optional<Context> existingContext = contextRepository.findByExternalIdAndType(
-                event.getId().toString(), ContextType.PROJECT);
+        Optional<Context> existingContext = contextRepository.findById(event.getId());
 
         if (existingContext.isPresent()) {
             log.info("Context for project already exists: {}", event.getId());
@@ -52,8 +51,7 @@ public class ProjectEventConsumer {
         }
 
         // Find the parent organization context
-        Optional<Context> parentContext = contextRepository.findByExternalIdAndType(
-                event.getOrganizationId().toString(), ContextType.ORGANIZATION);
+        Optional<Context> parentContext = contextRepository.findById(event.getOrganizationId());
 
         if (!parentContext.isPresent()) {
             log.error("Parent organization context not found for project: {}", event.getId());
@@ -82,7 +80,7 @@ public class ProjectEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleProjectUpdatedEvent(@Payload ProjectUpdatedEvent event) {
-        contextRepository.findByExternalIdAndType(event.getId().toString(), ContextType.PROJECT)
+        contextRepository.findById(event.getId())
                 .ifPresent(context -> {
                     context.setName(event.getName());
                     contextRepository.save(context);
@@ -95,7 +93,7 @@ public class ProjectEventConsumer {
     @LoggingAround
     @LoggingException
     public void handleProjectDeletedEvent(@Payload ProjectDeletedEvent event) {
-        contextRepository.findByExternalIdAndType(event.getId().toString(), ContextType.PROJECT)
+        contextRepository.findById(event.getId())
                 .ifPresent(context -> {
                     // If it has a parent, update the parent's children list
                     if (context.getParent() != null) {

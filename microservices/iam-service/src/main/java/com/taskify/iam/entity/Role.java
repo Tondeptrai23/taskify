@@ -33,7 +33,6 @@ public class Role {
     @Relationship(type = "HAS_PERMISSION", direction = Relationship.Direction.OUTGOING)
     private Set<Permission> permissions = new HashSet<>();
 
-    // New relationship - replace Organization and Project with Context
     @Relationship(type = "BELONGS_TO_CONTEXT", direction = Relationship.Direction.OUTGOING)
     private Context context;
 }
