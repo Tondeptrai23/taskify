@@ -60,7 +60,6 @@ public class ProjectEventPublisher {
                 .name(project.getName())
                 .description(project.getDescription())
                 .key(project.getKey())
-                .organizationId(project.getOrganizationId())
                 .authorId(project.getAuthorId())
                 .status(project.getStatus())
                 .timestamp(ZonedDateTime.now())

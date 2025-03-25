@@ -14,8 +14,8 @@ public class RoleDto {
     private String name;
     private String description;
     private boolean isDefault;
-    private UUID organizationId;
+    private UUID contextId;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
-    private List<String> permissions; // This is a list of permissions that the role has
+    private List<String> permissions;
 }

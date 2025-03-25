@@ -1,0 +1,83 @@
+# Disable Config Server for tests
+spring:
+  application:
+    name: organization-service
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false  # Disable service discovery in tests
+
+  # Use H2 in-memory database for tests
+  datasource:
+    url: jdbc:h2:mem:testdb-organization;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  # JPA/Hibernate configuration
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+
+  # Disable actual RabbitMQ for tests
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
+# Mock service URLs (replaces service discovery)
+services:
+  iam:
+    name: iam-service
+    url: http://localhost:8084
+  auth:
+    name: auth-service
+    url: http://localhost:8081
+  org:
+    name: organization-service
+    url: http://localhost:8086
+  project:
+    name: project-service
+    url: http://localhost:8087
+
+# Test-specific security configuration
+security:
+  jwt:
+    secret: test-only-jwt-secret-key-not-for-production-use
+    expiration: 3600000
+  refresh-token:
+    expiration: 86400000
+
+# Circuit breaker test configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 1000
+        permittedNumberOfCallsInHalfOpenState: 2
+
+# Enable test specific logging
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    com.taskify: DEBUG
+    org.hibernate.SQL: DEBUG
+
+# Enable metrics endpoints for tests
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
