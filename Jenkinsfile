@@ -13,62 +13,198 @@ pipeline {
             }
         }
         
-        stage('Build Common Libraries') {
-            steps {
-                sh 'cd libraries/common-lib-core && mvn clean install -DskipTests'
-                sh 'cd libraries/common-lib-web && mvn clean install -DskipTests'
+        // BUILD PHASE
+        stage('Build Phase') {
+            stages {
+                stage('Build Common Libraries') {
+                    steps {
+                        dir('libraries/common-lib-core') {
+                            sh 'mvn clean install package -DskipTests'
+                        }
+                        dir('libraries/common-lib-web') {
+                            sh 'mvn clean install package -DskipTests'
+                        }
+                    }
+                }
+                
+                stage('Build Infrastructure Services') {
+                    steps {
+                        dir('server-discovery') {
+                            sh 'mvn clean compile'
+                        }
+                        dir('config-server') {
+                            sh 'mvn clean compile'
+                        }
+                    }
+                }
+                
+                stage('Build Microservices') {
+                    parallel {
+                        stage('Auth Service') {
+                            steps {
+                                dir('microservices/auth-service') {
+                                    sh 'mvn clean compile'
+                                }
+                            }
+                        }
+                        stage('IAM Service') {
+                            steps {
+                                dir('microservices/iam-service') {
+                                    sh 'mvn clean compile'
+                                }
+                            }
+                        }
+                        stage('Organization Service') {
+                            steps {
+                                dir('microservices/organization-service') {
+                                    sh 'mvn clean compile'
+                                }
+                            }
+                        }
+                        stage('Project Service') {
+                            steps {
+                                dir('microservices/project-service') {
+                                    sh 'mvn clean compile'
+                                }
+                            }
+                        }
+                        stage('API Gateway') {
+                            steps {
+                                dir('api-gateway') {
+                                    sh 'mvn clean compile'
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         
-        stage('Build Microservices') {
-            parallel {
-                stage('Build Config Server') {
+        // TEST PHASE
+        stage('Test Phase') {
+            stages {
+                stage('Test Infrastructure Services') {
                     steps {
-                        sh 'cd config-server && mvn clean package -DskipTests'
+                        dir('server-discovery') {
+                            sh 'mvn test'
+                        }
+                        dir('config-server') {
+                            sh 'mvn test'
+                        }
+                    }
+                    post {
+                        always {
+                            junit '**/target/surefire-reports/TEST-*.xml'
+                        }
                     }
                 }
-                stage('Build Discovery Server') {
-                    steps {
-                        sh 'cd server-discovery && mvn clean package -DskipTests'
+                
+                stage('Test Microservices') {
+                    parallel {
+                        stage('Auth Service') {
+                            steps {
+                                dir('microservices/auth-service') {
+                                    sh 'mvn test'
+                                }
+                            }
+                            post {
+                                always {
+                                    junit 'microservices/auth-service/target/surefire-reports/TEST-*.xml'
+                                }
+                            }
+                        }
+                        stage('IAM Service') {
+                            steps {
+                                dir('microservices/iam-service') {
+                                    sh 'mvn test'
+                                }
+                            }
+                            post {
+                                always {
+                                    junit 'microservices/iam-service/target/surefire-reports/TEST-*.xml'
+                                }
+                            }
+                        }
+                        stage('Organization Service') {
+                            steps {
+                                dir('microservices/organization-service') {
+                                    sh 'mvn test'
+                                }
+                            }
+                            post {
+                                always {
+                                    junit 'microservices/organization-service/target/surefire-reports/TEST-*.xml'
+                                }
+                            }
+                        }
+                        stage('Project Service') {
+                            steps {
+                                dir('microservices/project-service') {
+                                    sh 'mvn test'
+                                }
+                            }
+                            post {
+                                always {
+                                    junit 'microservices/project-service/target/surefire-reports/TEST-*.xml'
+                                }
+                            }
+                        }
+                        stage('API Gateway') {
+                            steps {
+                                dir('api-gateway') {
+                                    sh 'mvn test'
+                                }
+                            }
+                            post {
+                                always {
+                                    junit 'api-gateway/target/surefire-reports/TEST-*.xml'
+                                }
+                            }
+                        }
                     }
                 }
-                stage('Build Auth Service') {
+                
+                stage('Package Applications') {
                     steps {
-                        sh 'cd microservices/auth-service && mvn clean package -DskipTests'
+                        dir('server-discovery') {
+                            sh 'mvn package -DskipTests'
+                        }
+                        dir('config-server') {
+                            sh 'mvn package -DskipTests'
+                        }
+                        dir('microservices/auth-service') {
+                            sh 'mvn package -DskipTests'
+                        }
+                        dir('microservices/iam-service') {
+                            sh 'mvn package -DskipTests'
+                        }
+                        dir('microservices/organization-service') {
+                            sh 'mvn package -DskipTests'
+                        }
+                        dir('microservices/project-service') {
+                            sh 'mvn package -DskipTests'
+                        }
+                        dir('api-gateway') {
+                            sh 'mvn package -DskipTests'
+                        }
                     }
                 }
-                stage('Build IAM Service') {
+                
+                stage('Archive Artifacts') {
                     steps {
-                        sh 'cd microservices/iam-service && mvn clean package -DskipTests'
-                    }
-                }
-                stage('Build Organization Service') {
-                    steps {
-                        sh 'cd microservices/organization-service && mvn clean package -DskipTests'
-                    }
-                }
-                stage('Build Project Service') {
-                    steps {
-                        sh 'cd microservices/project-service && mvn clean package -DskipTests'
-                    }
-                }
-                stage('Build API Gateway') {
-                    steps {
-                        sh 'cd api-gateway && mvn clean package -DskipTests'
+                        archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
                     }
                 }
             }
         }
-        
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/TEST-*.xml'
-                }
-            }
+    }
+    
+    post {
+        success {
+            echo 'Build and Test successful!'
+        }
+        failure {
+            echo 'Build or Test failed!'
         }
     }
 }
