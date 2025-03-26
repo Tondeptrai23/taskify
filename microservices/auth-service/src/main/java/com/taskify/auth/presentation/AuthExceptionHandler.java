@@ -1,6 +1,7 @@
-package com.taskify.auth.infrastructure.exception;
+package com.taskify.auth.presentation;
 
 import com.taskify.auth.application.exception.AuthApplicationException;
+import com.taskify.auth.infrastructure.exception.HttpStatusMapper;
 import com.taskify.commoncore.dto.ApiError;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
