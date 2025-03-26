@@ -7,10 +7,12 @@ import com.taskify.auth.domain.entity.User;
 import com.taskify.auth.domain.exception.InvalidCredentialsException;
 import com.taskify.auth.domain.repository.UserRepository;
 import com.taskify.auth.domain.service.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
+@Service
 public class UserApplicationServiceImpl implements UserApplicationService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;

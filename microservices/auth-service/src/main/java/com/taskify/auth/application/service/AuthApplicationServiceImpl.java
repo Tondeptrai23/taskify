@@ -14,7 +14,9 @@ import com.taskify.auth.domain.repository.UserRepository;
 import com.taskify.auth.domain.service.AuthService;
 import com.taskify.auth.domain.service.PasswordEncoder;
 import com.taskify.auth.domain.service.TokenService;
+import org.springframework.stereotype.Service;
 
+@Service
 public class AuthApplicationServiceImpl implements AuthApplicationService {
     private final UserRepository userRepository;
     private final AuthService authService;
