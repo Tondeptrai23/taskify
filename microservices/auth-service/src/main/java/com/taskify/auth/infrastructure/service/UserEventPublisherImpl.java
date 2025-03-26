@@ -1,23 +1,20 @@
-package com.taskify.auth.old.event;
+package com.taskify.auth.infrastructure.service;
 
-import com.taskify.auth.old.entity.User;
+import com.taskify.auth.application.contracts.UserEventPublisher;
+import com.taskify.auth.domain.entity.User;
 import com.taskify.commoncore.annotation.LoggingAfter;
 import com.taskify.commoncore.annotation.LoggingException;
 import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.user.UserCreatedEvent;
 import com.taskify.commoncore.event.user.UserDeletedEvent;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.stereotype.Component;
 
-@Slf4j
-@Component
-public class UserEventPublisher {
+public class UserEventPublisherImpl implements UserEventPublisher {
     private final RabbitTemplate rabbitTemplate;
     private final EventConstants eventConstants;
 
-    public UserEventPublisher(RabbitTemplate rabbitTemplate,
-                              EventConstants eventConstants) {
+    public UserEventPublisherImpl(RabbitTemplate rabbitTemplate,
+                                EventConstants eventConstants) {
         this.rabbitTemplate = rabbitTemplate;
         this.eventConstants = eventConstants;
     }
