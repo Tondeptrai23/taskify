@@ -3,8 +3,6 @@ package com.taskify.auth.application.service;
 import com.taskify.auth.application.contracts.UserApplicationService;
 import com.taskify.auth.application.contracts.UserEventPublisher;
 import com.taskify.auth.application.dto.UserDto;
-import com.taskify.auth.application.exception.AuthApplicationException;
-import com.taskify.auth.application.exception.AuthErrorCode;
 import com.taskify.auth.application.exception.UserNotFoundException;
 import com.taskify.auth.application.mapper.UserMapper;
 import com.taskify.auth.domain.entity.User;

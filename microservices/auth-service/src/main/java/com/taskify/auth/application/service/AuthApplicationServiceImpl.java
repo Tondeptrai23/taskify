@@ -1,19 +1,18 @@
 package com.taskify.auth.application.service;
 
+import com.taskify.auth.application.aop.TranslateDomainException;
 import com.taskify.auth.application.contracts.AuthApplicationService;
 import com.taskify.auth.application.contracts.UserEventPublisher;
 import com.taskify.auth.application.dto.AuthResultDto;
 import com.taskify.auth.application.dto.LoginDto;
 import com.taskify.auth.application.dto.RegisterUserDto;
 import com.taskify.auth.application.dto.UserDto;
-import com.taskify.auth.application.exception.DomainExceptionTranslator;
 import com.taskify.auth.application.exception.EmailExistsException;
 import com.taskify.auth.application.exception.UserNotFoundException;
 import com.taskify.auth.application.exception.UsernameExistsException;
 import com.taskify.auth.application.mapper.UserMapper;
 import com.taskify.auth.domain.entity.RefreshToken;
 import com.taskify.auth.domain.entity.User;
-import com.taskify.auth.domain.exception.AuthDomainException;
 import com.taskify.auth.domain.repository.UserRepository;
 import com.taskify.auth.domain.service.AuthDomainService;
 import com.taskify.auth.domain.contracts.PasswordEncoder;
@@ -29,7 +28,6 @@ public class AuthApplicationServiceImpl implements AuthApplicationService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final UserEventPublisher userEventPublisher;
-    private final DomainExceptionTranslator exceptionTranslator;
 
     public AuthApplicationServiceImpl(
             UserRepository userRepository,
@@ -37,8 +35,7 @@ public class AuthApplicationServiceImpl implements AuthApplicationService {
             TokenService tokenService,
             PasswordEncoder passwordEncoder,
             UserMapper userMapper,
-            UserEventPublisher userEventPublisher,
-            DomainExceptionTranslator exceptionTranslator
+            UserEventPublisher userEventPublisher
     ) {
         this.userRepository = userRepository;
         this.authDomainService = authService;
@@ -46,35 +43,31 @@ public class AuthApplicationServiceImpl implements AuthApplicationService {
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.userEventPublisher = userEventPublisher;
-        this.exceptionTranslator = exceptionTranslator;
     }
 
     @Override
     public AuthResultDto login(LoginDto loginDto) {
-        try {
-            User user = authDomainService.authenticate(loginDto.getUsername(), loginDto.getPassword());
-            String accessToken = tokenService.generateAccessToken(user);
-            RefreshToken refreshToken = tokenService.generateRefreshToken(user.getId());
+        User user = authDomainService.authenticate(loginDto.getUsername(), loginDto.getPassword());
+        String accessToken = tokenService.generateAccessToken(user);
+        RefreshToken refreshToken = tokenService.generateRefreshToken(user.getId());
 
-            String encodedRefreshToken = tokenService.encodeRefreshTokenForTransmission(refreshToken.getRawToken());
+        String encodedRefreshToken = tokenService.encodeRefreshTokenForTransmission(refreshToken.getRawToken());
 
-            AuthResultDto result = AuthResultDto.builder()
-                    .userId(user.getId())
-                    .username(user.getUsername())
-                    .email(user.getEmail())
-                    .role(user.getSystemRole().name())
-                    .accessToken(accessToken)
-                    .refreshToken(encodedRefreshToken)
-                    .build();
+        AuthResultDto result = AuthResultDto.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getSystemRole().name())
+                .accessToken(accessToken)
+                .refreshToken(encodedRefreshToken)
+                .build();
 
-            return result;
-        } catch (AuthDomainException e) {
-            throw exceptionTranslator.translate(e);
-        }
+        return result;
     }
 
     @Override
     @Transactional
+    @TranslateDomainException
     public UserDto register(RegisterUserDto registerDto) {
         // Check for existing user
         if (userRepository.existsByUsername(registerDto.getUsername())) {
@@ -99,55 +92,46 @@ public class AuthApplicationServiceImpl implements AuthApplicationService {
 
     @Override
     @Transactional
+    @TranslateDomainException
     public AuthResultDto refreshToken(String refreshToken) {
-        try {
-            String decodedToken = tokenService.decodeRefreshTokenFromTransmission(refreshToken);
+        String decodedToken = tokenService.decodeRefreshTokenFromTransmission(refreshToken);
 
-            String storedToken = tokenService.hashTokenForStorage(decodedToken);
+        String storedToken = tokenService.hashTokenForStorage(decodedToken);
 
-            RefreshToken token = authDomainService.refreshToken(storedToken);
+        RefreshToken token = authDomainService.refreshToken(storedToken);
 
-            User user = userRepository.findById(token.getUserId())
-                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+        User user = userRepository.findById(token.getUserId())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-            String accessToken = tokenService.generateAccessToken(user);
-            String encodedRefreshToken = tokenService.encodeRefreshTokenForTransmission(token.getRawToken());
+        String accessToken = tokenService.generateAccessToken(user);
+        String encodedRefreshToken = tokenService.encodeRefreshTokenForTransmission(token.getRawToken());
 
-            AuthResultDto result = AuthResultDto.builder()
-                    .userId(user.getId())
-                    .username(user.getUsername())
-                    .email(user.getEmail())
-                    .role(user.getSystemRole().name())
-                    .accessToken(accessToken)
-                    .refreshToken(encodedRefreshToken)
-                    .build();
+        AuthResultDto result = AuthResultDto.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getSystemRole().name())
+                .accessToken(accessToken)
+                .refreshToken(encodedRefreshToken)
+                .build();
 
-            return result;
-        } catch (AuthDomainException e) {
-            throw exceptionTranslator.translate(e);
-        }
+        return result;
     }
 
     @Override
     @Transactional
+    @TranslateDomainException
     public UserDto verifyToken(String token) {
-        try {
-            User user = authDomainService.validateToken(token);
-            return userMapper.toDto(user);
-        } catch (AuthDomainException e) {
-            throw exceptionTranslator.translate(e);
-        }
+        User user = authDomainService.validateToken(token);
+        return userMapper.toDto(user);
     }
 
     @Override
     @Transactional
+    @TranslateDomainException
     public void logout(String refreshToken) {
-        try {
-            String decodedToken = tokenService.decodeRefreshTokenFromTransmission(refreshToken);
-            String hashedToken = tokenService.hashTokenForStorage(decodedToken);
-            authDomainService.revokeToken(hashedToken);
-        } catch (AuthDomainException e) {
-            throw exceptionTranslator.translate(e);
-        }
+        String decodedToken = tokenService.decodeRefreshTokenFromTransmission(refreshToken);
+        String hashedToken = tokenService.hashTokenForStorage(decodedToken);
+        authDomainService.revokeToken(hashedToken);
     }
 }
