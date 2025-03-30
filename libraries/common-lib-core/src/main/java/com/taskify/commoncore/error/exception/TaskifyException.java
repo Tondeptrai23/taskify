@@ -3,7 +3,7 @@ package com.taskify.commoncore.error.exception;
 import com.taskify.commoncore.error.ErrorCode;
 import lombok.Getter;
 
-public class TaskifyException extends RuntimeException {
+public abstract class TaskifyException extends RuntimeException {
     private final ErrorCode errorCode;
     @Getter
     private final Object details;
