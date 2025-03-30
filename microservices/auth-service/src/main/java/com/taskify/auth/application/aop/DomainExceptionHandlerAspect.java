@@ -3,6 +3,7 @@ package com.taskify.auth.application.aop;
 import com.taskify.auth.application.exception.AuthApplicationException;
 import com.taskify.auth.application.exception.AuthErrorCode;
 import com.taskify.auth.domain.exception.*;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -18,6 +19,7 @@ import java.util.Map;
  */
 @Aspect
 @Component
+@Slf4j
 public class DomainExceptionHandlerAspect {
     private static final Map<Class<? extends AuthDomainException>, AuthErrorCode> ERROR_MAPPINGS = Map.of(
             InvalidCredentialsException.class, AuthErrorCode.INVALID_CREDENTIALS,
@@ -32,12 +34,14 @@ public class DomainExceptionHandlerAspect {
             return joinPoint.proceed();
         } catch (AuthDomainException e) {
             String methodName = joinPoint.getSignature().toShortString();
+            log.debug("Translating domain exception in {}: {}", methodName, e.getMessage());
             throw translate(e);
         }
     }
 
     /**
      * Translates domain exceptions to application exceptions using error code mapping
+     * while preserving the original exception as the cause
      */
     private AuthApplicationException translate(AuthDomainException exception) {
         AuthErrorCode errorCode = ERROR_MAPPINGS.getOrDefault(
@@ -45,6 +49,6 @@ public class DomainExceptionHandlerAspect {
                 AuthErrorCode.UNKNOWN
         );
 
-        return new AuthApplicationException(exception.getMessage(), errorCode);
+        return new AuthApplicationException(exception.getMessage(), errorCode, exception);
     }
 }

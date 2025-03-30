@@ -70,7 +70,9 @@ public class AuthDomainService {
 
         // Generate a new refresh token
         RefreshToken newToken = tokenService.generateRefreshToken(existingToken.getUserId());
-        return refreshTokenRepository.save(newToken);
+        refreshTokenRepository.save(newToken);
+
+        return newToken;
     }
 
     public void revokeToken(String token) {

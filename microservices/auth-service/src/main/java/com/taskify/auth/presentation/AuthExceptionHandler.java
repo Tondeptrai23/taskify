@@ -39,6 +39,8 @@ public class AuthExceptionHandler {
                 .timestamp(ZonedDateTime.now())
                 .build();
 
+        log.debug(ex.getMessage(), ex);
+
         return new ResponseEntity<>(apiError, status);
     }
 }
