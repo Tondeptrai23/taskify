@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
@@ -59,15 +61,19 @@ public class JwtTokenServiceImpl implements TokenService {
         byte[] randomBytes = new byte[32];
         new SecureRandom().nextBytes(randomBytes);
 
-        // Convert to hex string for storage
-        String tokenValue = HexFormat.of().formatHex(randomBytes);
+        // Convert to hex string for raw token
+        String rawTokenValue = HexFormat.of().formatHex(randomBytes);
+
+        // Hash the token for storage
+        String hashedToken = hashString(rawTokenValue);
 
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(tokenValue);
+        refreshToken.setToken(hashedToken);
         refreshToken.setUserId(userId);
         refreshToken.setExpiresAt(Instant.now().plusMillis(refreshTokenExpiration));
         refreshToken.setCreatedAt(Instant.now());
         refreshToken.setRevoked(false);
+        refreshToken.setRawToken(rawTokenValue);
 
         return refreshToken;
     }
@@ -81,6 +87,11 @@ public class JwtTokenServiceImpl implements TokenService {
     public String decodeRefreshTokenFromTransmission(String encodedToken) {
         byte[] decodedBytes = Base64.getDecoder().decode(encodedToken);
         return new String(decodedBytes, StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public String hashTokenForStorage(String rawToken) {
+        return hashString(rawToken);
     }
 
     @Override
@@ -101,5 +112,17 @@ public class JwtTokenServiceImpl implements TokenService {
                 .getBody();
 
         return UUID.fromString(claims.getSubject());
+    }
+
+    private String hashString(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(
+                    input.getBytes(StandardCharsets.UTF_8)
+            );
+            return HexFormat.of().formatHex(hashBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error hashing string", e);
+        }
     }
 }

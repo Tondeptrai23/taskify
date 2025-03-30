@@ -5,6 +5,7 @@ import com.taskify.auth.application.contracts.UserEventPublisher;
 import com.taskify.auth.application.dto.UserDto;
 import com.taskify.auth.application.exception.AuthApplicationException;
 import com.taskify.auth.application.exception.AuthErrorCode;
+import com.taskify.auth.application.exception.UserNotFoundException;
 import com.taskify.auth.application.mapper.UserMapper;
 import com.taskify.auth.domain.entity.User;
 import com.taskify.auth.domain.repository.UserRepository;
@@ -37,7 +38,7 @@ public class UserApplicationServiceImpl implements UserApplicationService {
     @Override
     public UserDto getUserById(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new AuthApplicationException("User not found", AuthErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         return userMapper.toDto(user);
     }
@@ -52,7 +53,7 @@ public class UserApplicationServiceImpl implements UserApplicationService {
     @Transactional
     public UserDto updateUser(UUID id, String username, String password) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new AuthApplicationException("User not found", AuthErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         if (username != null && !username.isBlank()) {
             user.setUsername(username);
@@ -68,7 +69,7 @@ public class UserApplicationServiceImpl implements UserApplicationService {
     @Transactional
     public void deleteUser(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new AuthApplicationException("User not found", AuthErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         user.markDeleted();
         userRepository.deleteById(id);

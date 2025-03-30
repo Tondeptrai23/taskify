@@ -1,5 +1,7 @@
 package com.taskify.auth.application.exception;
 
+import com.taskify.commoncore.error.CommonErrorCode;
+
 // TODO: Remove this exception after updating the common library
 public class AuthApplicationException extends RuntimeException {
     private final AuthErrorCode errorCode;

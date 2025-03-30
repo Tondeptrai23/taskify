@@ -11,6 +11,7 @@ import java.util.UUID;
 public class RefreshToken {
     private UUID id;
     private String token;
+    private String rawToken;
     private UUID userId;
     private boolean revoked;
     private Instant expiresAt;

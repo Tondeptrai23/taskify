@@ -11,4 +11,5 @@ public interface TokenService {
     String decodeRefreshTokenFromTransmission(String encodedToken);
     boolean validateAccessToken(String token);
     UUID getUserIdFromAccessToken(String token);
+    String hashTokenForStorage(String rawToken);
 }

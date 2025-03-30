@@ -17,6 +17,10 @@ public class HttpStatusMapper {
         statusMap.put(AuthErrorCode.INVALID_CREDENTIALS.getCode(), HttpStatus.UNAUTHORIZED);
         statusMap.put(AuthErrorCode.USERNAME_EXISTS.getCode(), HttpStatus.CONFLICT);
         statusMap.put(AuthErrorCode.EMAIL_EXISTS.getCode(), HttpStatus.CONFLICT);
+        statusMap.put(AuthErrorCode.USER_NOT_FOUND.getCode(), HttpStatus.NOT_FOUND);
+        statusMap.put(AuthErrorCode.TOKEN_INVALID.getCode(), HttpStatus.UNAUTHORIZED);
+        statusMap.put(AuthErrorCode.TOKEN_EXPIRED.getCode(), HttpStatus.UNAUTHORIZED);
+        statusMap.put(AuthErrorCode.TOKEN_REVOKED.getCode(), HttpStatus.UNAUTHORIZED);
     }
 
     public HttpStatus getStatus(String errorCode) {
