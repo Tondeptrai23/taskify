@@ -9,53 +9,19 @@ import com.taskify.auth.presentation.request.RegisterRequest;
 import com.taskify.auth.presentation.response.LoginResponse;
 import com.taskify.auth.presentation.response.RegisterResponse;
 import com.taskify.auth.presentation.response.UserResponse;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class AuthPresentationMapper {
+@Mapper(componentModel = "spring")
+public interface AuthPresentationMapper {
 
-    public LoginDto toLoginDto(LoginRequest request) {
-        LoginDto dto = new LoginDto();
-        dto.setUsername(request.getUsername());
-        dto.setPassword(request.getPassword());
-        return dto;
-    }
+    LoginDto toLoginDto(LoginRequest request);
 
-    public LoginResponse toLoginResponse(AuthResultDto authResult) {
-        LoginResponse response = new LoginResponse();
-        response.setId(authResult.getUserId());
-        response.setUsername(authResult.getUsername());
-        response.setEmail(authResult.getEmail());
-        response.setRole(authResult.getRole());
-        response.setAccessToken(authResult.getAccessToken());
-        response.setRefreshToken(authResult.getRefreshToken());
-        return response;
-    }
+    LoginResponse toLoginResponse(AuthResultDto authResult);
 
-    public RegisterUserDto toRegisterUserDto(RegisterRequest request) {
-        RegisterUserDto dto = new RegisterUserDto();
-        dto.setUsername(request.getUsername());
-        dto.setEmail(request.getEmail());
-        dto.setPassword(request.getPassword());
-        return dto;
-    }
+    RegisterUserDto toRegisterUserDto(RegisterRequest request);
 
-    public RegisterResponse toRegisterResponse(UserDto userDto) {
-        RegisterResponse response = new RegisterResponse();
-        response.setId(userDto.getId());
-        response.setUsername(userDto.getUsername());
-        response.setEmail(userDto.getEmail());
-        return response;
-    }
+    RegisterResponse toRegisterResponse(UserDto userDto);
 
-    public UserResponse toUserResponse(UserDto userDto) {
-        UserResponse response = new UserResponse();
-        response.setId(userDto.getId());
-        response.setUsername(userDto.getUsername());
-        response.setEmail(userDto.getEmail());
-        response.setRole(userDto.getRole());
-        response.setCreatedAt(userDto.getCreatedAt());
-        response.setUpdatedAt(userDto.getUpdatedAt());
-        return response;
-    }
+    UserResponse toUserResponse(UserDto userDto);
 }

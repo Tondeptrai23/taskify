@@ -1,27 +1,26 @@
-package com.taskify.auth.infrastructure.service;
+package com.taskify.auth.domain.service;
 
+import com.taskify.auth.domain.contracts.PasswordEncoder;
+import com.taskify.auth.domain.contracts.TokenService;
 import com.taskify.auth.domain.entity.RefreshToken;
 import com.taskify.auth.domain.entity.User;
 import com.taskify.auth.domain.exception.InvalidCredentialsException;
+import com.taskify.auth.domain.exception.TokenExpiredException;
+import com.taskify.auth.domain.exception.TokenRevokedException;
 import com.taskify.auth.domain.exception.TokenValidationException;
 import com.taskify.auth.domain.repository.RefreshTokenRepository;
 import com.taskify.auth.domain.repository.UserRepository;
-import com.taskify.auth.domain.service.AuthService;
-import com.taskify.auth.domain.service.PasswordEncoder;
-import com.taskify.auth.domain.service.TokenService;
-import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Service
-public class AuthServiceImpl implements AuthService {
+public class AuthDomainService {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthServiceImpl(
+    public AuthDomainService(
             UserRepository userRepository,
             RefreshTokenRepository refreshTokenRepository,
             TokenService tokenService,
@@ -33,7 +32,6 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Override
     public User authenticate(String username, String password) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid username"));
@@ -45,31 +43,26 @@ public class AuthServiceImpl implements AuthService {
         return user;
     }
 
-    @Override
     public User validateToken(String token) {
         if (!tokenService.validateAccessToken(token)) {
             throw new TokenValidationException("Invalid token");
         }
 
         UUID userId = tokenService.getUserIdFromAccessToken(token);
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new TokenValidationException("User not found"));
+        return userRepository.findById(userId).orElse(null);
     }
 
-    @Override
-    @Transactional
     public RefreshToken refreshToken(String token) {
         RefreshToken existingToken = refreshTokenRepository.findByToken(token)
                 .orElseThrow(() -> new TokenValidationException("Refresh token not found"));
 
         if (existingToken.isRevoked()) {
-            // Token reuse detected, revoke all tokens for this user
             refreshTokenRepository.revokeAllTokensForUser(existingToken.getUserId());
-            throw new TokenValidationException("Refresh token has been revoked");
+            throw new TokenRevokedException("Refresh token has been revoked");
         }
 
         if (existingToken.isExpired()) {
-            throw new TokenValidationException("Refresh token has expired");
+            throw new TokenExpiredException("Refresh token", LocalDateTime.now());
         }
 
         // Revoke the old token
@@ -80,14 +73,10 @@ public class AuthServiceImpl implements AuthService {
         return refreshTokenRepository.save(newToken);
     }
 
-    @Override
-    @Transactional
     public void revokeToken(String token) {
         refreshTokenRepository.revokeToken(token);
     }
 
-    @Override
-    @Transactional
     public void revokeAllUserTokens(User user) {
         refreshTokenRepository.revokeAllTokensForUser(user.getId());
     }

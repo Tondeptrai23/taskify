@@ -14,7 +14,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    @Mapping(source = "systemRole.name", target = "role")
+    @Mapping(source = "systemRole", target = "role")
     UserDto toDto(User user);
 
     List<UserDto> toDtoList(List<User> users);

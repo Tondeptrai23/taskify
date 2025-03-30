@@ -1,6 +1,6 @@
 package com.taskify.auth.domain.entity;
 
-import com.taskify.auth.domain.service.PasswordEncoder;
+import com.taskify.auth.domain.contracts.PasswordEncoder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,8 +23,16 @@ public class User {
         return deletedAt != null;
     }
 
-    public boolean verifyPassword(PasswordEncoder encoder, String rawPassword) {
-        return encoder.matches(rawPassword, this.passwordHash);
+    public void savePassword(String password, PasswordEncoder passwordEncoder) {
+        if (password == null) {
+            return;
+        }
+
+        if (password.isBlank()) {
+            return;
+        }
+
+        this.passwordHash = passwordEncoder.encode(password);
     }
 
     public void markDeleted() {

@@ -1,4 +1,4 @@
-package com.taskify.auth.domain.service;
+package com.taskify.auth.domain.contracts;
 
 public interface PasswordEncoder {
     String encode(String rawPassword);

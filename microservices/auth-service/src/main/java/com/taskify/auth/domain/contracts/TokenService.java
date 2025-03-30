@@ -1,4 +1,4 @@
-package com.taskify.auth.domain.service;
+package com.taskify.auth.domain.contracts;
 
 import com.taskify.auth.domain.entity.User;
 import com.taskify.auth.domain.entity.RefreshToken;

@@ -8,7 +8,9 @@ import com.taskify.commoncore.event.EventConstants;
 import com.taskify.commoncore.event.user.UserCreatedEvent;
 import com.taskify.commoncore.event.user.UserDeletedEvent;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Component;
 
+@Component
 public class UserEventPublisherImpl implements UserEventPublisher {
     private final RabbitTemplate rabbitTemplate;
     private final EventConstants eventConstants;

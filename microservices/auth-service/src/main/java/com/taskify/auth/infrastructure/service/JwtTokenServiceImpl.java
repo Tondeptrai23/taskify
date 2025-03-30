@@ -2,7 +2,7 @@ package com.taskify.auth.infrastructure.service;
 
 import com.taskify.auth.domain.entity.RefreshToken;
 import com.taskify.auth.domain.entity.User;
-import com.taskify.auth.domain.service.TokenService;
+import com.taskify.auth.domain.contracts.TokenService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -87,7 +87,7 @@ public class JwtTokenServiceImpl implements TokenService {
     public boolean validateAccessToken(String token) {
         try {
             Jwts.parser().setSigningKey(encodedSecret).parseClaimsJws(token);
-            return true;T
+            return true;
         } catch (Exception ex) {
             return false;
         }

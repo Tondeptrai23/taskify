@@ -1,6 +1,6 @@
 package com.taskify.auth.infrastructure.service;
 
-import com.taskify.auth.domain.service.PasswordEncoder;
+import com.taskify.auth.domain.contracts.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
