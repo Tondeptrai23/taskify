@@ -17,6 +17,7 @@ public interface AuthPresentationMapper {
 
     LoginDto toLoginDto(LoginRequest request);
 
+    @Mapping(target = "id", source = "authResult.userId")
     LoginResponse toLoginResponse(AuthResultDto authResult);
 
     RegisterUserDto toRegisterUserDto(RegisterRequest request);

@@ -6,11 +6,13 @@ import com.taskify.auth.infrastructure.persistence.entity.RefreshTokenJpaEntity;
 import com.taskify.auth.infrastructure.persistence.mapper.RefreshTokenEntityMapper;
 import com.taskify.auth.infrastructure.persistence.jpa.RefreshTokenJpaRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Repository
 public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
     private final RefreshTokenJpaRepository refreshTokenJpaRepository;

@@ -13,6 +13,7 @@ import com.taskify.auth.application.exception.UsernameExistsException;
 import com.taskify.auth.application.mapper.UserMapper;
 import com.taskify.auth.domain.entity.RefreshToken;
 import com.taskify.auth.domain.entity.User;
+import com.taskify.auth.domain.repository.RefreshTokenRepository;
 import com.taskify.auth.domain.repository.UserRepository;
 import com.taskify.auth.domain.service.AuthDomainService;
 import com.taskify.auth.domain.contracts.PasswordEncoder;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthApplicationServiceImpl implements AuthApplicationService {
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final AuthDomainService authDomainService;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
@@ -31,6 +33,7 @@ public class AuthApplicationServiceImpl implements AuthApplicationService {
 
     public AuthApplicationServiceImpl(
             UserRepository userRepository,
+            RefreshTokenRepository refreshTokenRepository,
             AuthDomainService authService,
             TokenService tokenService,
             PasswordEncoder passwordEncoder,
@@ -38,6 +41,7 @@ public class AuthApplicationServiceImpl implements AuthApplicationService {
             UserEventPublisher userEventPublisher
     ) {
         this.userRepository = userRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.authDomainService = authService;
         this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
@@ -50,6 +54,7 @@ public class AuthApplicationServiceImpl implements AuthApplicationService {
         User user = authDomainService.authenticate(loginDto.getUsername(), loginDto.getPassword());
         String accessToken = tokenService.generateAccessToken(user);
         RefreshToken refreshToken = tokenService.generateRefreshToken(user.getId());
+        refreshTokenRepository.save(refreshToken);
 
         String encodedRefreshToken = tokenService.encodeRefreshTokenForTransmission(refreshToken.getRawToken());
 
