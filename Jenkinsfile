@@ -361,15 +361,7 @@ pipeline {
                             }
                             steps {
                                 dir(IAM_PATH) {
-                                    sh 'mvn test jacoco:report'
-                                    publishHTML(target: [
-                                        allowMissing: false,
-                                        alwaysLinkToLastBuild: true,
-                                        keepAll: true,
-                                        reportDir: "${IAM_PATH}/target/site/jacoco",
-                                        reportFiles: 'index.html',
-                                        reportName: 'IAM Service JaCoCo Report'
-                                    ])
+                                    sh 'mvn clean verify'
                                 }
                             }
                             post {
