@@ -17,6 +17,9 @@ pipeline {
         ORG_PATH = "microservices/organization-service" 
         PROJECT_PATH = "microservices/project-service"
         GATEWAY_PATH = "api-gateway"
+
+        // Define coverage threshold
+        COVERAGE_THRESHOLD = 70
     }
     
     stages {
@@ -346,8 +349,15 @@ pipeline {
                             }
                             steps {
                                 dir(IAM_PATH) {
-                                    sh 'mvn test'
-                                    echo "IAM Service tests completed"
+                                    sh 'mvn test jacoco:report jacoco:check'
+                                    publishHTML(target: [
+                                        allowMissing: false,
+                                        alwaysLinkToLastBuild: true,
+                                        keepAll: true,
+                                        reportDir: "${IAM_PATH}/target/site/jacoco",
+                                        reportFiles: 'index.html',
+                                        reportName: 'IAM Service JaCoCo Report'
+                                    ])
                                 }
                             }
                             post {
@@ -363,8 +373,16 @@ pipeline {
                             }
                             steps {
                                 dir(ORG_PATH) {
-                                    sh 'mvn test'
-                                    echo "Organization Service tests completed"
+                                    sh 'mvn test jacoco:report jacoco:check'
+
+                                    publishHTML(target: [
+                                        allowMissing: false,
+                                        alwaysLinkToLastBuild: true,
+                                        keepAll: true,
+                                        reportDir: "${ORG_PATH}/target/site/jacoco",
+                                        reportFiles: 'index.html',
+                                        reportName: 'Organization Service JaCoCo Report'
+                                    ])
                                 }
                             }
                             post {
@@ -526,10 +544,10 @@ pipeline {
     
     post {
         success {
-            echo 'Build and Test successful!'
+            echo 'Build, Test, and Code Coverage checks successful!'
         }
         failure {
-            echo 'Build or Test failed!'
+            echo 'Build, Test, or Code Coverage check failed!'
         }
         always {
             echo 'Cleaning workspace...'
