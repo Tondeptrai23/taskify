@@ -59,6 +59,8 @@ pipeline {
                             def previousCommit = sh(script: "git rev-parse HEAD~1", returnStdout: true).trim()
                             echo "Previous commit: ${previousCommit}"
 
+                            echo "Successfully fetched previous commit: ${GIT_PREVIOUS_SUCCESSFUL_COMMIT}"
+
                             // Get the changed files between the two commits
                             changeSet = sh(script: "git diff --name-only ${previousCommit} ${currentCommit}", returnStdout: true).trim()
                             
