@@ -49,33 +49,43 @@ pipeline {
                         // Try to get the changes
                         def changeSet = []
                         
-                        // For first-time builds, there won't be a previous build
-                        if (currentBuild.previousBuild) {
-                            echo "This is not the first build - comparing with previous build"
-                            
-                            def previousCommit = sh(script: "git rev-parse HEAD~1", returnStdout: true).trim()
-                            echo "Previous commit: ${previousCommit}"
+                        def previousCommit = env.GIT_PREVIOUS_SUCCESSFUL_COMMIT ?: ""
+                        
+                        if (previousCommit) {
+                            echo "Previous successful commit: ${previousCommit}"
 
+                            // Reset all flags to false as we'll set them based on actual changes
+                            env.COMMON_CORE_CHANGED = "false"
+                            env.COMMON_WEB_CHANGED = "false"
+                            env.DISCOVERY_CHANGED = "false"
+                            env.CONFIG_CHANGED = "false"
+                            env.AUTH_CHANGED = "false"
+                            env.IAM_CHANGED = "false"
+                            env.ORG_CHANGED = "false"
+                            env.PROJECT_CHANGED = "false"
+                            env.GATEWAY_CHANGED = "false"
+                            
                             // Get the changed files between the two commits
-                            changeSet = sh(script: "git diff --name-only ${previousCommit} ${currentCommit}", returnStdout: true).trim()
+                            def changeSet = sh(script: "git diff --name-only ${previousCommit} ${currentCommit}", returnStdout: true).trim()
                             
                             if (changeSet) {
                                 changeSet = changeSet.split('\n')
                                 echo "Changed files: ${changeSet.join(', ')}"
                                 
-                                // Reset all flags to false as we'll set them based on actual changes
-                                env.COMMON_CORE_CHANGED = "false"
-                                env.COMMON_WEB_CHANGED = "false"
-                                env.DISCOVERY_CHANGED = "false"
-                                env.CONFIG_CHANGED = "false"
-                                env.AUTH_CHANGED = "false"
-                                env.IAM_CHANGED = "false"
-                                env.ORG_CHANGED = "false"
-                                env.PROJECT_CHANGED = "false"
-                                env.GATEWAY_CHANGED = "false"
-                                
                                 // Check each path in the change set
                                 for (change in changeSet) {
+                                    if (change.startsWith("Jenkinsfile")) {
+                                        echo "Jenkinsfile changes detected - rebuilding everything"
+                                        env.COMMON_CORE_CHANGED = "true"
+                                        env.COMMON_WEB_CHANGED = "true"
+                                        env.DISCOVERY_CHANGED = "true"
+                                        env.CONFIG_CHANGED = "true"
+                                        env.AUTH_CHANGED = "true"
+                                        env.IAM_CHANGED = "true"
+                                        env.ORG_CHANGED = "true"
+                                        env.PROJECT_CHANGED = "true"
+                                        env.GATEWAY_CHANGED = "true"
+                                    }
                                     if (change.startsWith(COMMON_CORE_PATH)) {
                                         env.COMMON_CORE_CHANGED = "true"
                                         echo "Common Core Library changes detected"
@@ -133,16 +143,14 @@ pipeline {
                                     echo "Common Web Library change affects all microservices"
                                 }
                             } else {
-                                echo "No changes detected or git diff returned empty result"
+                                echo "No changes detected between commits"
                             }
                         } else {
-                            echo "This is the first build - building everything"
-                            // First build, so all components need to be built
+                            echo "This is the first build or no previous commit information available - building everything"
                         }
                     } catch (Exception e) {
                         echo "Error detecting changes: ${e.message}"
                         echo "Building all components as fallback"
-                        // On error, build everything to be safe
                     }
                     
                     // Output summary of what will be built
