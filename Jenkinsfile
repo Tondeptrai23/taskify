@@ -66,7 +66,7 @@ pipeline {
                             env.GATEWAY_CHANGED = "false"
                             
                             // Get the changed files between the two commits
-                            def changeSet = sh(script: "git diff --name-only ${previousCommit} ${currentCommit}", returnStdout: true).trim()
+                            changeSet = sh(script: "git diff --name-only ${previousCommit} ${currentCommit}", returnStdout: true).trim()
                             
                             if (changeSet) {
                                 changeSet = changeSet.split('\n')
