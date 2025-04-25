@@ -17,6 +17,12 @@ pipeline {
         ORG_PATH = "microservices/organization-service" 
         PROJECT_PATH = "microservices/project-service"
         GATEWAY_PATH = "api-gateway"
+
+        DOCKER_HUB_REGISTRY = "docker.io"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        
+        DOCKER_NAMESPACE = "taskify"  
+        DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
     }
     
     stages {
@@ -530,6 +536,284 @@ pipeline {
                 }
             }
         }
+
+                stage('Docker Phase') {
+            stages {
+                stage('Docker Login') {
+                    steps {
+                        script {
+                            // Login to Docker Hub
+                            sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                            echo "Logged in to Docker Hub"
+                        }
+                    }
+                }
+                
+                stage('Build Docker Images') {
+                    parallel {
+                        stage('Discovery Service Image') {
+                            when {
+                                expression { return env.DISCOVERY_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/discovery-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker build -f docker/services/discovery-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
+                                    echo "Discovery Service Docker image built: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Config Server Image') {
+                            when {
+                                expression { return env.CONFIG_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/config-server"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker build -f docker/services/config-server.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
+                                    echo "Config Server Docker image built: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Auth Service Image') {
+                            when {
+                                expression { return env.AUTH_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/auth-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker build -f docker/services/auth-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
+                                    echo "Auth Service Docker image built: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('IAM Service Image') {
+                            when {
+                                expression { return env.IAM_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/iam-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker build -f docker/services/iam-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
+                                    echo "IAM Service Docker image built: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Organization Service Image') {
+                            when {
+                                expression { return env.ORG_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/organization-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker build -f docker/services/organization-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
+                                    echo "Organization Service Docker image built: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Project Service Image') {
+                            when {
+                                expression { return env.PROJECT_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/project-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker build -f docker/services/project-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
+                                    echo "Project Service Docker image built: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('API Gateway Image') {
+                            when {
+                                expression { return env.GATEWAY_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/api-gateway"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker build -f docker/services/api-gateway.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
+                                    echo "API Gateway Docker image built: ${imageTagged}"
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                stage('Push Docker Images') {
+                    parallel {
+                        stage('Push Discovery Service Image') {
+                            when {
+                                expression { return env.DISCOVERY_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/discovery-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker push ${imageTagged}"
+                                    sh "docker push ${imageLatest}"
+                                    echo "Discovery Service Docker image pushed: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Push Config Server Image') {
+                            when {
+                                expression { return env.CONFIG_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/config-server"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker push ${imageTagged}"
+                                    sh "docker push ${imageLatest}"
+                                    echo "Config Server Docker image pushed: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Push Auth Service Image') {
+                            when {
+                                expression { return env.AUTH_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/auth-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker push ${imageTagged}"
+                                    sh "docker push ${imageLatest}"
+                                    echo "Auth Service Docker image pushed: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Push IAM Service Image') {
+                            when {
+                                expression { return env.IAM_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/iam-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker push ${imageTagged}"
+                                    sh "docker push ${imageLatest}"
+                                    echo "IAM Service Docker image pushed: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Push Organization Service Image') {
+                            when {
+                                expression { return env.ORG_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/organization-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker push ${imageTagged}"
+                                    sh "docker push ${imageLatest}"
+                                    echo "Organization Service Docker image pushed: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Push Project Service Image') {
+                            when {
+                                expression { return env.PROJECT_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/project-service"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker push ${imageTagged}"
+                                    sh "docker push ${imageLatest}"
+                                    echo "Project Service Docker image pushed: ${imageTagged}"
+                                }
+                            }
+                        }
+                        
+                        stage('Push API Gateway Image') {
+                            when {
+                                expression { return env.GATEWAY_CHANGED == "true" }
+                            }
+                            steps {
+                                script {
+                                    def imageName = "${DOCKER_NAMESPACE}/api-gateway"
+                                    def imageTag = "${DOCKER_IMAGE_TAG}"
+                                    def imageLatest = "${imageName}:latest"
+                                    def imageTagged = "${imageName}:${imageTag}"
+                                    
+                                    sh "docker push ${imageTagged}"
+                                    sh "docker push ${imageLatest}"
+                                    echo "API Gateway Docker image pushed: ${imageTagged}"
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                stage('Clean Docker Images') {
+                    steps {
+                        script {
+                            // Clean up local Docker images to save disk space on Jenkins server
+                            echo "Cleaning up old Docker images to prevent disk space issues on Jenkins server"
+                            sh "docker system prune -f"
+                        }
+                    }
+                }
+            }
+        }
+    }
     }
     
     post {
