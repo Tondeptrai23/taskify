@@ -1,3 +1,5 @@
+@Library('taskify-pipeline-library') _
+
 pipeline {
     agent any
     
@@ -36,140 +38,32 @@ pipeline {
         stage('Detect Changes') {
             steps {
                 script {
-                    // Initialize change flags - default to true for pipeline testing/debugging
-                    env.COMMON_CORE_CHANGED = "true"
-                    env.COMMON_WEB_CHANGED = "true"
-                    env.DISCOVERY_CHANGED = "true"
-                    env.CONFIG_CHANGED = "true"
-                    env.AUTH_CHANGED = "true"
-                    env.IAM_CHANGED = "true"
-                    env.ORG_CHANGED = "true"
-                    env.PROJECT_CHANGED = "true"
-                    env.GATEWAY_CHANGED = "true"
+                    // Call a helper function from the shared library to detect changes
+                    // This keeps the complex change detection logic in the library
+                    def pathConfig = [
+                        COMMON_CORE_PATH: env.COMMON_CORE_PATH,
+                        COMMON_WEB_PATH: env.COMMON_WEB_PATH,
+                        DISCOVERY_PATH: env.DISCOVERY_PATH,
+                        CONFIG_PATH: env.CONFIG_PATH,
+                        AUTH_PATH: env.AUTH_PATH,
+                        IAM_PATH: env.IAM_PATH,
+                        ORG_PATH: env.ORG_PATH,
+                        PROJECT_PATH: env.PROJECT_PATH,
+                        GATEWAY_PATH: env.GATEWAY_PATH
+                    ]
                     
-                    try {
-                        // Get the current commit hash
-                        def currentCommit = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-                        echo "Current commit: ${currentCommit}"
-                        
-                        // Try to get the changes
-                        def changeSet = []
-                        
-                        def previousCommit = env.GIT_PREVIOUS_SUCCESSFUL_COMMIT ?: ""
-                        
-                        if (previousCommit) {
-                            echo "Previous successful commit: ${previousCommit}"
-
-                            // Reset all flags to false as we'll set them based on actual changes
-                            env.COMMON_CORE_CHANGED = "false"
-                            env.COMMON_WEB_CHANGED = "false"
-                            env.DISCOVERY_CHANGED = "false"
-                            env.CONFIG_CHANGED = "false"
-                            env.AUTH_CHANGED = "false"
-                            env.IAM_CHANGED = "false"
-                            env.ORG_CHANGED = "false"
-                            env.PROJECT_CHANGED = "false"
-                            env.GATEWAY_CHANGED = "false"
-                            
-                            // Get the changed files between the two commits
-                            changeSet = sh(script: "git diff --name-only ${previousCommit} ${currentCommit}", returnStdout: true).trim()
-                            
-                            if (changeSet) {
-                                changeSet = changeSet.split('\n')
-                                echo "Changed files: ${changeSet.join(', ')}"
-                                
-                                // Check each path in the change set
-                                for (change in changeSet) {
-                                    if (change.startsWith("Jenkinsfile")) {
-                                        echo "Jenkinsfile changes detected - rebuilding everything"
-                                        env.COMMON_CORE_CHANGED = "true"
-                                        env.COMMON_WEB_CHANGED = "true"
-                                        env.DISCOVERY_CHANGED = "true"
-                                        env.CONFIG_CHANGED = "true"
-                                        env.AUTH_CHANGED = "true"
-                                        env.IAM_CHANGED = "true"
-                                        env.ORG_CHANGED = "true"
-                                        env.PROJECT_CHANGED = "true"
-                                        env.GATEWAY_CHANGED = "true"
-                                    }
-                                    if (change.startsWith(COMMON_CORE_PATH)) {
-                                        env.COMMON_CORE_CHANGED = "true"
-                                        echo "Common Core Library changes detected"
-                                    }
-                                    else if (change.startsWith(COMMON_WEB_PATH)) {
-                                        env.COMMON_WEB_CHANGED = "true"
-                                        echo "Common Web Library changes detected"
-                                    }
-                                    else if (change.startsWith(DISCOVERY_PATH)) {
-                                        env.DISCOVERY_CHANGED = "true"
-                                        echo "Discovery Service changes detected"
-                                    }
-                                    else if (change.startsWith(CONFIG_PATH)) {
-                                        env.CONFIG_CHANGED = "true"
-                                        echo "Config Server changes detected"
-                                    }
-                                    else if (change.startsWith(AUTH_PATH)) {
-                                        env.AUTH_CHANGED = "true"
-                                        echo "Auth Service changes detected"
-                                    }
-                                    else if (change.startsWith(IAM_PATH)) {
-                                        env.IAM_CHANGED = "true"
-                                        echo "IAM Service changes detected"
-                                    }
-                                    else if (change.startsWith(ORG_PATH)) {
-                                        env.ORG_CHANGED = "true"
-                                        echo "Organization Service changes detected"
-                                    }
-                                    else if (change.startsWith(PROJECT_PATH)) {
-                                        env.PROJECT_CHANGED = "true"
-                                        echo "Project Service changes detected"
-                                    }
-                                    else if (change.startsWith(GATEWAY_PATH)) {
-                                        env.GATEWAY_CHANGED = "true"
-                                        echo "API Gateway changes detected"
-                                    }
-                                }
-                                
-                                // Propagate common library changes to dependent services
-                                if (env.COMMON_CORE_CHANGED == "true") {
-                                    env.COMMON_WEB_CHANGED = "true"
-                                    env.AUTH_CHANGED = "true"
-                                    env.IAM_CHANGED = "true" 
-                                    env.ORG_CHANGED = "true"
-                                    env.PROJECT_CHANGED = "true"
-                                    env.GATEWAY_CHANGED = "true" 
-                                    echo "Common Core Library change affects all services"
-                                }
-                                
-                                if (env.COMMON_WEB_CHANGED == "true") {
-                                    env.AUTH_CHANGED = "true"
-                                    env.IAM_CHANGED = "true"
-                                    env.ORG_CHANGED = "true"
-                                    env.PROJECT_CHANGED = "true"
-                                    echo "Common Web Library change affects all microservices"
-                                }
-                            } else {
-                                echo "No changes detected between commits"
-                            }
-                        } else {
-                            echo "This is the first build or no previous commit information available - building everything"
-                        }
-                    } catch (Exception e) {
-                        echo "Error detecting changes: ${e.message}"
-                        echo "Building all components as fallback"
-                    }
+                    def serviceFlags = pipelineUtils.detectChanges(pathConfig)
                     
-                    // Output summary of what will be built
-                    echo "Services to build:"
-                    echo "Common Core Library: ${env.COMMON_CORE_CHANGED}"
-                    echo "Common Web Library: ${env.COMMON_WEB_CHANGED}"
-                    echo "Discovery Service: ${env.DISCOVERY_CHANGED}"
-                    echo "Config Server: ${env.CONFIG_CHANGED}" 
-                    echo "Auth Service: ${env.AUTH_CHANGED}"
-                    echo "IAM Service: ${env.IAM_CHANGED}"
-                    echo "Organization Service: ${env.ORG_CHANGED}"
-                    echo "Project Service: ${env.PROJECT_CHANGED}"
-                    echo "API Gateway: ${env.GATEWAY_CHANGED}"
+                    // Set environment variables based on the returned flags
+                    env.COMMON_CORE_CHANGED = serviceFlags.COMMON_CORE_CHANGED.toString()
+                    env.COMMON_WEB_CHANGED = serviceFlags.COMMON_WEB_CHANGED.toString()
+                    env.DISCOVERY_CHANGED = serviceFlags.DISCOVERY_CHANGED.toString()
+                    env.CONFIG_CHANGED = serviceFlags.CONFIG_CHANGED.toString()
+                    env.AUTH_CHANGED = serviceFlags.AUTH_CHANGED.toString()
+                    env.IAM_CHANGED = serviceFlags.IAM_CHANGED.toString()
+                    env.ORG_CHANGED = serviceFlags.ORG_CHANGED.toString()
+                    env.PROJECT_CHANGED = serviceFlags.PROJECT_CHANGED.toString()
+                    env.GATEWAY_CHANGED = serviceFlags.GATEWAY_CHANGED.toString()
                 }
             }
         }
@@ -203,27 +97,13 @@ pipeline {
                 stage('Build Infrastructure Services') {
                     parallel {
                         stage('Discovery Service') {
-                            when {
-                                expression { return env.DISCOVERY_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(DISCOVERY_PATH) {
-                                    sh 'mvn clean compile'
-                                    echo "Discovery Service compiled"
-                                }
-                            }
+                            when { expression { return env.DISCOVERY_CHANGED == "true" } }
+                            steps { serviceSteps.buildService(DISCOVERY_PATH, "Discovery Service") }
                         }
                         
                         stage('Config Server') {
-                            when {
-                                expression { return env.CONFIG_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(CONFIG_PATH) {
-                                    sh 'mvn clean compile'
-                                    echo "Config Server compiled"
-                                }
-                            }
+                            when { expression { return env.CONFIG_CHANGED == "true" } }
+                            steps { serviceSteps.buildService(CONFIG_PATH, "Config Server") }
                         }
                     }
                 }
@@ -231,63 +111,28 @@ pipeline {
                 stage('Build Microservices') {
                     parallel {
                         stage('Auth Service') {
-                            when {
-                                expression { return env.AUTH_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(AUTH_PATH) {
-                                    sh 'mvn clean compile'
-                                    echo "Auth Service compiled"
-                                }
-                            }
+                            when { expression { return env.AUTH_CHANGED == "true" } }
+                            steps { serviceSteps.buildService(AUTH_PATH, "Auth Service") }
                         }
                         
                         stage('IAM Service') {
-                            when {
-                                expression { return env.IAM_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(IAM_PATH) {
-                                    sh 'mvn clean compile'
-                                    echo "IAM Service compiled"
-                                }
-                            }
+                            when { expression { return env.IAM_CHANGED == "true" } }
+                            steps { serviceSteps.buildService(IAM_PATH, "IAM Service") }
                         }
                         
                         stage('Organization Service') {
-                            when {
-                                expression { return env.ORG_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(ORG_PATH) {
-                                    sh 'mvn clean compile'
-                                    echo "Organization Service compiled"
-                                }
-                            }
+                            when { expression { return env.ORG_CHANGED == "true" } }
+                            steps { serviceSteps.buildService(ORG_PATH, "Organization Service") }
                         }
                         
                         stage('Project Service') {
-                            when {
-                                expression { return env.PROJECT_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(PROJECT_PATH) {
-                                    sh 'mvn clean compile'
-                                    echo "Project Service compiled"
-                                }
-                            }
+                            when { expression { return env.PROJECT_CHANGED == "true" } }
+                            steps { serviceSteps.buildService(PROJECT_PATH, "Project Service") }
                         }
                         
                         stage('API Gateway') {
-                            when {
-                                expression { return env.GATEWAY_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(GATEWAY_PATH) {
-                                    sh 'mvn clean compile'
-                                    echo "API Gateway compiled"
-                                }
-                            }
+                            when { expression { return env.GATEWAY_CHANGED == "true" } }
+                            steps { serviceSteps.buildService(GATEWAY_PATH, "API Gateway") }
                         }
                     }
                 }
@@ -300,37 +145,13 @@ pipeline {
                 stage('Test Infrastructure Services') {
                     parallel {
                         stage('Discovery Service') {
-                            when {
-                                expression { return env.DISCOVERY_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(DISCOVERY_PATH) {
-                                    sh 'mvn test'
-                                    echo "Discovery Service tests completed"
-                                }
-                            }
-                            post {
-                                always {
-                                    junit allowEmptyResults: true, testResults: "${DISCOVERY_PATH}/target/surefire-reports/TEST-*.xml"
-                                }
-                            }
+                            when { expression { return env.DISCOVERY_CHANGED == "true" } }
+                            steps { serviceSteps.testService(DISCOVERY_PATH, "Discovery Service") }
                         }
                         
                         stage('Config Server') {
-                            when {
-                                expression { return env.CONFIG_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(CONFIG_PATH) {
-                                    sh 'mvn test'
-                                    echo "Config Server tests completed"
-                                }
-                            }
-                            post {
-                                always {
-                                    junit allowEmptyResults: true, testResults: "${CONFIG_PATH}/target/surefire-reports/TEST-*.xml"
-                                }
-                            }
+                            when { expression { return env.CONFIG_CHANGED == "true" } }
+                            steps { serviceSteps.testService(CONFIG_PATH, "Config Server") }
                         }
                     }
                 }
@@ -338,176 +159,47 @@ pipeline {
                 stage('Test Microservices') {
                     parallel {
                         stage('Auth Service') {
-                            when {
-                                expression { return env.AUTH_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(AUTH_PATH) {
-                                    sh 'mvn test'
-                                    echo "Auth Service tests completed"
-                                }
-                            }
-                            post {
-                                always {
-                                    junit allowEmptyResults: true, testResults: "${AUTH_PATH}/target/surefire-reports/TEST-*.xml"
-                                }
-                            }
+                            when { expression { return env.AUTH_CHANGED == "true" } }
+                            steps { serviceSteps.testService(AUTH_PATH, "Auth Service") }
                         }
                         
                         stage('IAM Service') {
-                            when {
-                                expression { return env.IAM_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(IAM_PATH) {
-                                    sh 'mvn test'
-                                    echo "IAM Service tests completed"
-                                }
-                            }
-                            post {
-                                always {
-                                    junit allowEmptyResults: true, testResults: "${IAM_PATH}/target/surefire-reports/TEST-*.xml"
-                                }
-                            }
+                            when { expression { return env.IAM_CHANGED == "true" } }
+                            steps { serviceSteps.testService(IAM_PATH, "IAM Service") }
                         }
                         
                         stage('Organization Service') {
-                            when {
-                                expression { return env.ORG_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(ORG_PATH) {
-                                    sh 'mvn test'
-                                    echo "Organization Service tests completed"
-                                }
-                            }
-                            post {
-                                always {
-                                    junit allowEmptyResults: true, testResults: "${ORG_PATH}/target/surefire-reports/TEST-*.xml"
-                                }
-                            }
+                            when { expression { return env.ORG_CHANGED == "true" } }
+                            steps { serviceSteps.testService(ORG_PATH, "Organization Service") }
                         }
                         
                         stage('Project Service') {
-                            when {
-                                expression { return env.PROJECT_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(PROJECT_PATH) {
-                                    sh 'mvn test'
-                                    echo "Project Service tests completed"
-                                }
-                            }
-                            post {
-                                always {
-                                    junit allowEmptyResults: true, testResults: "${PROJECT_PATH}/target/surefire-reports/TEST-*.xml"
-                                }
-                            }
+                            when { expression { return env.PROJECT_CHANGED == "true" } }
+                            steps { serviceSteps.testService(PROJECT_PATH, "Project Service") }
                         }
                         
                         stage('API Gateway') {
-                            when {
-                                expression { return env.GATEWAY_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(GATEWAY_PATH) {
-                                    sh 'mvn test'
-                                    echo "API Gateway tests completed"
-                                }
-                            }
-                            post {
-                                always {
-                                    junit allowEmptyResults: true, testResults: "${GATEWAY_PATH}/target/surefire-reports/TEST-*.xml"
-                                }
-                            }
+                            when { expression { return env.GATEWAY_CHANGED == "true" } }
+                            steps { serviceSteps.testService(GATEWAY_PATH, "API Gateway") }
                         }
                     }
                 }
                 
                 stage('Package Applications') {
-                    parallel {
-                        stage('Discovery Service') {
-                            when {
-                                expression { return env.DISCOVERY_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(DISCOVERY_PATH) {
-                                    sh 'mvn package -DskipTests'
-                                    echo "Discovery Service packaged"
-                                }
-                            }
-                        }
-                        
-                        stage('Config Server') {
-                            when {
-                                expression { return env.CONFIG_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(CONFIG_PATH) {
-                                    sh 'mvn package -DskipTests'
-                                    echo "Config Server packaged"
-                                }
-                            }
-                        }
-                        
-                        stage('Auth Service') {
-                            when {
-                                expression { return env.AUTH_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(AUTH_PATH) {
-                                    sh 'mvn package -DskipTests'
-                                    echo "Auth Service packaged"
-                                }
-                            }
-                        }
-                        
-                        stage('IAM Service') {
-                            when {
-                                expression { return env.IAM_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(IAM_PATH) {
-                                    sh 'mvn package -DskipTests'
-                                    echo "IAM Service packaged"
-                                }
-                            }
-                        }
-                        
-                        stage('Organization Service') {
-                            when {
-                                expression { return env.ORG_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(ORG_PATH) {
-                                    sh 'mvn package -DskipTests'
-                                    echo "Organization Service packaged"
-                                }
-                            }
-                        }
-                        
-                        stage('Project Service') {
-                            when {
-                                expression { return env.PROJECT_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(PROJECT_PATH) {
-                                    sh 'mvn package -DskipTests'
-                                    echo "Project Service packaged"
-                                }
-                            }
-                        }
-                        
-                        stage('API Gateway') {
-                            when {
-                                expression { return env.GATEWAY_CHANGED == "true" }
-                            }
-                            steps {
-                                dir(GATEWAY_PATH) {
-                                    sh 'mvn package -DskipTests'
-                                    echo "API Gateway packaged"
-                                }
-                            }
+                    steps {
+                        script {
+                            // Use helper function to package services in parallel
+                            def services = [
+                                [path: DISCOVERY_PATH, name: "Discovery Service", enabled: env.DISCOVERY_CHANGED == "true"],
+                                [path: CONFIG_PATH, name: "Config Server", enabled: env.CONFIG_CHANGED == "true"],
+                                [path: AUTH_PATH, name: "Auth Service", enabled: env.AUTH_CHANGED == "true"],
+                                [path: IAM_PATH, name: "IAM Service", enabled: env.IAM_CHANGED == "true"],
+                                [path: ORG_PATH, name: "Organization Service", enabled: env.ORG_CHANGED == "true"],
+                                [path: PROJECT_PATH, name: "Project Service", enabled: env.PROJECT_CHANGED == "true"],
+                                [path: GATEWAY_PATH, name: "API Gateway", enabled: env.GATEWAY_CHANGED == "true"]
+                            ]
+                            
+                            serviceSteps.packageServicesInParallel(services)
                         }
                     }
                 }
@@ -542,262 +234,27 @@ pipeline {
                 stage('Docker Login') {
                     steps {
                         script {
-                            // Login to Docker Hub
                             sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
                             echo "Logged in to Docker Hub"
                         }
                     }
                 }
                 
-                stage('Build Docker Images') {
-                    parallel {
-                        stage('Discovery Service Image') {
-                            when {
-                                expression { return env.DISCOVERY_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/discovery-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker build -f docker/services/discovery-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
-                                    echo "Discovery Service Docker image built: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Config Server Image') {
-                            when {
-                                expression { return env.CONFIG_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/config-server"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker build -f docker/services/config-server.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
-                                    echo "Config Server Docker image built: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Auth Service Image') {
-                            when {
-                                expression { return env.AUTH_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/auth-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker build -f docker/services/auth-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
-                                    echo "Auth Service Docker image built: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('IAM Service Image') {
-                            when {
-                                expression { return env.IAM_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/iam-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker build -f docker/services/iam-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
-                                    echo "IAM Service Docker image built: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Organization Service Image') {
-                            when {
-                                expression { return env.ORG_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/organization-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker build -f docker/services/organization-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
-                                    echo "Organization Service Docker image built: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Project Service Image') {
-                            when {
-                                expression { return env.PROJECT_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/project-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker build -f docker/services/project-service.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
-                                    echo "Project Service Docker image built: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('API Gateway Image') {
-                            when {
-                                expression { return env.GATEWAY_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/api-gateway"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker build -f docker/services/api-gateway.Dockerfile -t ${imageTagged} -t ${imageLatest} ."
-                                    echo "API Gateway Docker image built: ${imageTagged}"
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                stage('Push Docker Images') {
-                    parallel {
-                        stage('Push Discovery Service Image') {
-                            when {
-                                expression { return env.DISCOVERY_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/discovery-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker push ${imageTagged}"
-                                    sh "docker push ${imageLatest}"
-                                    echo "Discovery Service Docker image pushed: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Push Config Server Image') {
-                            when {
-                                expression { return env.CONFIG_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/config-server"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker push ${imageTagged}"
-                                    sh "docker push ${imageLatest}"
-                                    echo "Config Server Docker image pushed: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Push Auth Service Image') {
-                            when {
-                                expression { return env.AUTH_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/auth-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker push ${imageTagged}"
-                                    sh "docker push ${imageLatest}"
-                                    echo "Auth Service Docker image pushed: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Push IAM Service Image') {
-                            when {
-                                expression { return env.IAM_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/iam-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker push ${imageTagged}"
-                                    sh "docker push ${imageLatest}"
-                                    echo "IAM Service Docker image pushed: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Push Organization Service Image') {
-                            when {
-                                expression { return env.ORG_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/organization-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker push ${imageTagged}"
-                                    sh "docker push ${imageLatest}"
-                                    echo "Organization Service Docker image pushed: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Push Project Service Image') {
-                            when {
-                                expression { return env.PROJECT_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/project-service"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker push ${imageTagged}"
-                                    sh "docker push ${imageLatest}"
-                                    echo "Project Service Docker image pushed: ${imageTagged}"
-                                }
-                            }
-                        }
-                        
-                        stage('Push API Gateway Image') {
-                            when {
-                                expression { return env.GATEWAY_CHANGED == "true" }
-                            }
-                            steps {
-                                script {
-                                    def imageName = "${DOCKER_NAMESPACE}/api-gateway"
-                                    def imageTag = "${DOCKER_IMAGE_TAG}"
-                                    def imageLatest = "${imageName}:latest"
-                                    def imageTagged = "${imageName}:${imageTag}"
-                                    
-                                    sh "docker push ${imageTagged}"
-                                    sh "docker push ${imageLatest}"
-                                    echo "API Gateway Docker image pushed: ${imageTagged}"
-                                }
-                            }
+                stage('Build and Push Docker Images') {
+                    steps {
+                        script {
+                            // Use helper function to build and push Docker images in parallel
+                            def services = [
+                                [name: "discovery-service", path: DISCOVERY_PATH, dockerfile: "docker/services/discovery-service.Dockerfile", enabled: env.DISCOVERY_CHANGED == "true"],
+                                [name: "config-server", path: CONFIG_PATH, dockerfile: "docker/services/config-server.Dockerfile", enabled: env.CONFIG_CHANGED == "true"],
+                                [name: "auth-service", path: AUTH_PATH, dockerfile: "docker/services/auth-service.Dockerfile", enabled: env.AUTH_CHANGED == "true"],
+                                [name: "iam-service", path: IAM_PATH, dockerfile: "docker/services/iam-service.Dockerfile", enabled: env.IAM_CHANGED == "true"],
+                                [name: "organization-service", path: ORG_PATH, dockerfile: "docker/services/organization-service.Dockerfile", enabled: env.ORG_CHANGED == "true"],
+                                [name: "project-service", path: PROJECT_PATH, dockerfile: "docker/services/project-service.Dockerfile", enabled: env.PROJECT_CHANGED == "true"],
+                                [name: "api-gateway", path: GATEWAY_PATH, dockerfile: "docker/services/api-gateway.Dockerfile", enabled: env.GATEWAY_CHANGED == "true"]
+                            ]
+                            
+                            dockerSteps.buildAndPushImages(services, env.DOCKER_NAMESPACE, env.DOCKER_IMAGE_TAG)
                         }
                     }
                 }
@@ -805,7 +262,6 @@ pipeline {
                 stage('Clean Docker Images') {
                     steps {
                         script {
-                            // Clean up local Docker images to save disk space on Jenkins server
                             echo "Cleaning up old Docker images to prevent disk space issues on Jenkins server"
                             sh "docker system prune -f"
                         }
