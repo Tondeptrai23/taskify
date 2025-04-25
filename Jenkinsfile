@@ -537,7 +537,7 @@ pipeline {
             }
         }
 
-                stage('Docker Phase') {
+        stage('Docker Phase') {
             stages {
                 stage('Docker Login') {
                     steps {
@@ -813,7 +813,6 @@ pipeline {
                 }
             }
         }
-    }
     }
     
     post {
