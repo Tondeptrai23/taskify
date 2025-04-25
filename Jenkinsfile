@@ -167,123 +167,123 @@ pipeline {
             }
         }
         
-        // // TEST PHASE
-        // stage('Test Phase') {
-        //     stages {
-        //         stage('Test Infrastructure Services') {
-        //             parallel {
-        //                 stage('Discovery Service') {
-        //                     when { expression { return env.DISCOVERY_CHANGED == "true" } }
-        //                     steps { 
-        //                         script {
-        //                             serviceSteps.testService(DISCOVERY_PATH, "Discovery Service")
-        //                         }
-        //                     }
-        //                 }
+        // TEST PHASE
+        stage('Test Phase') {
+            stages {
+                stage('Test Infrastructure Services') {
+                    parallel {
+                        stage('Discovery Service') {
+                            when { expression { return env.DISCOVERY_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(DISCOVERY_PATH, "Discovery Service")
+                                }
+                            }
+                        }
                         
-        //                 stage('Config Server') {
-        //                     when { expression { return env.CONFIG_CHANGED == "true" } }
-        //                     steps { 
-        //                         script {
-        //                             serviceSteps.testService(CONFIG_PATH, "Config Server")
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
+                        stage('Config Server') {
+                            when { expression { return env.CONFIG_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(CONFIG_PATH, "Config Server")
+                                }
+                            }
+                        }
+                    }
+                }
                 
-        //         stage('Test Microservices') {
-        //             parallel {
-        //                 stage('Auth Service') {
-        //                     when { expression { return env.AUTH_CHANGED == "true" } }
-        //                     steps { 
-        //                         script {
-        //                             serviceSteps.testService(AUTH_PATH, "Auth Service")
-        //                         }
-        //                     }
-        //                 }
+                stage('Test Microservices') {
+                    parallel {
+                        stage('Auth Service') {
+                            when { expression { return env.AUTH_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(AUTH_PATH, "Auth Service")
+                                }
+                            }
+                        }
                         
-        //                 stage('IAM Service') {
-        //                     when { expression { return env.IAM_CHANGED == "true" } }
-        //                     steps { 
-        //                         script {
-        //                             serviceSteps.testService(IAM_PATH, "IAM Service")
-        //                         }
-        //                     }
-        //                 }
+                        stage('IAM Service') {
+                            when { expression { return env.IAM_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(IAM_PATH, "IAM Service")
+                                }
+                            }
+                        }
                         
-        //                 stage('Organization Service') {
-        //                     when { expression { return env.ORG_CHANGED == "true" } }
-        //                     steps { 
-        //                         script {
-        //                             serviceSteps.testService(ORG_PATH, "Organization Service")
-        //                         }
-        //                     }
-        //                 }
+                        stage('Organization Service') {
+                            when { expression { return env.ORG_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(ORG_PATH, "Organization Service")
+                                }
+                            }
+                        }
                         
-        //                 stage('Project Service') {
-        //                     when { expression { return env.PROJECT_CHANGED == "true" } }
-        //                     steps { 
-        //                         script {
-        //                             serviceSteps.testService(PROJECT_PATH, "Project Service")
-        //                         }
-        //                     }
-        //                 }
+                        stage('Project Service') {
+                            when { expression { return env.PROJECT_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(PROJECT_PATH, "Project Service")
+                                }
+                            }
+                        }
                         
-        //                 stage('API Gateway') {
-        //                     when { expression { return env.GATEWAY_CHANGED == "true" } }
-        //                     steps { 
-        //                         script {
-        //                             serviceSteps.testService(GATEWAY_PATH, "API Gateway")
-        //                         }
-        //                     }
-        //                 }
-        //             }
-        //         }
+                        stage('API Gateway') {
+                            when { expression { return env.GATEWAY_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(GATEWAY_PATH, "API Gateway")
+                                }
+                            }
+                        }
+                    }
+                }
                 
-        //         stage('Package Applications') {
-        //             steps {
-        //                 script {
-        //                     // Use helper function to package services in parallel
-        //                     def services = [
-        //                         [path: DISCOVERY_PATH, name: "Discovery Service", enabled: env.DISCOVERY_CHANGED == "true"],
-        //                         [path: CONFIG_PATH, name: "Config Server", enabled: env.CONFIG_CHANGED == "true"],
-        //                         [path: AUTH_PATH, name: "Auth Service", enabled: env.AUTH_CHANGED == "true"],
-        //                         [path: IAM_PATH, name: "IAM Service", enabled: env.IAM_CHANGED == "true"],
-        //                         [path: ORG_PATH, name: "Organization Service", enabled: env.ORG_CHANGED == "true"],
-        //                         [path: PROJECT_PATH, name: "Project Service", enabled: env.PROJECT_CHANGED == "true"],
-        //                         [path: GATEWAY_PATH, name: "API Gateway", enabled: env.GATEWAY_CHANGED == "true"]
-        //                     ]
+                stage('Package Applications') {
+                    steps {
+                        script {
+                            // Use helper function to package services in parallel
+                            def services = [
+                                [path: DISCOVERY_PATH, name: "Discovery Service", enabled: env.DISCOVERY_CHANGED == "true"],
+                                [path: CONFIG_PATH, name: "Config Server", enabled: env.CONFIG_CHANGED == "true"],
+                                [path: AUTH_PATH, name: "Auth Service", enabled: env.AUTH_CHANGED == "true"],
+                                [path: IAM_PATH, name: "IAM Service", enabled: env.IAM_CHANGED == "true"],
+                                [path: ORG_PATH, name: "Organization Service", enabled: env.ORG_CHANGED == "true"],
+                                [path: PROJECT_PATH, name: "Project Service", enabled: env.PROJECT_CHANGED == "true"],
+                                [path: GATEWAY_PATH, name: "API Gateway", enabled: env.GATEWAY_CHANGED == "true"]
+                            ]
                             
-        //                     serviceSteps.packageServicesInParallel(services)
-        //                 }
-        //             }
-        //         }
+                            serviceSteps.packageServicesInParallel(services)
+                        }
+                    }
+                }
                 
-        //         stage('Archive Artifacts') {
-        //             steps {
-        //                 script {
-        //                     def artifactPaths = []
+                stage('Archive Artifacts') {
+                    steps {
+                        script {
+                            def artifactPaths = []
                             
-        //                     if (env.DISCOVERY_CHANGED == "true") artifactPaths.add("${DISCOVERY_PATH}/target/*.jar")
-        //                     if (env.CONFIG_CHANGED == "true") artifactPaths.add("${CONFIG_PATH}/target/*.jar")
-        //                     if (env.AUTH_CHANGED == "true") artifactPaths.add("${AUTH_PATH}/target/*.jar")
-        //                     if (env.IAM_CHANGED == "true") artifactPaths.add("${IAM_PATH}/target/*.jar")
-        //                     if (env.ORG_CHANGED == "true") artifactPaths.add("${ORG_PATH}/target/*.jar")
-        //                     if (env.PROJECT_CHANGED == "true") artifactPaths.add("${PROJECT_PATH}/target/*.jar")
-        //                     if (env.GATEWAY_CHANGED == "true") artifactPaths.add("${GATEWAY_PATH}/target/*.jar")
+                            if (env.DISCOVERY_CHANGED == "true") artifactPaths.add("${DISCOVERY_PATH}/target/*.jar")
+                            if (env.CONFIG_CHANGED == "true") artifactPaths.add("${CONFIG_PATH}/target/*.jar")
+                            if (env.AUTH_CHANGED == "true") artifactPaths.add("${AUTH_PATH}/target/*.jar")
+                            if (env.IAM_CHANGED == "true") artifactPaths.add("${IAM_PATH}/target/*.jar")
+                            if (env.ORG_CHANGED == "true") artifactPaths.add("${ORG_PATH}/target/*.jar")
+                            if (env.PROJECT_CHANGED == "true") artifactPaths.add("${PROJECT_PATH}/target/*.jar")
+                            if (env.GATEWAY_CHANGED == "true") artifactPaths.add("${GATEWAY_PATH}/target/*.jar")
                             
-        //                     if (!artifactPaths.isEmpty()) {
-        //                         archiveArtifacts artifacts: artifactPaths.join(','), fingerprint: true
-        //                         echo "Artifacts archived"
-        //                     } else {
-        //                         echo "No artifacts to archive"
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+                            if (!artifactPaths.isEmpty()) {
+                                archiveArtifacts artifacts: artifactPaths.join(','), fingerprint: true
+                                echo "Artifacts archived"
+                            } else {
+                                echo "No artifacts to archive"
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         stage('Docker Phase') {
             stages {
