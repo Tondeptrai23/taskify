@@ -23,7 +23,7 @@ pipeline {
         DOCKER_HUB_REGISTRY = "docker.io"
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         
-        DOCKER_NAMESPACE = "taskify"  
+        DOCKER_NAMESPACE = "${env.DOCKER_NAMESPACE ?: 'taskify'}"
         DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
     }
     
@@ -290,7 +290,7 @@ pipeline {
                 stage('Docker Login') {
                     steps {
                         script {
-                            sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                            sh "docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
                             echo "Logged in to Docker Hub"
                         }
                     }
