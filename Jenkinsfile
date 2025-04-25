@@ -98,12 +98,20 @@ pipeline {
                     parallel {
                         stage('Discovery Service') {
                             when { expression { return env.DISCOVERY_CHANGED == "true" } }
-                            steps { serviceSteps.buildService(DISCOVERY_PATH, "Discovery Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(DISCOVERY_PATH, "Discovery Service")
+                                }
+                            }
                         }
                         
                         stage('Config Server') {
                             when { expression { return env.CONFIG_CHANGED == "true" } }
-                            steps { serviceSteps.buildService(CONFIG_PATH, "Config Server") }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(CONFIG_PATH, "Config Server")
+                                }
+                            }
                         }
                     }
                 }
@@ -112,27 +120,47 @@ pipeline {
                     parallel {
                         stage('Auth Service') {
                             when { expression { return env.AUTH_CHANGED == "true" } }
-                            steps { serviceSteps.buildService(AUTH_PATH, "Auth Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(AUTH_PATH, "Auth Service")
+                                }
+                            }
                         }
                         
                         stage('IAM Service') {
                             when { expression { return env.IAM_CHANGED == "true" } }
-                            steps { serviceSteps.buildService(IAM_PATH, "IAM Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(IAM_PATH, "IAM Service")
+                                }
+                            }
                         }
                         
                         stage('Organization Service') {
                             when { expression { return env.ORG_CHANGED == "true" } }
-                            steps { serviceSteps.buildService(ORG_PATH, "Organization Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(ORG_PATH, "Organization Service")
+                                }
+                            }
                         }
                         
                         stage('Project Service') {
                             when { expression { return env.PROJECT_CHANGED == "true" } }
-                            steps { serviceSteps.buildService(PROJECT_PATH, "Project Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(PROJECT_PATH, "Project Service")
+                                }
+                            }
                         }
                         
                         stage('API Gateway') {
                             when { expression { return env.GATEWAY_CHANGED == "true" } }
-                            steps { serviceSteps.buildService(GATEWAY_PATH, "API Gateway") }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(GATEWAY_PATH, "API Gateway")
+                                }
+                            }
                         }
                     }
                 }
@@ -146,12 +174,20 @@ pipeline {
                     parallel {
                         stage('Discovery Service') {
                             when { expression { return env.DISCOVERY_CHANGED == "true" } }
-                            steps { serviceSteps.testService(DISCOVERY_PATH, "Discovery Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(DISCOVERY_PATH, "Discovery Service")
+                                }
+                            }
                         }
                         
                         stage('Config Server') {
                             when { expression { return env.CONFIG_CHANGED == "true" } }
-                            steps { serviceSteps.testService(CONFIG_PATH, "Config Server") }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(CONFIG_PATH, "Config Server")
+                                }
+                            }
                         }
                     }
                 }
@@ -160,27 +196,47 @@ pipeline {
                     parallel {
                         stage('Auth Service') {
                             when { expression { return env.AUTH_CHANGED == "true" } }
-                            steps { serviceSteps.testService(AUTH_PATH, "Auth Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(AUTH_PATH, "Auth Service")
+                                }
+                            }
                         }
                         
                         stage('IAM Service') {
                             when { expression { return env.IAM_CHANGED == "true" } }
-                            steps { serviceSteps.testService(IAM_PATH, "IAM Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(IAM_PATH, "IAM Service")
+                                }
+                            }
                         }
                         
                         stage('Organization Service') {
                             when { expression { return env.ORG_CHANGED == "true" } }
-                            steps { serviceSteps.testService(ORG_PATH, "Organization Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(ORG_PATH, "Organization Service")
+                                }
+                            }
                         }
                         
                         stage('Project Service') {
                             when { expression { return env.PROJECT_CHANGED == "true" } }
-                            steps { serviceSteps.testService(PROJECT_PATH, "Project Service") }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(PROJECT_PATH, "Project Service")
+                                }
+                            }
                         }
                         
                         stage('API Gateway') {
                             when { expression { return env.GATEWAY_CHANGED == "true" } }
-                            steps { serviceSteps.testService(GATEWAY_PATH, "API Gateway") }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(GATEWAY_PATH, "API Gateway")
+                                }
+                            }
                         }
                     }
                 }
