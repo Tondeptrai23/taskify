@@ -24,7 +24,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         
         DOCKER_NAMESPACE = "${env.DOCKER_NAMESPACE ?: 'taskify'}"
-        KUBERNETES_NAMESPACE = "taskify"
+        KUBERNETES_NAMESPACE = "taskify-cluster"
         KUBECONFIG_CREDENTIAL_ID = 'kubernetes-config'
     }
     
@@ -99,152 +99,152 @@ pipeline {
                     }
                 }
                 
-                stage('Build Infrastructure Services') {
-                    parallel {
-                        stage('Discovery Service') {
-                            when { expression { return env.DISCOVERY_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.buildService(DISCOVERY_PATH, "Discovery Service")
-                                }
-                            }
-                        }
+                // stage('Build Infrastructure Services') {
+                //     parallel {
+                //         stage('Discovery Service') {
+                //             when { expression { return env.DISCOVERY_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.buildService(DISCOVERY_PATH, "Discovery Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('Config Server') {
-                            when { expression { return env.CONFIG_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.buildService(CONFIG_PATH, "Config Server")
-                                }
-                            }
-                        }
-                    }
-                }
+                //         stage('Config Server') {
+                //             when { expression { return env.CONFIG_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.buildService(CONFIG_PATH, "Config Server")
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
                 
-                stage('Build Microservices') {
-                    parallel {
-                        stage('Auth Service') {
-                            when { expression { return env.AUTH_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.buildService(AUTH_PATH, "Auth Service")
-                                }
-                            }
-                        }
+                // stage('Build Microservices') {
+                //     parallel {
+                //         stage('Auth Service') {
+                //             when { expression { return env.AUTH_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.buildService(AUTH_PATH, "Auth Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('IAM Service') {
-                            when { expression { return env.IAM_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.buildService(IAM_PATH, "IAM Service")
-                                }
-                            }
-                        }
+                //         stage('IAM Service') {
+                //             when { expression { return env.IAM_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.buildService(IAM_PATH, "IAM Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('Organization Service') {
-                            when { expression { return env.ORG_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.buildService(ORG_PATH, "Organization Service")
-                                }
-                            }
-                        }
+                //         stage('Organization Service') {
+                //             when { expression { return env.ORG_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.buildService(ORG_PATH, "Organization Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('Project Service') {
-                            when { expression { return env.PROJECT_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.buildService(PROJECT_PATH, "Project Service")
-                                }
-                            }
-                        }
+                //         stage('Project Service') {
+                //             when { expression { return env.PROJECT_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.buildService(PROJECT_PATH, "Project Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('API Gateway') {
-                            when { expression { return env.GATEWAY_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.buildService(GATEWAY_PATH, "API Gateway")
-                                }
-                            }
-                        }
-                    }
-                }
+                //         stage('API Gateway') {
+                //             when { expression { return env.GATEWAY_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.buildService(GATEWAY_PATH, "API Gateway")
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
             }
         }
         
         // TEST PHASE
         stage('Test Phase') {
             stages {
-                stage('Test Infrastructure Services') {
-                    parallel {
-                        stage('Discovery Service') {
-                            when { expression { return env.DISCOVERY_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.testService(DISCOVERY_PATH, "Discovery Service")
-                                }
-                            }
-                        }
+                // stage('Test Infrastructure Services') {
+                //     parallel {
+                //         stage('Discovery Service') {
+                //             when { expression { return env.DISCOVERY_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.testService(DISCOVERY_PATH, "Discovery Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('Config Server') {
-                            when { expression { return env.CONFIG_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.testService(CONFIG_PATH, "Config Server")
-                                }
-                            }
-                        }
-                    }
-                }
+                //         stage('Config Server') {
+                //             when { expression { return env.CONFIG_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.testService(CONFIG_PATH, "Config Server")
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
                 
-                stage('Test Microservices') {
-                    parallel {
-                        stage('Auth Service') {
-                            when { expression { return env.AUTH_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.testService(AUTH_PATH, "Auth Service")
-                                }
-                            }
-                        }
+                // stage('Test Microservices') {
+                //     parallel {
+                //         stage('Auth Service') {
+                //             when { expression { return env.AUTH_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.testService(AUTH_PATH, "Auth Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('IAM Service') {
-                            when { expression { return env.IAM_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.testService(IAM_PATH, "IAM Service")
-                                }
-                            }
-                        }
+                //         stage('IAM Service') {
+                //             when { expression { return env.IAM_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.testService(IAM_PATH, "IAM Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('Organization Service') {
-                            when { expression { return env.ORG_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.testService(ORG_PATH, "Organization Service")
-                                }
-                            }
-                        }
+                //         stage('Organization Service') {
+                //             when { expression { return env.ORG_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.testService(ORG_PATH, "Organization Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('Project Service') {
-                            when { expression { return env.PROJECT_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.testService(PROJECT_PATH, "Project Service")
-                                }
-                            }
-                        }
+                //         stage('Project Service') {
+                //             when { expression { return env.PROJECT_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.testService(PROJECT_PATH, "Project Service")
+                //                 }
+                //             }
+                //         }
                         
-                        stage('API Gateway') {
-                            when { expression { return env.GATEWAY_CHANGED == "true" } }
-                            steps { 
-                                script {
-                                    serviceSteps.testService(GATEWAY_PATH, "API Gateway")
-                                }
-                            }
-                        }
-                    }
-                }
+                //         stage('API Gateway') {
+                //             when { expression { return env.GATEWAY_CHANGED == "true" } }
+                //             steps { 
+                //                 script {
+                //                     serviceSteps.testService(GATEWAY_PATH, "API Gateway")
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
                 
                 stage('Package Applications') {
                     steps {
@@ -330,45 +330,47 @@ pipeline {
                 }
             }
         }
-    }
 
-    stage('Deployment Phase') {
-        when {
-            branch 'ci-cd'  // Specify the branch for deployment
-        }
-        stages {
-            stage('Create or Select Kubernetes Namespace') {
-                steps {
-                    script {
-                        sh """
-                            kubectl get namespace ${KUBERNETES_NAMESPACE} || kubectl create namespace ${KUBERNETES_NAMESPACE}
-                            kubectl config set-context --current --namespace=${KUBERNETES_NAMESPACE}
-                        """
-                    }
-                }
+        stage('Deployment Phase') {
+            when {
+                branch 'ci-cd'  // Specify the branch for deployment
             }
-            
-            stage('Deploy with Helm') {
-                steps {
-                    script {
-                        withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
-                            sh "helm upgrade --install discovery-service ./helm/taskify/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
+            stages {
+                stage('Create or Select Kubernetes Namespace') {
+                    steps {
+                        script {
+                            withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                                sh """
+                                    kubectl get namespace ${KUBERNETES_NAMESPACE} || kubectl create namespace ${KUBERNETES_NAMESPACE}
+                                    kubectl config set-context --current --namespace=${KUBERNETES_NAMESPACE}
+                                """
+                            }
                         }
-                        
-                        // withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
-                        //     def helmHome = tool 'helm'
-                        //     sh "${helmHome}/helm upgrade --install discovery-service ./helm/taskify/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
-                        // }
                     }
                 }
-            }
-            
-            stage('Verify Deployment') {
-                steps {
-                    script {
-                        echo "Verifying deployments in namespace ${KUBERNETES_NAMESPACE}..."
-                        sh "kubectl get pods -n ${KUBERNETES_NAMESPACE}"
-                        sh "kubectl get services -n ${KUBERNETES_NAMESPACE}"
+                
+                stage('Deploy with Helm') {
+                    steps {
+                        script {
+                            withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                                sh "helm upgrade --install discovery-service ./helm/taskify/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
+                            }
+                            
+                            // withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                            //     def helmHome = tool 'helm'
+                            //     sh "${helmHome}/helm upgrade --install discovery-service ./helm/taskify/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
+                            // }
+                        }
+                    }
+                }
+                
+                stage('Verify Deployment') {
+                    steps {
+                        script {
+                            echo "Verifying deployments in namespace ${KUBERNETES_NAMESPACE}..."
+                            sh "kubectl get pods -n ${KUBERNETES_NAMESPACE}"
+                            sh "kubectl get services -n ${KUBERNETES_NAMESPACE}"
+                        }
                     }
                 }
             }
