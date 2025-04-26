@@ -24,6 +24,8 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         
         DOCKER_NAMESPACE = "${env.DOCKER_NAMESPACE ?: 'taskify'}"
+        KUBERNETES_NAMESPACE = "taskify"
+        KUBECONFIG_CREDENTIAL_ID = 'kubernetes-config'
     }
     
     stages {
@@ -324,6 +326,49 @@ pipeline {
                             echo "Cleaning up old Docker images to prevent disk space issues on Jenkins server"
                             sh "docker system prune -f"
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    stage('Deployment Phase') {
+        when {
+            branch 'ci-cd'  // Specify the branch for deployment
+        }
+        stages {
+            stage('Create or Select Kubernetes Namespace') {
+                steps {
+                    script {
+                        sh """
+                            kubectl get namespace ${KUBERNETES_NAMESPACE} || kubectl create namespace ${KUBERNETES_NAMESPACE}
+                            kubectl config set-context --current --namespace=${KUBERNETES_NAMESPACE}
+                        """
+                    }
+                }
+            }
+            
+            stage('Deploy with Helm') {
+                steps {
+                    script {
+                        withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                            sh "helm upgrade --install discovery-service ./helm/taskify/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
+                        }
+                        
+                        // withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                        //     def helmHome = tool 'helm'
+                        //     sh "${helmHome}/helm upgrade --install discovery-service ./helm/taskify/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
+                        // }
+                    }
+                }
+            }
+            
+            stage('Verify Deployment') {
+                steps {
+                    script {
+                        echo "Verifying deployments in namespace ${KUBERNETES_NAMESPACE}..."
+                        sh "kubectl get pods -n ${KUBERNETES_NAMESPACE}"
+                        sh "kubectl get services -n ${KUBERNETES_NAMESPACE}"
                     }
                 }
             }
