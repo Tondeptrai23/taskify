@@ -304,7 +304,12 @@ pipeline {
                 stage('Build and Push Docker Images') {
                     steps {
                         script {
-                            // Use helper function to build and push Docker images in parallel
+                            // Get current branch name and generate a timestamp
+                            def branchName = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+                            def buildTime = sh(script: "date +%Y%m%d%H%M%S", returnStdout: true).trim()
+                            
+                            echo "Building Docker images for branch: ${branchName}"
+                            
                             def services = [
                                 [name: "discovery-service", path: DISCOVERY_PATH, dockerfile: "docker/services/discovery-service.Dockerfile", enabled: env.DISCOVERY_CHANGED == "true"],
                                 [name: "config-server", path: CONFIG_PATH, dockerfile: "docker/services/config-server.Dockerfile", enabled: env.CONFIG_CHANGED == "true"],
@@ -315,7 +320,7 @@ pipeline {
                                 [name: "api-gateway", path: GATEWAY_PATH, dockerfile: "docker/services/api-gateway.Dockerfile", enabled: env.GATEWAY_CHANGED == "true"]
                             ]
                             
-                            dockerSteps.buildAndPushImages(services, env.DOCKER_NAMESPACE, env.DOCKER_IMAGE_TAG)
+                            dockerSteps.buildAndPushImages(services, env.DOCKER_NAMESPACE, env.DOCKER_IMAGE_TAG, branchName, buildTime)
                         }
                     }
                 }
@@ -368,8 +373,16 @@ pipeline {
                     steps {
                         script {
                             echo "Verifying deployments in namespace ${KUBERNETES_NAMESPACE}..."
-                            sh "kubectl get pods -n ${KUBERNETES_NAMESPACE}"
-                            sh "kubectl get services -n ${KUBERNETES_NAMESPACE}"
+
+                            withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                                // Check the status of the deployed services
+                                sh "kubectl get deployments -n ${KUBERNETES_NAMESPACE}"
+                                sh "kubectl get pods -n ${KUBERNETES_NAMESPACE} --show-labels"
+                                sh "kubectl get services -n ${KUBERNETES_NAMESPACE}"
+                                
+                                // Optionally, check the logs of a specific pod
+                                // sh "kubectl logs <pod-name> -n ${KUBERNETES_NAMESPACE}"
+                            }
                         }
                     }
                 }
