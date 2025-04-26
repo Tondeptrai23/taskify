@@ -24,7 +24,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         
         DOCKER_NAMESPACE = "${env.DOCKER_NAMESPACE ?: 'taskify'}"
-        KUBERNETES_NAMESPACE = "taskify-cluster"
+        KUBERNETES_NAMESPACE = "taskify"
         KUBECONFIG_CREDENTIAL_ID = 'kubernetes-config'
     }
     
@@ -304,11 +304,8 @@ pipeline {
                 stage('Build and Push Docker Images') {
                     steps {
                         script {
-                            // Get current branch name and generate a timestamp
-                            def branchName = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
-                            def buildTime = sh(script: "date +%Y%m%d%H%M%S", returnStdout: true).trim()
-                            
-                            echo "Building Docker images for branch: ${branchName}"
+                            // Get current branch name 
+                            def branchName = env.BRANCH_NAME
                             
                             def services = [
                                 [name: "discovery-service", path: DISCOVERY_PATH, dockerfile: "docker/services/discovery-service.Dockerfile", enabled: env.DISCOVERY_CHANGED == "true"],
@@ -320,7 +317,7 @@ pipeline {
                                 [name: "api-gateway", path: GATEWAY_PATH, dockerfile: "docker/services/api-gateway.Dockerfile", enabled: env.GATEWAY_CHANGED == "true"]
                             ]
                             
-                            dockerSteps.buildAndPushImages(services, env.DOCKER_NAMESPACE, env.DOCKER_IMAGE_TAG, branchName, buildTime)
+                            dockerSteps.buildAndPushImages(services, env.DOCKER_NAMESPACE, env.DOCKER_IMAGE_TAG, branchName)
                         }
                     }
                 }
