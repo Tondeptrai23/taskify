@@ -1,8 +1,5 @@
-def buildAndPushImages(List services, String namespace, String tag, String branchName, String buildTime) {
+def buildAndPushImages(List services, String namespace, String tag, String branchName) {
     def stepsForParallel = [:]
-    
-    // Normalize branch name for Docker tag (replace slashes and other invalid chars)
-    def safeTagPrefix = branchName.replaceAll(/[^a-zA-Z0-9._-]/, '-').toLowerCase()
     
     // Determine if this is the main branch
     def isMainBranch = (branchName == 'main')
@@ -17,7 +14,7 @@ def buildAndPushImages(List services, String namespace, String tag, String branc
                 def imageName = "${namespace}/${serviceName}"
                 
                 // Create unique, descriptive tag
-                def uniqueTag = "${safeTagPrefix}-${tag}-${buildTime}"
+                def uniqueTag = "${tag}"
                 def imageTagged = "${imageName}:${uniqueTag}"
                 
                 if (isMainBranch) {
