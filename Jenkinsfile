@@ -24,7 +24,6 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         
         DOCKER_NAMESPACE = "${env.DOCKER_NAMESPACE ?: 'taskify'}"
-        DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
     }
     
     stages {
@@ -32,6 +31,10 @@ pipeline {
             steps {
                 checkout scm
                 sh "git fetch --all"
+
+                script {
+                    env.DOCKER_IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                }
             }
         }
         

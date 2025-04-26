@@ -59,7 +59,7 @@ def detectChanges(Map config) {
                         serviceFlags.PROJECT_CHANGED = true
                         serviceFlags.GATEWAY_CHANGED = true
                     }
-                    if (change.startsWith(config.COMMON_CORE_PATH)) {
+                    else if (change.startsWith(config.COMMON_CORE_PATH)) {
                         serviceFlags.COMMON_CORE_CHANGED = true
                         echo "Common Core Library changes detected"
                     }
@@ -67,7 +67,34 @@ def detectChanges(Map config) {
                         serviceFlags.COMMON_WEB_CHANGED = true
                         echo "Common Web Library changes detected"
                     }
-                    // ... similar checks for other services
+                    else if (change.startsWith(DISCOVERY_PATH)) {
+                        serviceFlags.DISCOVERY_CHANGED = true
+                        echo "Discovery Service changes detected"
+                    }
+                    else if (change.startsWith(CONFIG_PATH)) {
+                        serviceFlags.CONFIG_CHANGED = true
+                        echo "Config Server changes detected"
+                    }
+                    else if (change.startsWith(AUTH_PATH)) {
+                        serviceFlags.AUTH_CHANGED = true
+                        echo "Auth Service changes detected"
+                    }
+                    else if (change.startsWith(IAM_PATH)) {
+                        serviceFlags.IAM_CHANGED = true
+                        echo "IAM Service changes detected"
+                    }
+                    else if (change.startsWith(ORG_PATH)) {
+                        serviceFlags.ORG_CHANGED = true
+                        echo "Organization Service changes detected"
+                    }
+                    else if (change.startsWith(PROJECT_PATH)) {
+                        serviceFlags.PROJECT_CHANGED = true
+                        echo "Project Service changes detected"
+                    }
+                    else if (change.startsWith(GATEWAY_PATH)) {
+                        serviceFlags.GATEWAY_CHANGED = true
+                        echo "API Gateway changes detected"
+                    }
                 }
                 
                 // Propagate common library changes to dependent services
