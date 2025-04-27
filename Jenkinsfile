@@ -355,7 +355,31 @@ pipeline {
                     steps {
                         script {
                             withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
-                                sh "helm upgrade --install discovery-service ./helm/taskify/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
+                                // Domain and services configuration (hardcoded)
+                                def baseDomain = "taskify.local"
+                                def services = [
+                                    [name: "discovery-service", nodePort: 30001],
+                                    // [name: "config-server", nodePort: 30002],
+                                    // [name: "auth-service", nodePort: 30003],
+                                    // [name: "api-gateway", nodePort: 30004],
+                                    // [name: "iam-service", nodePort: 30005],
+                                    // [name: "organization-service", nodePort: 30006],
+                                    // [name: "project-service", nodePort: 30007]
+                                ]
+
+                                // Deploy each service with Helm
+                                services.each { service ->
+                                    if (service.name == "discovery-service" && env.DISCOVERY_CHANGED == "true" ||
+                                        service.name == "config-server" && env.CONFIG_CHANGED == "true" ||
+                                        service.name == "auth-service" && env.AUTH_CHANGED == "true" ||
+                                        service.name == "api-gateway" && env.GATEWAY_CHANGED == "true" ||
+                                        service.name == "iam-service" && env.IAM_CHANGED == "true" ||
+                                        service.name == "organization-service" && env.ORG_CHANGED == "true" ||
+                                        service.name == "project-service" && env.PROJECT_CHANGED == "true") {
+                                        
+                                        sh "helm upgrade --install ${service.name} ./helm/taskify/charts/${service.name} --set image.tag=${env.DOCKER_IMAGE_TAG} --set service.type=NodePort --set service.nodePort=${service.nodePort} --namespace=${KUBERNETES_NAMESPACE}"
+                                    }
+                                }
                             }
                             
                             // withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
@@ -379,6 +403,43 @@ pipeline {
                                 
                                 // Optionally, check the logs of a specific pod
                                 // sh "kubectl logs <pod-name> -n ${KUBERNETES_NAMESPACE}"
+                            }
+                        }
+                    }
+                }
+
+                stage('Print Access Instructions') {
+                    steps {
+                        script {
+                            // Get worker node IP
+
+                            withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                                echo "Getting worker node IP..."
+                                sh "kubectl get nodes -o wide"
+                                def workerNodeIP = sh(script: "kubectl get nodes -o wide | grep -v master | awk '{print \$6}' | head -1", returnStdout: true).trim()
+
+                                
+                                echo """
+                                ===== ACCESS INSTRUCTIONS FOR TESTERS =====
+                                
+                                1. Add the following entries to your hosts file (/etc/hosts on Linux/Mac, C:\\Windows\\System32\\drivers\\etc\\hosts on Windows):
+                                
+                                ${workerNodeIP} taskify.local discovery-service.taskify.local config-server.taskify.local auth-service.taskify.local api-gateway.taskify.local iam-service.taskify.local organization-service.taskify.local project-service.taskify.local
+                                
+                                2. Access the services using these URLs:
+                                
+                                - Discovery Service: http://discovery-service.taskify.local:30001
+                                - Config Server: http://config-server.taskify.local:30002
+                                - Auth Service: http://auth-service.taskify.local:30003
+                                - API Gateway: http://api-gateway.taskify.local:30004
+                                - IAM Service: http://iam-service.taskify.local:30005
+                                - Organization Service: http://organization-service.taskify.local:30006
+                                - Project Service: http://project-service.taskify.local:30007
+                                
+                                Main application access point: http://api-gateway.taskify.local:30004
+                                
+                                ============================================
+                                """
                             }
                         }
                     }
