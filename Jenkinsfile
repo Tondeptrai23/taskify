@@ -359,12 +359,12 @@ pipeline {
                                 def baseDomain = "taskify.local"
                                 def services = [
                                     [name: "discovery-service", nodePort: 30001],
-                                    // [name: "config-server", nodePort: 30002],
-                                    // [name: "auth-service", nodePort: 30003],
-                                    // [name: "api-gateway", nodePort: 30004],
-                                    // [name: "iam-service", nodePort: 30005],
-                                    // [name: "organization-service", nodePort: 30006],
-                                    // [name: "project-service", nodePort: 30007]
+                                    [name: "config-server", nodePort: 30002],
+                                    [name: "auth-service", nodePort: 30003],
+                                    [name: "api-gateway", nodePort: 30004],
+                                    [name: "iam-service", nodePort: 30005],
+                                    [name: "organization-service", nodePort: 30006],
+                                    [name: "project-service", nodePort: 30007]
                                 ]
 
                                 // Deploy each service with Helm

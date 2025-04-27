@@ -1,4 +1,4 @@
-# Default values for config-server.
+# Default values for iam-service.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -7,7 +7,7 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: tondeptrai23/config-server
+  repository: tondeptrai23/iam-service
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -17,7 +17,7 @@ image:
 imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: ""
-fullnameOverride: "config-server"
+fullnameOverride: "iam-service"
 
 # This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
@@ -29,7 +29,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: "config-server"
+  name: "iam-service"
 
 # This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
@@ -54,8 +54,13 @@ service:
   # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: NodePort
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 8888
-  nodePort: 30002
+  port: 8084
+  nodePort: 30005
+
+spring:
+  profiles: prod
+  config:
+    import: optional:configserver:http://config-server:8888
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -65,7 +70,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: config-server.local
+    - host: iam-service.local
       paths:
         - path: /
           pathType: ImplementationSpecific
@@ -73,23 +78,6 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
-
-spring:
-  profiles: kubernetes
-  cloud:
-    config:
-      server:
-        git:
-          uri: "https://github.com/Tondeptrai23/taskify-config"
-          defaultLabel: main
-          searchPaths:
-            - '{application}'
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: "http://discovery-service.taskify.local:30001/eureka/" 
-    
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
