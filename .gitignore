@@ -61,6 +61,7 @@ dist-ssr
 
 # ENV
 application-dev.yml
+application-prod.yml
 
 
 ### Test files
