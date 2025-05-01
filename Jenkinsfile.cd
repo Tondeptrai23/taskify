@@ -38,6 +38,35 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy Database') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                        // Add Bitnami repo
+                        sh "helm repo add bitnami https://charts.bitnami.com/bitnami"
+                        sh "helm repo update"
+                        
+                        // Create ConfigMap for init scripts
+                        sh """
+                        kubectl create configmap postgresql-init-scripts \
+                            --from-file=auth-schema.sql=microservices/auth-service/src/main/resources/db/init.sql \
+                            --from-file=organization-schema.sql=microservices/organization-service/src/main/resources/db/init.sql \
+                            --from-file=project-schema.sql=microservices/project-service/src/main/resources/db/init.sql \
+                            -n ${KUBERNETES_NAMESPACE} \
+                            --dry-run=client \
+                            -o yaml | kubectl apply -f -
+                        """
+                        
+                        // Deploy PostgreSQL
+                        sh "helm upgrade --install postgresql bitnami/postgresql --namespace=${KUBERNETES_NAMESPACE} --values=helm/taskify/charts/postgresql/values.yaml --wait"
+                        
+                        // Verify PostgreSQL is running
+                        sh "kubectl get pods -l app.kubernetes.io/name=postgresql -n ${KUBERNETES_NAMESPACE}"
+                    }
+                }
+            }
+        }
         
         stage('Deploy with Helm') {
             steps {
