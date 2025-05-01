@@ -57,9 +57,9 @@ pipeline {
                             --dry-run=client \
                             -o yaml | kubectl apply -f -
                         """
-                        
+
                         // Deploy PostgreSQL
-                        sh "helm upgrade --install postgresql bitnami/postgresql --namespace=${KUBERNETES_NAMESPACE} --values=helm/taskify/charts/postgresql/values.yaml --wait"
+                        sh "helm upgrade --install postgresql bitnami/postgresql --namespace=${KUBERNETES_NAMESPACE} --values=helm/charts/postgresql/values.yaml --wait"
                         
                         // Verify PostgreSQL is running
                         sh "kubectl get pods -l app.kubernetes.io/name=postgresql -n ${KUBERNETES_NAMESPACE}"
@@ -72,7 +72,7 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
-                        sh "helm upgrade --install rabbitmq ./helm/taskify/charts/rabbitmq --namespace=${KUBERNETES_NAMESPACE}"
+                        sh "helm upgrade --install rabbitmq ./helm/charts/rabbitmq --namespace=${KUBERNETES_NAMESPACE}"
 
 
                         // Domain and services configuration (hardcoded)
@@ -89,13 +89,13 @@ pipeline {
 
                         // Deploy each service with Helm
                         services.each { service ->
-                            sh "helm upgrade --install ${service.name} ./helm/taskify/charts/${service.name} --set image.tag=${env.DOCKER_IMAGE_TAG} --set service.type=NodePort --set service.nodePort=${service.nodePort} --namespace=${KUBERNETES_NAMESPACE}"
+                            sh "helm upgrade --install ${service.name} ./helm/charts/${service.name} --set image.tag=${env.DOCKER_IMAGE_TAG} --set service.type=NodePort --set service.nodePort=${service.nodePort} --namespace=${KUBERNETES_NAMESPACE}"
                         }
                     }
                     
                     // withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
                     //     def helmHome = tool 'helm'
-                    //     sh "${helmHome}/helm upgrade --install discovery-service ./helm/taskify/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
+                    //     sh "${helmHome}/helm upgrade --install discovery-service ./helm/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
                     // }
                 }
             }

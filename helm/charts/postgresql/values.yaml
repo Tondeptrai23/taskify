@@ -1,0 +1,9 @@
+auth:
+  username: postgres
+  password: postgres
+  database: postgres
+
+primary:
+  initdb:
+    scriptsConfigMap: postgres-init-scripts
+    user: postgres
