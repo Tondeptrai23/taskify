@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rabbitmq.fullname" . }}
+  labels: {{- include "rabbitmq.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "rabbitmq.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "rabbitmq.selectorLabels" . | nindent 8 }}
+      {{- with .Values.podLabels }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "rabbitmq.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: {{ .Values.auth.username }}
+            - name: RABBITMQ_DEFAULT_PASS
+              value: {{ .Values.auth.password }}
+          ports:
+            - name: amqp
+              containerPort: 5672
+              protocol: TCP
+            - name: management
+              containerPort: 15672
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: amqp
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            periodSeconds: 5
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/rabbitmq
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "rabbitmq.fullname" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
