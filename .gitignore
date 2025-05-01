@@ -70,3 +70,6 @@ TestController.java
 TestService.java
 
 
+### Temporarily ignore docker compose ###
+docker-compose.yml
+docker-compose.*.yml
