@@ -47,7 +47,7 @@ def detectChanges(Map config) {
                 
                 // Check each path in the change set
                 for (change in changeSet) {
-                    if (change.startsWith("Jenkinsfile")) {
+                    if (change.startsWith("Jenkinsfile.ci") ) {
                         echo "Jenkinsfile changes detected - rebuilding everything"
                         serviceFlags.COMMON_CORE_CHANGED = true
                         serviceFlags.COMMON_WEB_CHANGED = true
