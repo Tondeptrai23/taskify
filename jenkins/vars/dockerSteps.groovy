@@ -17,7 +17,8 @@ def buildAndPushImages(List services, String namespace, String tag, String branc
                 def uniqueTag = "${tag}"
                 def imageTagged = "${imageName}:${uniqueTag}"
                 
-                if (isMainBranch) {
+                // TODO: Remove "true" after testing
+                if (isMainBranch || true) {
                     // For main branch, also tag as latest
                     sh "docker build -f ${dockerfile} -t ${imageTagged} -t ${imageName}:latest ."
                     echo "${serviceName} Docker image built: ${imageTagged} (also tagged as latest)"

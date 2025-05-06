@@ -59,7 +59,7 @@ pipeline {
                         """
 
                         // Deploy PostgreSQL
-                        sh "helm upgrade --install postgresql bitnami/postgresql --namespace=${KUBERNETES_NAMESPACE} --values=helm/charts/postgresql/values.yaml --wait"
+                        sh "helm upgrade --install postgresql bitnami/postgresql --namespace=${KUBERNETES_NAMESPACE} --values=helm/charts/postgresql/values.yaml"
                         
                         // Verify PostgreSQL is running
                         sh "kubectl get pods -l app.kubernetes.io/name=postgresql -n ${KUBERNETES_NAMESPACE}"

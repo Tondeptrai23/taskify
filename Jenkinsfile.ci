@@ -307,14 +307,25 @@ pipeline {
                             // Get current branch name 
                             def branchName = env.BRANCH_NAME
                             
+                            // def services = [
+                            //     [name: "discovery-service", path: DISCOVERY_PATH, dockerfile: "docker/services/discovery-service.Dockerfile", enabled: env.DISCOVERY_CHANGED == "true"],
+                            //     [name: "config-server", path: CONFIG_PATH, dockerfile: "docker/services/config-server.Dockerfile", enabled: env.CONFIG_CHANGED == "true"],
+                            //     [name: "auth-service", path: AUTH_PATH, dockerfile: "docker/services/auth-service.Dockerfile", enabled: env.AUTH_CHANGED == "true"],
+                            //     [name: "iam-service", path: IAM_PATH, dockerfile: "docker/services/iam-service.Dockerfile", enabled: env.IAM_CHANGED == "true"],
+                            //     [name: "organization-service", path: ORG_PATH, dockerfile: "docker/services/organization-service.Dockerfile", enabled: env.ORG_CHANGED == "true"],
+                            //     [name: "project-service", path: PROJECT_PATH, dockerfile: "docker/services/project-service.Dockerfile", enabled: env.PROJECT_CHANGED == "true"],
+                            //     [name: "api-gateway", path: GATEWAY_PATH, dockerfile: "docker/services/api-gateway.Dockerfile", enabled: env.GATEWAY_CHANGED == "true"]
+                            // ]
+
+                            // TODO: Use the above commented code after testing
                             def services = [
-                                [name: "discovery-service", path: DISCOVERY_PATH, dockerfile: "docker/services/discovery-service.Dockerfile", enabled: env.DISCOVERY_CHANGED == "true"],
-                                [name: "config-server", path: CONFIG_PATH, dockerfile: "docker/services/config-server.Dockerfile", enabled: env.CONFIG_CHANGED == "true"],
-                                [name: "auth-service", path: AUTH_PATH, dockerfile: "docker/services/auth-service.Dockerfile", enabled: env.AUTH_CHANGED == "true"],
-                                [name: "iam-service", path: IAM_PATH, dockerfile: "docker/services/iam-service.Dockerfile", enabled: env.IAM_CHANGED == "true"],
-                                [name: "organization-service", path: ORG_PATH, dockerfile: "docker/services/organization-service.Dockerfile", enabled: env.ORG_CHANGED == "true"],
-                                [name: "project-service", path: PROJECT_PATH, dockerfile: "docker/services/project-service.Dockerfile", enabled: env.PROJECT_CHANGED == "true"],
-                                [name: "api-gateway", path: GATEWAY_PATH, dockerfile: "docker/services/api-gateway.Dockerfile", enabled: env.GATEWAY_CHANGED == "true"]
+                                [name: "discovery-service", path: DISCOVERY_PATH, dockerfile: "docker/services/discovery-service.Dockerfile", enabled: true],
+                                [name: "config-server", path: CONFIG_PATH, dockerfile: "docker/services/config-server.Dockerfile", enabled: true],
+                                [name: "auth-service", path: AUTH_PATH, dockerfile: "docker/services/auth-service.Dockerfile", enabled:true],
+                                [name: "iam-service", path: IAM_PATH, dockerfile: "docker/services/iam-service.Dockerfile", enabled: true],
+                                [name: "organization-service", path: ORG_PATH, dockerfile: "docker/services/organization-service.Dockerfile",enabled: true],
+                                [name: "project-service", path: PROJECT_PATH, dockerfile: "docker/services/project-service.Dockerfile", enabled: true],
+                                [name: "api-gateway", path: GATEWAY_PATH, dockerfile: "docker/services/api-gateway.Dockerfile", enabled: true]
                             ]
                             
                             dockerSteps.buildAndPushImages(services, env.DOCKER_NAMESPACE, env.DOCKER_IMAGE_TAG, branchName)
