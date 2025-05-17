@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "config-server.fullname" . }}
+  labels: {{- include "config-server.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "config-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "config-server.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "config-server.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.spring.profiles }}
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_URI
+              value: "{{ .Values.spring.cloud.config.server.git.uri }}"
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL
+              value: "{{ .Values.spring.cloud.config.server.git.defaultLabel }}"
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS
+              value: "{{ .Values.spring.cloud.config.server.git.searchPaths | join "," }}" 
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "{{ .Values.eureka.client.serviceUrl.defaultZone }}"
+            - name: ENCRYPT_KEY
+              value: thaitoan2311
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 60
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 30
+            timeoutSeconds: 10
+          resources: {{- toYaml .Values.resources | nindent 12 }}

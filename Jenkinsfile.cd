@@ -1,0 +1,168 @@
+@Library('taskify-pipeline-library') _
+
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Git branch to deploy')
+        string(name: 'DOCKER_IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag to use for deployment')
+    }
+
+    environment {
+        DOCKER_NAMESPACE = "${env.DOCKER_NAMESPACE ?: 'taskify'}"
+        KUBERNETES_NAMESPACE = "taskify"
+        KUBECONFIG_CREDENTIAL_ID = 'kubernetes-config'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    echo "Deploying from branch: ${params.BRANCH_NAME}"
+                    checkout scm
+                    sh "git checkout ${params.BRANCH_NAME}"
+                    sh "git pull origin ${params.BRANCH_NAME}"
+                }
+            }
+        }
+
+        stage('Create or Select Kubernetes Namespace') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                        sh """
+                            kubectl get namespace ${KUBERNETES_NAMESPACE} || kubectl create namespace ${KUBERNETES_NAMESPACE}
+                            kubectl config set-context --current --namespace=${KUBERNETES_NAMESPACE}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Deploy Database') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                        // Add Bitnami repo
+                        sh "helm repo add bitnami https://charts.bitnami.com/bitnami"
+                        sh "helm repo update"
+                        
+                        // Create ConfigMap for init scripts
+                        sh """
+                        kubectl create configmap postgresql-init-scripts \
+                            --from-file=auth-schema.sql=microservices/auth-service/src/main/resources/db/init.sql \
+                            --from-file=organization-schema.sql=microservices/organization-service/src/main/resources/db/init.sql \
+                            --from-file=project-schema.sql=microservices/project-service/src/main/resources/db/init.sql \
+                            -n ${KUBERNETES_NAMESPACE} \
+                            --dry-run=client \
+                            -o yaml | kubectl apply -f -
+                        """
+
+                        // Deploy PostgreSQL
+                        sh "helm upgrade --install postgresql bitnami/postgresql --namespace=${KUBERNETES_NAMESPACE} --values=helm/charts/postgresql/values.yaml"
+                        
+                        // Verify PostgreSQL is running
+                        sh "kubectl get pods -l app.kubernetes.io/name=postgresql -n ${KUBERNETES_NAMESPACE}"
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy with Helm') {
+            steps {
+                script {
+                    withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                        sh "helm upgrade --install rabbitmq ./helm/charts/rabbitmq --namespace=${KUBERNETES_NAMESPACE}"
+
+
+                        // Domain and services configuration (hardcoded)
+                        def baseDomain = "taskify.local"
+                        def services = [
+                            [name: "discovery-service", nodePort: 30001],
+                            [name: "config-server", nodePort: 30002],
+                            [name: "auth-service", nodePort: 30003],
+                            // [name: "api-gateway", nodePort: 30004],
+                            [name: "iam-service", nodePort: 30005],
+                            [name: "organization-service", nodePort: 30006],
+                            [name: "project-service", nodePort: 30007],
+                        ]
+
+                        // Deploy each service with Helm
+                        services.each { service ->
+                            sh "helm upgrade --install ${service.name} ./helm/charts/${service.name} --set image.tag=${env.DOCKER_IMAGE_TAG} --set service.type=NodePort --set service.nodePort=${service.nodePort} --namespace=${KUBERNETES_NAMESPACE}"
+                        }
+                    }
+                    
+                    // withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                    //     def helmHome = tool 'helm'
+                    //     sh "${helmHome}/helm upgrade --install discovery-service ./helm/charts/discovery-service --set image.tag=${env.DOCKER_IMAGE_TAG} --namespace=taskify"
+                    // }
+                }
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                script {
+                    echo "Verifying deployments in namespace ${KUBERNETES_NAMESPACE}..."
+
+                    withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                        // Check the status of the deployed services
+                        sh "kubectl get deployments -n ${KUBERNETES_NAMESPACE}"
+                        sh "kubectl get pods -n ${KUBERNETES_NAMESPACE} --show-labels"
+                        sh "kubectl get services -n ${KUBERNETES_NAMESPACE}"
+                        
+                        // Optionally, check the logs of a specific pod
+                        // sh "kubectl logs <pod-name> -n ${KUBERNETES_NAMESPACE}"
+                    }
+                }
+            }
+        }
+
+        stage('Print Access Instructions') {
+            steps {
+                script {
+                    // Get worker node IP
+
+                    withKubeConfig([credentialsId: "${KUBECONFIG_CREDENTIAL_ID}"]) {
+                        echo "Getting worker node IP..."
+                        sh "kubectl get nodes -o wide"
+                        def workerNodeIP = sh(script: "kubectl get nodes -o wide | grep -v master | awk '{print \$6}' | head -1", returnStdout: true).trim()
+
+                        
+                        echo """
+                        ===== ACCESS INSTRUCTIONS FOR TESTERS =====
+                        
+                        1. Add the following entries to your hosts file (/etc/hosts on Linux/Mac, C:\\Windows\\System32\\drivers\\etc\\hosts on Windows):
+                        
+                        ${workerNodeIP} taskify.local discovery-service.taskify.local config-server.taskify.local auth-service.taskify.local api-gateway.taskify.local iam-service.taskify.local organization-service.taskify.local project-service.taskify.local
+                        
+                        2. Access the services using these URLs:
+                        
+                        - Discovery Service: http://discovery-service.taskify.local:30001
+                        - Config Server: http://config-server.taskify.local:30002
+                        - Auth Service: http://auth-service.taskify.local:30003
+                        - API Gateway: http://api-gateway.taskify.local:30004
+                        - IAM Service: http://iam-service.taskify.local:30005
+                        - Organization Service: http://organization-service.taskify.local:30006
+                        - Project Service: http://project-service.taskify.local:30007
+                        
+                        Main application access point: http://api-gateway.taskify.local:30004
+                        
+                        ============================================
+                        """
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                echo "Cleaning up..."
+                cleanWs()
+            }
+        }
+    }
+}

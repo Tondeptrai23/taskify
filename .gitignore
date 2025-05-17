@@ -61,6 +61,7 @@ dist-ssr
 
 # ENV
 application-dev.yml
+application-prod.yml
 
 
 ### Test files
@@ -69,3 +70,6 @@ TestController.java
 TestService.java
 
 
+### Temporarily ignore docker compose ###
+docker-compose.yml
+docker-compose.*.yml

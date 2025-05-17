@@ -1,0 +1,342 @@
+@Library('taskify-pipeline-library') _
+
+pipeline {
+    agent any
+    
+    tools {
+        maven 'Maven 3.9.6'
+        jdk 'JDK 17'
+    }
+    
+    environment {
+        // Define service paths for easier reference
+        COMMON_CORE_PATH = "libraries/common-lib-core"
+        COMMON_WEB_PATH = "libraries/common-lib-web"
+        DISCOVERY_PATH = "server-discovery"
+        CONFIG_PATH = "config-server"
+        AUTH_PATH = "microservices/auth-service"
+        IAM_PATH = "microservices/iam-service"
+        ORG_PATH = "microservices/organization-service" 
+        PROJECT_PATH = "microservices/project-service"
+        GATEWAY_PATH = "api-gateway"
+
+        DOCKER_HUB_REGISTRY = "docker.io"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        
+        DOCKER_NAMESPACE = "${env.DOCKER_NAMESPACE ?: 'taskify'}"
+        KUBERNETES_NAMESPACE = "taskify"
+        KUBECONFIG_CREDENTIAL_ID = 'kubernetes-config'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh "git fetch --all"
+
+                script {
+                    env.DOCKER_IMAGE_TAG = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+                }
+            }
+        }
+        
+        stage('Detect Changes') {
+            steps {
+                script {
+                    // Call a helper function from the shared library to detect changes
+                    // This keeps the complex change detection logic in the library
+                    def pathConfig = [
+                        COMMON_CORE_PATH: env.COMMON_CORE_PATH,
+                        COMMON_WEB_PATH: env.COMMON_WEB_PATH,
+                        DISCOVERY_PATH: env.DISCOVERY_PATH,
+                        CONFIG_PATH: env.CONFIG_PATH,
+                        AUTH_PATH: env.AUTH_PATH,
+                        IAM_PATH: env.IAM_PATH,
+                        ORG_PATH: env.ORG_PATH,
+                        PROJECT_PATH: env.PROJECT_PATH,
+                        GATEWAY_PATH: env.GATEWAY_PATH
+                    ]
+                    
+                    def serviceFlags = pipelineUtils.detectChanges(pathConfig)
+                    
+                    // Set environment variables based on the returned flags
+                    env.COMMON_CORE_CHANGED = serviceFlags.COMMON_CORE_CHANGED.toString()
+                    env.COMMON_WEB_CHANGED = serviceFlags.COMMON_WEB_CHANGED.toString()
+                    env.DISCOVERY_CHANGED = serviceFlags.DISCOVERY_CHANGED.toString()
+                    env.CONFIG_CHANGED = serviceFlags.CONFIG_CHANGED.toString()
+                    env.AUTH_CHANGED = serviceFlags.AUTH_CHANGED.toString()
+                    env.IAM_CHANGED = serviceFlags.IAM_CHANGED.toString()
+                    env.ORG_CHANGED = serviceFlags.ORG_CHANGED.toString()
+                    env.PROJECT_CHANGED = serviceFlags.PROJECT_CHANGED.toString()
+                    env.GATEWAY_CHANGED = serviceFlags.GATEWAY_CHANGED.toString()
+                }
+            }
+        }
+        
+        // BUILD PHASE
+        stage('Build Phase') {
+            stages {
+                stage('Build Common Libraries') {
+                    when {
+                        expression { return env.COMMON_CORE_CHANGED == "true" || env.COMMON_WEB_CHANGED == "true" }
+                    }
+                    steps {
+                        script {
+                            if (env.COMMON_CORE_CHANGED == "true") {
+                                dir(COMMON_CORE_PATH) {
+                                    sh 'mvn clean install -DskipTests'
+                                    echo "Common Core Library built and installed to local maven repository"
+                                }
+                            }
+                            
+                            if (env.COMMON_WEB_CHANGED == "true") {
+                                dir(COMMON_WEB_PATH) {
+                                    sh 'mvn clean install -DskipTests'
+                                    echo "Common Web Library built and installed to local maven repository"
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                stage('Build Infrastructure Services') {
+                    parallel {
+                        stage('Discovery Service') {
+                            when { expression { return env.DISCOVERY_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(DISCOVERY_PATH, "Discovery Service")
+                                }
+                            }
+                        }
+                        
+                        stage('Config Server') {
+                            when { expression { return env.CONFIG_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(CONFIG_PATH, "Config Server")
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                stage('Build Microservices') {
+                    parallel {
+                        stage('Auth Service') {
+                            when { expression { return env.AUTH_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(AUTH_PATH, "Auth Service")
+                                }
+                            }
+                        }
+                        
+                        stage('IAM Service') {
+                            when { expression { return env.IAM_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(IAM_PATH, "IAM Service")
+                                }
+                            }
+                        }
+                        
+                        stage('Organization Service') {
+                            when { expression { return env.ORG_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(ORG_PATH, "Organization Service")
+                                }
+                            }
+                        }
+                        
+                        stage('Project Service') {
+                            when { expression { return env.PROJECT_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(PROJECT_PATH, "Project Service")
+                                }
+                            }
+                        }
+                        
+                        stage('API Gateway') {
+                            when { expression { return env.GATEWAY_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.buildService(GATEWAY_PATH, "API Gateway")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // TEST PHASE
+        stage('Test Phase') {
+            stages {
+                stage('Test Infrastructure Services') {
+                    parallel {
+                        stage('Discovery Service') {
+                            when { expression { return env.DISCOVERY_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(DISCOVERY_PATH, "Discovery Service")
+                                }
+                            }
+                        }
+                        
+                        stage('Config Server') {
+                            when { expression { return env.CONFIG_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(CONFIG_PATH, "Config Server")
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                stage('Test Microservices') {
+                    parallel {
+                        stage('Auth Service') {
+                            when { expression { return env.AUTH_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(AUTH_PATH, "Auth Service")
+                                }
+                            }
+                        }
+                        
+                        stage('IAM Service') {
+                            when { expression { return env.IAM_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(IAM_PATH, "IAM Service")
+                                }
+                            }
+                        }
+                        
+                        stage('Organization Service') {
+                            when { expression { return env.ORG_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(ORG_PATH, "Organization Service")
+                                }
+                            }
+                        }
+                        
+                        stage('Project Service') {
+                            when { expression { return env.PROJECT_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(PROJECT_PATH, "Project Service")
+                                }
+                            }
+                        }
+                        
+                        stage('API Gateway') {
+                            when { expression { return env.GATEWAY_CHANGED == "true" } }
+                            steps { 
+                                script {
+                                    serviceSteps.testService(GATEWAY_PATH, "API Gateway")
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                stage('Package Applications') {
+                    steps {
+                        script {
+                            // Use helper function to package services in parallel
+                            def services = [
+                                [path: DISCOVERY_PATH, name: "Discovery Service", enabled: env.DISCOVERY_CHANGED == "true"],
+                                [path: CONFIG_PATH, name: "Config Server", enabled: env.CONFIG_CHANGED == "true"],
+                                [path: AUTH_PATH, name: "Auth Service", enabled: env.AUTH_CHANGED == "true"],
+                                [path: IAM_PATH, name: "IAM Service", enabled: env.IAM_CHANGED == "true"],
+                                [path: ORG_PATH, name: "Organization Service", enabled: env.ORG_CHANGED == "true"],
+                                [path: PROJECT_PATH, name: "Project Service", enabled: env.PROJECT_CHANGED == "true"],
+                                [path: GATEWAY_PATH, name: "API Gateway", enabled: env.GATEWAY_CHANGED == "true"]
+                            ]
+                            
+                            serviceSteps.packageServicesInParallel(services)
+                        }
+                    }
+                }
+                
+                stage('Archive Artifacts') {
+                    steps {
+                        script {
+                            def artifactPaths = []
+                            
+                            if (env.DISCOVERY_CHANGED == "true") artifactPaths.add("${DISCOVERY_PATH}/target/*.jar")
+                            if (env.CONFIG_CHANGED == "true") artifactPaths.add("${CONFIG_PATH}/target/*.jar")
+                            if (env.AUTH_CHANGED == "true") artifactPaths.add("${AUTH_PATH}/target/*.jar")
+                            if (env.IAM_CHANGED == "true") artifactPaths.add("${IAM_PATH}/target/*.jar")
+                            if (env.ORG_CHANGED == "true") artifactPaths.add("${ORG_PATH}/target/*.jar")
+                            if (env.PROJECT_CHANGED == "true") artifactPaths.add("${PROJECT_PATH}/target/*.jar")
+                            if (env.GATEWAY_CHANGED == "true") artifactPaths.add("${GATEWAY_PATH}/target/*.jar")
+                            
+                            if (!artifactPaths.isEmpty()) {
+                                archiveArtifacts artifacts: artifactPaths.join(','), fingerprint: true
+                                echo "Artifacts archived"
+                            } else {
+                                echo "No artifacts to archive"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Docker Phase') {
+            stages {
+                stage('Docker Login') {
+                    steps {
+                        script {
+                            sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin'
+                            echo "Logged in to Docker Hub"
+                        }
+                    }
+                }
+                
+                stage('Build and Push Docker Images') {
+                    steps {
+                        script {
+                            def branchName = env.BRANCH_NAME
+                            
+                            def services = [
+                                [name: "discovery-service", path: DISCOVERY_PATH, dockerfile: "docker/services/discovery-service.Dockerfile", enabled: env.DISCOVERY_CHANGED == "true"],
+                                [name: "config-server", path: CONFIG_PATH, dockerfile: "docker/services/config-server.Dockerfile", enabled: env.CONFIG_CHANGED == "true"],
+                                [name: "auth-service", path: AUTH_PATH, dockerfile: "docker/services/auth-service.Dockerfile", enabled: env.AUTH_CHANGED == "true"],
+                                [name: "iam-service", path: IAM_PATH, dockerfile: "docker/services/iam-service.Dockerfile", enabled: env.IAM_CHANGED == "true"],
+                                [name: "organization-service", path: ORG_PATH, dockerfile: "docker/services/organization-service.Dockerfile", enabled: env.ORG_CHANGED == "true"],
+                                [name: "project-service", path: PROJECT_PATH, dockerfile: "docker/services/project-service.Dockerfile", enabled: env.PROJECT_CHANGED == "true"],
+                                [name: "api-gateway", path: GATEWAY_PATH, dockerfile: "docker/services/api-gateway.Dockerfile", enabled: env.GATEWAY_CHANGED == "true"]
+                            ]
+
+                            services.each { service ->
+                                dockerSteps.buildAndPushImage(service.name, service.path, service.dockerfile, env.DOCKER_NAMESPACE, env.DOCKER_IMAGE_TAG, branchName)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Build and Test successful!'
+            sh "docker system prune -f"
+        }
+        failure {
+            echo 'Build or Test failed!'
+        }
+        always {
+            echo 'Cleaning workspace...'
+            cleanWs()
+        }
+    }
+}
