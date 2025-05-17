@@ -5,6 +5,10 @@ def buildAndPushImages(List services, String namespace, String tag, String branc
     def isMainBranch = (branchName == 'main')
     
     services.each { service ->
+        if (isMainBranch) {
+            service.enabled = true
+        }
+
         if (service.enabled) {
             def serviceName = service.name
             def dockerfile = service.dockerfile
@@ -17,7 +21,6 @@ def buildAndPushImages(List services, String namespace, String tag, String branc
                 def uniqueTag = "${tag}"
                 def imageTagged = "${imageName}:${uniqueTag}"
                 
-                // TODO: Remove "true" after testing
                 if (isMainBranch || true) {
                     // For main branch, also tag as latest
                     sh "docker build -f ${dockerfile} -t ${imageTagged} -t ${imageName}:latest ."
